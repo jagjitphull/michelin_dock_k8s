@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docker Swarm — Introduction and Architecture Reference</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --paper:#ffffff;
+      --soft:#f8fafc;
+      --ink:#172033;
+      --muted:#5f6b7d;
+      --blue:#2563eb;
+      --blue2:#1d4ed8;
+      --cyan:#0891b2;
+      --green:#16a34a;
+      --orange:#ea580c;
+      --purple:#7c3aed;
+      --red:#dc2626;
+      --border:#dbe3ef;
+      --code:#0f172a;
+      --codeText:#e5eefc;
+      --shadow:0 12px 28px rgba(15,23,42,.10);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--ink);
+      line-height:1.62;
+    }
+    .wrap{max-width:1160px;margin:0 auto;padding:26px}
+    .hero{
+      position:relative;
+      overflow:hidden;
+      border:1px solid var(--border);
+      border-radius:28px;
+      padding:42px 32px;
+      background:linear-gradient(135deg,#fff 0%,#f8fbff 50%,#eef7ff 100%);
+      box-shadow:var(--shadow);
+    }
+    .hero:before{
+      content:"";
+      position:absolute;
+      right:-80px;
+      top:-80px;
+      width:250px;
+      height:250px;
+      border-radius:50%;
+      background:repeating-linear-gradient(45deg,rgba(37,99,235,.12),rgba(37,99,235,.12) 8px,transparent 8px,transparent 18px);
+      animation:spin 32s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .badge{display:inline-flex;gap:8px;align-items:center;border:1px solid #bfdbfe;background:#eff6ff;color:#164e91;border-radius:999px;padding:7px 13px;font-weight:800;font-size:13px}
+    h1{font-size:clamp(32px,5vw,54px);line-height:1.04;letter-spacing:-.045em;margin:18px 0 10px;max-width:900px}
+    h2{font-size:30px;line-height:1.16;letter-spacing:-.02em;margin:52px 0 14px;border-left:6px solid var(--blue);padding-left:14px}
+    h3{font-size:22px;margin:28px 0 10px;color:#111827}
+    h4{font-size:17px;margin:22px 0 8px;color:#111827}
+    .lead{font-size:20px;color:var(--muted);max-width:860px;margin:0 0 18px}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+    .pill{background:#fff;border:1px solid var(--border);border-radius:999px;padding:8px 12px;color:#536176;font-size:14px;font-weight:700}
+    .toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:24px;position:relative;z-index:2}
+    .toc a{display:block;background:#fff;border:1px solid var(--border);padding:13px 14px;border-radius:14px;font-weight:800;color:#243148;text-decoration:none}
+    .toc a:hover{background:#eef6ff;border-color:#93c5fd}
+    .grid{display:grid;gap:18px}
+    .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:20px;box-shadow:0 8px 20px rgba(15,23,42,.05)}
+    .card strong{color:#0f172a}
+    .icon{font-size:30px;display:inline-block;margin-bottom:8px}
+    .note,.warn,.good{border-radius:18px;padding:16px 18px;margin:18px 0;border:1px solid var(--border);background:#fff}
+    .note{border-left:6px solid var(--blue);background:#f8fbff}
+    .warn{border-left:6px solid var(--orange);background:#fff8f1}
+    .good{border-left:6px solid var(--green);background:#f2fbf5}
+    table{border-collapse:separate;border-spacing:0;width:100%;margin:16px 0;background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden}
+    th,td{padding:13px 14px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+    th{background:#f1f5f9;color:#111827;font-size:14px;text-transform:uppercase;letter-spacing:.04em}
+    tr:last-child td{border-bottom:0}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;background:#eef2f7;border:1px solid #dce4ee;border-radius:7px;padding:2px 6px;color:#0f172a;font-size:.94em}
+    pre{position:relative;background:var(--code);color:var(--codeText);border-radius:18px;padding:18px;overflow:auto;box-shadow:0 10px 22px rgba(15,23,42,.16);border:1px solid #1e293b}
+    pre code{background:transparent;border:0;color:inherit;padding:0;white-space:pre;font-size:14px;line-height:1.55}
+    .copy{position:absolute;right:12px;top:10px;background:#334155;color:#fff;border:1px solid #64748b;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:12px}
+    .copy:hover{background:#475569}
+    .diagram{background:#fff;border:1px solid var(--border);border-radius:24px;padding:18px;margin:20px 0;box-shadow:0 8px 20px rgba(15,23,42,.05);overflow:hidden}
+    .diagram-title{font-weight:900;font-size:18px;margin:0 0 12px;color:#111827}
+    .caption{font-size:13px;color:var(--muted);margin-top:8px;text-align:center}
+    svg.swarm-svg{width:100%;height:auto;display:block;margin:0 auto;max-width:1000px}
+    .svg-label{font:700 16px Inter,Segoe UI,Arial,sans-serif;fill:#111827}
+    .svg-small{font:500 13px Inter,Segoe UI,Arial,sans-serif;fill:#475569}
+    .svg-mini{font:700 12px Inter,Segoe UI,Arial,sans-serif;fill:#334155}
+    .dash{stroke-dasharray:12 10;animation:dash 2.4s linear infinite}
+    @keyframes dash{to{stroke-dashoffset:-88}}
+    .pulse-light{animation:pulseLight 1.8s ease-in-out infinite}
+    @keyframes pulseLight{0%,100%{opacity:1}50%{opacity:.45}}
+    .glow{filter:drop-shadow(0 7px 10px rgba(15,23,42,.16))}
+    .steps{counter-reset:step}
+    .step{counter-increment:step;position:relative;padding-left:54px;margin:18px 0}
+    .step:before{content:counter(step);position:absolute;left:0;top:0;width:36px;height:36px;border-radius:12px;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-weight:900}
+    .mini{font-size:13px;color:var(--muted)}
+    .simpleline{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:32px 0}
+    details summary{cursor:pointer}
+    .footer{margin-top:60px;padding:28px;border-top:1px solid var(--border);color:var(--muted);font-size:14px;text-align:center}
+    @media(max-width:850px){.grid.two,.grid.three,.grid.four{grid-template-columns:1fr}.wrap{padding:16px}.hero{padding:28px 20px}h2{font-size:25px}.diagram{padding:10px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important} animate,animateMotion{display:none}}
+    @media print{.copy,.toc{display:none}.card,.diagram,pre,.hero{box-shadow:none}body{background:#fff}.wrap{max-width:100%;padding:10px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">🐳 Docker Swarm • Trainee Reference</span>
+      <h1>Docker Swarm: Introduction and Architecture</h1>
+      <p class="lead">A simple visual guide for trainees to understand how Docker Swarm turns multiple Docker hosts into one cluster, schedules containers as services, and keeps applications running.</p>
+      <div class="meta">
+        <span class="pill">Level: Beginner</span>
+        <span class="pill">Focus: Introduction + Architecture</span>
+        <span class="pill">Includes: Clean animated SVG diagrams</span>
+      </div>
+      <div class="toc">
+        <a href="#intro">1. What is Docker Swarm?</a>
+        <a href="#why">2. Why Swarm?</a>
+        <a href="#architecture">3. Swarm Architecture</a>
+        <a href="#flow">4. How Services Run</a>
+        <a href="#networking">5. Networking View</a>
+        <a href="#troubleshooting">6. Troubleshooting</a>
+        <a href="#quiz">7. Assessment</a>
+      </div>
+    </section>
+
+    <section id="intro">
+      <h2>1. What is Docker Swarm?</h2>
+      <div class="grid two">
+        <div class="card">
+          <span class="icon">🧩</span>
+          <h3>Simple meaning</h3>
+          <p><strong>Docker Swarm</strong> is Docker’s built-in clustering feature. It allows many Docker machines to work together as one group called a <strong>swarm</strong>.</p>
+          <p>Instead of logging in to every server and starting containers manually, you tell Swarm what you want. Example: “Run 3 copies of nginx.” Swarm decides where to run them.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🎯</span>
+          <h3>One-line definition</h3>
+          <p><strong>Docker Swarm = many Docker hosts + automatic scheduling + scaling + self-healing + service discovery.</strong></p>
+          <p>It is useful for learning orchestration and for simple Docker-native clusters.</p>
+        </div>
+      </div>
+
+      <div class="diagram">
+        <p class="diagram-title">Animated Concept 1 — From one Docker host to a Swarm cluster</p>
+        <svg class="swarm-svg" viewBox="0 0 1000 440" role="img" aria-label="One Docker host becoming a Docker Swarm cluster">
+          <defs>
+            <marker id="arrA" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+            <linearGradient id="gradBlue" x1="0" x2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#0891b2"/></linearGradient>
+            <linearGradient id="gradGreen" x1="0" x2="1"><stop offset="0" stop-color="#16a34a"/><stop offset="1" stop-color="#65a30d"/></linearGradient>
+          </defs>
+          <rect x="20" y="24" width="960" height="376" rx="28" fill="#f8fafc" stroke="#dbe3ef"/>
+          <text x="250" y="72" text-anchor="middle" class="svg-label">Normal Docker</text>
+          <text x="735" y="72" text-anchor="middle" class="svg-label">Docker Swarm</text>
+
+          <rect x="110" y="120" width="280" height="210" rx="22" fill="#ffffff" stroke="#bfdbfe" class="glow"/>
+          <text x="250" y="154" text-anchor="middle" class="svg-label">Single Docker Host</text>
+          <rect x="150" y="190" width="80" height="54" rx="12" fill="#dbeafe" stroke="#93c5fd"/>
+          <text x="190" y="223" text-anchor="middle" class="svg-mini">container</text>
+          <rect x="270" y="190" width="80" height="54" rx="12" fill="#dbeafe" stroke="#93c5fd"/>
+          <text x="310" y="223" text-anchor="middle" class="svg-mini">container</text>
+          <rect x="210" y="260" width="80" height="42" rx="12" fill="#eef2ff" stroke="#c4b5fd"/>
+          <text x="250" y="286" text-anchor="middle" class="svg-mini">manual</text>
+
+          <path id="oneToMany" d="M410 220 C465 180, 510 180, 565 220" fill="none" stroke="#2563eb" stroke-width="4" marker-end="url(#arrA)" class="dash"/>
+          <circle r="8" fill="#f97316"><animateMotion dur="2.8s" repeatCount="indefinite"><mpath href="#oneToMany"/></animateMotion></circle>
+          <text x="488" y="170" text-anchor="middle" class="svg-small">orchestration</text>
+
+          <rect x="595" y="105" width="115" height="78" rx="16" fill="#2563eb" class="glow"/>
+          <text x="652" y="136" text-anchor="middle" font-size="14" font-weight="800" fill="white">Manager</text>
+          <text x="652" y="158" text-anchor="middle" font-size="12" fill="#dff6ff">schedules</text>
+          <rect x="760" y="105" width="115" height="78" rx="16" fill="#dbeafe" stroke="#93c5fd"/>
+          <text x="817" y="136" text-anchor="middle" class="svg-mini">Manager</text>
+          <text x="817" y="158" text-anchor="middle" class="svg-small">backup</text>
+          <rect x="595" y="250" width="115" height="72" rx="16" fill="#16a34a" class="glow"/>
+          <text x="652" y="280" text-anchor="middle" font-size="14" font-weight="800" fill="white">Worker</text>
+          <text x="652" y="302" text-anchor="middle" font-size="12" fill="#dcfce7">runs tasks</text>
+          <rect x="760" y="250" width="115" height="72" rx="16" fill="#16a34a" class="glow"/>
+          <text x="817" y="280" text-anchor="middle" font-size="14" font-weight="800" fill="white">Worker</text>
+          <text x="817" y="302" text-anchor="middle" font-size="12" fill="#dcfce7">runs tasks</text>
+
+          <path id="schedule1" d="M652 184 L652 250" stroke="#2563eb" stroke-width="3" marker-end="url(#arrA)" fill="none" class="dash"/>
+          <path id="schedule2" d="M710 146 C740 170, 760 205, 817 250" stroke="#2563eb" stroke-width="3" marker-end="url(#arrA)" fill="none" class="dash"/>
+          <circle r="6" fill="#f97316"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#schedule1"/></animateMotion></circle>
+          <circle r="6" fill="#f97316"><animateMotion dur="2.6s" repeatCount="indefinite" begin=".5s"><mpath href="#schedule2"/></animateMotion></circle>
+        </svg>
+        <div class="caption">Only the small orange dots move; boxes stay fixed, so the diagram remains clean on different screen sizes.</div>
+      </div>
+
+      <div class="note"><strong>Important:</strong> Swarm mode is built into Docker Engine. In this document, “Docker Swarm” means modern Docker Engine Swarm mode.</div>
+
+      <h3>Normal Docker vs Docker Swarm</h3>
+      <table>
+        <thead><tr><th>Topic</th><th>Normal Docker</th><th>Docker Swarm</th></tr></thead>
+        <tbody>
+          <tr><td>Target</td><td>Usually one Docker host</td><td>One or many Docker hosts in a cluster</td></tr>
+          <tr><td>Main command</td><td><code>docker run</code></td><td><code>docker service create</code></td></tr>
+          <tr><td>Scaling</td><td>Manual container creation</td><td><code>docker service scale web=5</code></td></tr>
+          <tr><td>Failure handling</td><td>Mostly manual or container restart policy</td><td>Manager maintains desired number of tasks</td></tr>
+          <tr><td>Networking</td><td>Usually local bridge network</td><td>Overlay network across Docker hosts</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="why">
+      <h2>2. Why do we need Docker Swarm?</h2>
+      <div class="grid four">
+        <div class="card"><span class="icon">📦</span><h3>Deploy services</h3><p>Run an application as a <strong>service</strong>, not as many manually managed containers.</p></div>
+        <div class="card"><span class="icon">📈</span><h3>Scale easily</h3><p>Increase or decrease replicas with one command.</p></div>
+        <div class="card"><span class="icon">🩹</span><h3>Self-healing</h3><p>If a task fails, Swarm schedules a replacement task.</p></div>
+        <div class="card"><span class="icon">🌐</span><h3>Multi-host network</h3><p>Services on different hosts can communicate using overlay networking.</p></div>
+      </div>
+      <div class="warn"><strong>Reality check:</strong> Docker Swarm is simpler than Kubernetes. Kubernetes is more common in large enterprise platforms, but Swarm is easier for beginners to understand orchestration concepts.</div>
+    </section>
+
+    <section id="architecture">
+      <h2>3. Docker Swarm Architecture</h2>
+      <p>A Swarm cluster contains <strong>nodes</strong>. A node is a machine, VM, or cloud server running Docker Engine and participating in the swarm.</p>
+
+      <div class="diagram">
+        <p class="diagram-title">Animated Concept 2 — Manager and worker nodes</p>
+        <svg class="swarm-svg" viewBox="0 0 1000 500" role="img" aria-label="Docker Swarm architecture with managers and workers">
+          <defs>
+            <marker id="arrB" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+            <linearGradient id="mgrGrad" x1="0" x2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#0891b2"/></linearGradient>
+            <linearGradient id="wrkGrad" x1="0" x2="1"><stop offset="0" stop-color="#16a34a"/><stop offset="1" stop-color="#65a30d"/></linearGradient>
+          </defs>
+          <rect x="24" y="24" width="952" height="420" rx="28" fill="#f8fafc" stroke="#dbe3ef"/>
+          <text x="500" y="62" text-anchor="middle" font-size="24" font-weight="900" fill="#172033">Docker Swarm Cluster</text>
+
+          <rect x="100" y="105" width="205" height="104" rx="18" fill="#2563eb" class="glow"/>
+          <text x="202" y="137" text-anchor="middle" font-size="17" font-weight="900" fill="white">Manager 1</text>
+          <text x="202" y="162" text-anchor="middle" font-size="13" fill="#e0f2fe">Leader</text>
+          <text x="202" y="184" text-anchor="middle" font-size="13" fill="#e0f2fe">Stores cluster state</text>
+
+          <rect x="397" y="105" width="205" height="104" rx="18" fill="#dbeafe" stroke="#93c5fd" class="glow"/>
+          <text x="500" y="137" text-anchor="middle" class="svg-label" fill="#1e3a8a">Manager 2</text>
+          <text x="500" y="162" text-anchor="middle" class="svg-small" fill="#1d4ed8">Raft member</text>
+          <text x="500" y="184" text-anchor="middle" class="svg-small" fill="#1d4ed8">Can become leader</text>
+
+          <rect x="695" y="105" width="205" height="104" rx="18" fill="#dbeafe" stroke="#93c5fd" class="glow"/>
+          <text x="797" y="137" text-anchor="middle" class="svg-label" fill="#1e3a8a">Manager 3</text>
+          <text x="797" y="162" text-anchor="middle" class="svg-small" fill="#1d4ed8">Raft member</text>
+          <text x="797" y="184" text-anchor="middle" class="svg-small" fill="#1d4ed8">High availability</text>
+
+          <path id="raft1" d="M305 157 L397 157" stroke="#2563eb" stroke-width="3" fill="none" class="dash"/>
+          <path id="raft2" d="M602 157 L695 157" stroke="#2563eb" stroke-width="3" fill="none" class="dash"/>
+          <circle r="6" fill="#f97316"><animateMotion dur="2.0s" repeatCount="indefinite"><mpath href="#raft1"/></animateMotion></circle>
+          <circle r="6" fill="#f97316"><animateMotion dur="2.0s" repeatCount="indefinite" begin=".35s"><mpath href="#raft2"/></animateMotion></circle>
+          <text x="500" y="244" text-anchor="middle" class="svg-small">Managers agree on cluster state and schedule work.</text>
+
+          <rect x="95" y="310" width="210" height="90" rx="18" fill="#16a34a" class="glow"/>
+          <text x="200" y="344" text-anchor="middle" font-size="17" font-weight="900" fill="white">Worker 1</text>
+          <text x="200" y="370" text-anchor="middle" font-size="13" fill="#dcfce7">Runs task containers</text>
+
+          <rect x="395" y="310" width="210" height="90" rx="18" fill="#16a34a" class="glow"/>
+          <text x="500" y="344" text-anchor="middle" font-size="17" font-weight="900" fill="white">Worker 2</text>
+          <text x="500" y="370" text-anchor="middle" font-size="13" fill="#dcfce7">Runs task containers</text>
+
+          <rect x="695" y="310" width="210" height="90" rx="18" fill="#16a34a" class="glow"/>
+          <text x="800" y="344" text-anchor="middle" font-size="17" font-weight="900" fill="white">Worker 3</text>
+          <text x="800" y="370" text-anchor="middle" font-size="13" fill="#dcfce7">Runs task containers</text>
+
+          <path id="schedA" d="M202 209 C190 250, 190 275, 200 310" stroke="#2563eb" stroke-width="3" marker-end="url(#arrB)" fill="none" class="dash"/>
+          <path id="schedB" d="M500 209 L500 310" stroke="#2563eb" stroke-width="3" marker-end="url(#arrB)" fill="none" class="dash"/>
+          <path id="schedC" d="M797 209 C810 250, 810 275, 800 310" stroke="#2563eb" stroke-width="3" marker-end="url(#arrB)" fill="none" class="dash"/>
+          <circle r="6" fill="#f97316"><animateMotion dur="2.3s" repeatCount="indefinite"><mpath href="#schedA"/></animateMotion></circle>
+          <circle r="6" fill="#f97316"><animateMotion dur="2.4s" repeatCount="indefinite" begin=".25s"><mpath href="#schedB"/></animateMotion></circle>
+          <circle r="6" fill="#f97316"><animateMotion dur="2.5s" repeatCount="indefinite" begin=".5s"><mpath href="#schedC"/></animateMotion></circle>
+        </svg>
+        <div class="caption">Managers are the control plane. Workers execute assigned tasks. The moving dots show scheduling and cluster-state communication.</div>
+      </div>
+
+      <div class="grid two">
+        <div class="card"><h3>Manager node</h3><p>The manager is the brain of Swarm. It accepts service definitions, stores cluster state, schedules tasks, and checks whether the real state matches the desired state.</p></div>
+        <div class="card"><h3>Worker node</h3><p>The worker runs containers assigned by the manager. It reports task status back to the manager.</p></div>
+        <div class="card"><h3>Service</h3><p>A service is the desired application definition. It includes the image, replicas, ports, networks, constraints, and update policy.</p></div>
+        <div class="card"><h3>Task</h3><p>A task is one scheduled unit of work. In normal use, one task runs one container.</p></div>
+      </div>
+
+      <h3>Architecture components in easy words</h3>
+      <table>
+        <thead><tr><th>Component</th><th>Easy explanation</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Swarm</td><td>Cluster of Docker Engines</td><td>manager1 + worker1 + worker2</td></tr>
+          <tr><td>Node</td><td>One server or VM inside the swarm</td><td>Ubuntu VM running Docker</td></tr>
+          <tr><td>Manager</td><td>Controls the cluster and schedules tasks</td><td><code>docker node ls</code> runs on manager</td></tr>
+          <tr><td>Worker</td><td>Runs assigned application containers</td><td>nginx task runs on worker</td></tr>
+          <tr><td>Service</td><td>Desired app definition</td><td><code>nginx:alpine</code> with 3 replicas</td></tr>
+          <tr><td>Task</td><td>Actual running unit created from service</td><td>One nginx container</td></tr>
+          <tr><td>Overlay network</td><td>Network across multiple Docker hosts</td><td><code>docker network create -d overlay app-net</code></td></tr>
+          <tr><td>Routing mesh</td><td>Published service port can be reached through swarm nodes</td><td>Access port 8080 on manager or worker</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="flow">
+      <h2>4. How a Service Runs in Swarm</h2>
+      <p>Swarm uses a <strong>desired state</strong> model. You describe the final state you want. The manager checks the real cluster and takes action if reality does not match your desired state.</p>
+
+      <div class="diagram">
+        <p class="diagram-title">Animated Concept 3 — Desired state and task scheduling</p>
+        <svg class="swarm-svg" viewBox="0 0 1000 430" role="img" aria-label="Desired state flow in Docker Swarm">
+          <defs>
+            <marker id="arrC" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7c3aed"/></marker>
+          </defs>
+          <rect x="24" y="24" width="952" height="350" rx="28" fill="#fbf8ff" stroke="#ddd6fe"/>
+          <text x="500" y="62" text-anchor="middle" font-size="24" font-weight="900" fill="#35205f">Desired State Flow</text>
+
+          <rect x="70" y="125" width="190" height="98" rx="18" fill="#fff" stroke="#c4b5fd" class="glow"/>
+          <text x="165" y="158" text-anchor="middle" class="svg-label">User</text>
+          <text x="165" y="184" text-anchor="middle" class="svg-small">web service</text>
+          <text x="165" y="205" text-anchor="middle" class="svg-small">3 replicas</text>
+
+          <path id="cmdFlow" d="M260 174 C315 140, 360 140, 415 174" fill="none" stroke="#7c3aed" stroke-width="4" marker-end="url(#arrC)" class="dash"/>
+          <circle r="7" fill="#f97316"><animateMotion dur="2.5s" repeatCount="indefinite"><mpath href="#cmdFlow"/></animateMotion></circle>
+
+          <rect x="415" y="105" width="190" height="138" rx="20" fill="#7c3aed" class="glow"/>
+          <text x="510" y="140" text-anchor="middle" font-size="18" font-weight="900" fill="white">Swarm Manager</text>
+          <text x="510" y="168" text-anchor="middle" font-size="13" fill="#ede9fe">stores desired state</text>
+          <text x="510" y="192" text-anchor="middle" font-size="13" fill="#ede9fe">schedules tasks</text>
+          <text x="510" y="216" text-anchor="middle" font-size="13" fill="#ede9fe">replaces failed tasks</text>
+
+          <rect x="735" y="90" width="160" height="70" rx="16" fill="#dcfce7" stroke="#86efac"/>
+          <text x="815" y="120" text-anchor="middle" class="svg-mini">Worker 1</text>
+          <text x="815" y="143" text-anchor="middle" class="svg-small">web.1</text>
+          <rect x="735" y="185" width="160" height="70" rx="16" fill="#dbeafe" stroke="#93c5fd"/>
+          <text x="815" y="215" text-anchor="middle" class="svg-mini">Worker 2</text>
+          <text x="815" y="238" text-anchor="middle" class="svg-small">web.2</text>
+          <rect x="735" y="280" width="160" height="70" rx="16" fill="#ede9fe" stroke="#c4b5fd"/>
+          <text x="815" y="310" text-anchor="middle" class="svg-mini">Worker 3</text>
+          <text x="815" y="333" text-anchor="middle" class="svg-small">web.3</text>
+
+          <path id="taskOne" d="M605 150 C655 118, 690 112, 735 125" fill="none" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrC)" class="dash"/>
+          <path id="taskTwo" d="M605 174 C658 190, 690 205, 735 220" fill="none" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrC)" class="dash"/>
+          <path id="taskThree" d="M605 198 C655 245, 690 300, 735 315" fill="none" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrC)" class="dash"/>
+          <circle r="6" fill="#f97316"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#taskOne"/></animateMotion></circle>
+          <circle r="6" fill="#22c55e"><animateMotion dur="2.4s" repeatCount="indefinite" begin=".35s"><mpath href="#taskTwo"/></animateMotion></circle>
+          <circle r="6" fill="#2563eb"><animateMotion dur="2.6s" repeatCount="indefinite" begin=".7s"><mpath href="#taskThree"/></animateMotion></circle>
+
+          <rect x="305" y="295" width="390" height="48" rx="14" fill="#fff" stroke="#ddd6fe"/>
+          <text x="500" y="325" text-anchor="middle" class="svg-small">If one task fails, Swarm creates another task to restore 3 replicas.</text>
+        </svg>
+        <div class="caption">The service definition stays with the manager; small dots show tasks being assigned to workers.</div>
+      </div>
+
+      <div class="steps">
+        <div class="step"><strong>You create a service.</strong> Example: <code>docker service create --replicas 3 nginx:alpine</code>.</div>
+        <div class="step"><strong>Manager stores desired state.</strong> Desired state says: “3 nginx tasks should run.”</div>
+        <div class="step"><strong>Manager schedules tasks.</strong> It chooses available nodes.</div>
+        <div class="step"><strong>Workers run containers.</strong> Each task becomes a running container.</div>
+        <div class="step"><strong>Manager keeps checking.</strong> If a task stops, the manager creates another task to restore the desired state.</div>
+      </div>
+    </section>
+
+    <section id="networking">
+      <h2>5. Swarm Networking and Load Balancing</h2>
+      <p>Swarm networking helps services communicate across nodes. The two beginner concepts are <strong>overlay network</strong> and <strong>ingress/routing mesh</strong>.</p>
+
+      <div class="diagram">
+        <p class="diagram-title">Animated Concept 4 — Published port, routing mesh, and overlay network</p>
+        <svg class="swarm-svg" viewBox="0 0 1000 450" role="img" aria-label="Docker Swarm routing mesh and overlay network">
+          <defs>
+            <marker id="arrD" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891b2"/></marker>
+          </defs>
+          <rect x="24" y="24" width="952" height="370" rx="28" fill="#f0fdff" stroke="#bae6fd"/>
+          <text x="500" y="62" text-anchor="middle" font-size="24" font-weight="900" fill="#164e63">Overlay Network + Routing Mesh</text>
+
+          <rect x="70" y="115" width="165" height="78" rx="18" fill="#fff" stroke="#67e8f9" class="glow"/>
+          <text x="152" y="146" text-anchor="middle" class="svg-label">Client</text>
+          <text x="152" y="170" text-anchor="middle" class="svg-small">curl :8080</text>
+
+          <rect x="380" y="105" width="210" height="98" rx="20" fill="#0891b2" class="glow"/>
+          <text x="485" y="140" text-anchor="middle" font-size="18" font-weight="900" fill="white">Ingress</text>
+          <text x="485" y="165" text-anchor="middle" font-size="13" fill="#cffafe">routing mesh</text>
+          <text x="485" y="186" text-anchor="middle" font-size="13" fill="#cffafe">published port 8080</text>
+
+          <path id="clientPath" d="M235 154 C285 120, 330 120, 380 154" fill="none" stroke="#0891b2" stroke-width="4" marker-end="url(#arrD)" class="dash"/>
+          <circle r="7" fill="#f97316"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#clientPath"/></animateMotion></circle>
+
+          <rect x="90" y="250" width="820" height="100" rx="24" fill="#ecfeff" stroke="#67e8f9" stroke-dasharray="12 8"/>
+          <text x="500" y="374" text-anchor="middle" class="svg-mini" fill="#155e75">Overlay network: service tasks can communicate across hosts</text>
+
+          <rect x="140" y="303" width="145" height="42" rx="13" fill="#dcfce7" stroke="#86efac"/>
+          <text x="212" y="329" text-anchor="middle" class="svg-mini">web task 1</text>
+          <rect x="427" y="303" width="145" height="42" rx="13" fill="#dbeafe" stroke="#93c5fd"/>
+          <text x="500" y="329" text-anchor="middle" class="svg-mini">web task 2</text>
+          <rect x="715" y="303" width="145" height="42" rx="13" fill="#ede9fe" stroke="#c4b5fd"/>
+          <text x="787" y="329" text-anchor="middle" class="svg-mini">web task 3</text>
+
+          <path id="toTask1" d="M485 203 C405 230, 310 265, 212 303" fill="none" stroke="#0891b2" stroke-width="3" marker-end="url(#arrD)" class="dash"/>
+          <path id="toTask2" d="M485 203 C490 238, 495 275, 500 303" fill="none" stroke="#0891b2" stroke-width="3" marker-end="url(#arrD)" class="dash"/>
+          <path id="toTask3" d="M485 203 C575 230, 680 265, 787 303" fill="none" stroke="#0891b2" stroke-width="3" marker-end="url(#arrD)" class="dash"/>
+          <circle r="6" fill="#f97316"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#toTask1"/></animateMotion></circle>
+          <circle r="6" fill="#22c55e"><animateMotion dur="2.8s" repeatCount="indefinite" begin=".35s"><mpath href="#toTask2"/></animateMotion></circle>
+          <circle r="6" fill="#2563eb"><animateMotion dur="3.0s" repeatCount="indefinite" begin=".7s"><mpath href="#toTask3"/></animateMotion></circle>
+        </svg>
+        <div class="caption">Request enters the published port, then Swarm can route traffic to one of the running service tasks.</div>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <h3>Overlay network</h3>
+          <p>An overlay network connects services running on different Docker hosts.</p>
+          <pre><button class="copy" onclick="copyCode(this)">Copy</button><code>docker network create --driver overlay app-net</code></pre>
+        </div>
+        <div class="card">
+          <h3>Ingress / routing mesh</h3>
+          <p>When a service port is published, Swarm can accept traffic on swarm nodes and route it to an available task.</p>
+          <pre><button class="copy" onclick="copyCode(this)">Copy</button><code>docker service create \
+  --name web \
+  --replicas 3 \
+  --publish published=8080,target=80 \
+  nginx:alpine</code></pre>
+        </div>
+      </div>
+
+      <h3>Important Swarm ports for multi-node environments</h3>
+      <table>
+        <thead><tr><th>Port</th><th>Protocol</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>2377</code></td><td>TCP</td><td>Swarm management/control plane communication</td></tr>
+          <tr><td><code>7946</code></td><td>TCP/UDP</td><td>Communication among nodes</td></tr>
+          <tr><td><code>4789</code></td><td>UDP</td><td>Overlay network traffic</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>6. Common Troubleshooting</h2>
+      <table>
+        <thead><tr><th>Problem</th><th>Likely cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td><code>docker swarm init</code> asks for advertise address</td><td>Host has multiple network interfaces</td><td>Run <code>docker swarm init --advertise-addr &lt;IP&gt;</code></td></tr>
+          <tr><td>Worker cannot join</td><td>Wrong IP, expired/wrong token, or port blocked</td><td>Run <code>docker swarm join-token worker</code> again and allow TCP <code>2377</code></td></tr>
+          <tr><td>Service stuck in pending</td><td>No suitable node, image pull problem, resource issue, or constraint issue</td><td>Run <code>docker service ps --no-trunc &lt;service&gt;</code></td></tr>
+          <tr><td>Cannot access published port</td><td>Firewall, wrong port, or service not running</td><td>Check <code>docker service ls</code>, <code>docker service ps</code>, and firewall rules</td></tr>
+          <tr><td>Cannot remove overlay network</td><td>Service is still attached</td><td>Remove services first, then remove the network</td></tr>
+          <tr><td><code>This node is already part of a swarm</code></td><td>Swarm already initialized or joined</td><td>Leave the swarm carefully with <code>docker swarm leave --force</code> only when you intentionally want to remove this node from the swarm</td></tr>
+        </tbody>
+      </table>
+      <div class="good"><strong>Trainer tip:</strong> Always ask trainees to run <code>docker service ps --no-trunc SERVICE_NAME</code>. It shows the real reason a task failed, such as image pull failure, port conflict, constraint mismatch, or container crash.</div>
+    </section>
+
+    <section id="quiz">
+      <h2>7. Quick Assessment</h2>
+      <div class="grid two">
+        <div class="card">
+          <h3>Concept questions</h3>
+          <ol>
+            <li>What is a Docker Swarm node?</li>
+            <li>What is the difference between manager and worker nodes?</li>
+            <li>What is a service?</li>
+            <li>What is a task?</li>
+            <li>Why does Swarm use desired state?</li>
+            <li>What is an overlay network?</li>
+            <li>What is the routing mesh?</li>
+            <li>Why are odd numbers of managers recommended?</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Architecture recap</h3>
+          <ol>
+            <li>Name the component that accepts user requests and schedules work.</li>
+            <li>Name the component that runs assigned containers.</li>
+            <li>Explain why desired state is better than manual container management.</li>
+            <li>Explain why overlay networking is needed in a multi-host cluster.</li>
+            <li>Explain how routing mesh helps published service ports.</li>
+            <li>Explain why manager high availability needs quorum.</li>
+          </ol>
+        </div>
+      </div>
+
+      <h3>Answer key</h3>
+      <details class="card">
+        <summary><strong>Show answers</strong></summary>
+        <ol>
+          <li>A node is a Docker Engine participating in the swarm.</li>
+          <li>Managers control and schedule; workers run assigned tasks.</li>
+          <li>A service is the desired definition of an application workload.</li>
+          <li>A task is the smallest scheduled unit, usually one container.</li>
+          <li>Desired state lets Swarm continuously reconcile actual state with what the user requested.</li>
+          <li>An overlay network lets services communicate across Docker hosts.</li>
+          <li>Routing mesh routes traffic from a published port to available service tasks.</li>
+          <li>Odd manager counts reduce split-vote risk and improve quorum behavior.</li>
+        </ol>
+      </details>
+    </section>
+
+    <section id="reference">
+      <h2>Reference Notes</h2>
+      <ul>
+        <li>Swarm mode is part of Docker Engine.</li>
+        <li>For manager high availability, prefer an odd number of manager nodes.</li>
+        <li>For multi-node Swarm networking, open TCP <code>2377</code>, TCP/UDP <code>7946</code>, and UDP <code>4789</code> between participating hosts.</li>
+      </ul>
+      <h3>Official Docker links for trainer verification</h3>
+      <ul>
+        <li><a href="https://docs.docker.com/engine/swarm/">Docker Swarm mode overview</a></li>
+        <li><a href="https://docs.docker.com/engine/swarm/key-concepts/">Docker Swarm mode key concepts</a></li>
+        <li><a href="https://docs.docker.com/engine/swarm/how-swarm-mode-works/nodes/">How Swarm nodes work</a></li>
+        <li><a href="https://docs.docker.com/engine/swarm/services/">Deploy services to a swarm</a></li>
+        <li><a href="https://docs.docker.com/engine/swarm/networking/">Manage Swarm service networks</a></li>
+        <li><a href="https://docs.docker.com/engine/network/drivers/overlay/">Overlay network driver</a></li>
+      </ul>
+    </section>
+
+    <div class="footer">Docker Swarm trainee reference • Clean responsive inline SVG animations • White-background classroom reference document</div>
+  </div>
+
+  <script>
+    function copyCode(btn){
+      const pre = btn.parentElement;
+      const code = pre.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const old = btn.innerText;
+        btn.innerText = 'Copied';
+        setTimeout(() => btn.innerText = old, 1100);
+      }).catch(() => {
+        btn.innerText = 'Select text';
+      });
+    }
+  </script>
+</body>
+</html>

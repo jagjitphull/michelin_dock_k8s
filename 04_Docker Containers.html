@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Docker Containers - Trainee Reference Guide</title>
+<style>
+  :root{
+    --bg:#ffffff; --text:#17202a; --muted:#52616b; --primary:#0b63ce; --secondary:#0f9d58;
+    --danger:#c62828; --warn:#b26a00; --soft:#eef6ff; --code:#101820; --codeText:#eaf2ff;
+    --border:#d7e3f3; --card:#f9fbfe; --purple:#6a4bc3;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;line-height:1.62;}
+  header{background:linear-gradient(120deg,#eaf4ff,#ffffff 55%,#edf9f2);padding:38px 28px;border-bottom:1px solid var(--border);}
+  header h1{margin:0 0 8px;font-size:34px;color:#08345f;}
+  header p{max-width:980px;margin:0;color:var(--muted);font-size:17px;}
+  nav{position:sticky;top:0;background:#ffffffee;backdrop-filter:blur(8px);border-bottom:1px solid var(--border);z-index:10;padding:10px 22px;}
+  nav a{display:inline-block;margin:5px 9px 5px 0;padding:7px 11px;border:1px solid var(--border);border-radius:999px;text-decoration:none;color:#064f9e;font-size:14px;background:#fff;}
+  main{max-width:1180px;margin:0 auto;padding:24px;}
+  section{margin:30px 0;padding:24px;border:1px solid var(--border);border-radius:18px;background:#fff;box-shadow:0 3px 18px rgba(0,0,0,.035);} 
+  h2{margin-top:0;color:#08345f;border-bottom:2px solid #e6f0fb;padding-bottom:8px;}
+  h3{color:#174a7c;margin-top:24px;}
+  h4{color:#24523c;margin-bottom:5px;}
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+  .note,.warn,.danger,.success{border-left:5px solid;padding:13px 15px;border-radius:10px;margin:14px 0;background:#fff;}
+  .note{border-color:var(--primary);background:#f1f7ff;}.warn{border-color:var(--warn);background:#fff8e8;}.danger{border-color:var(--danger);background:#fff1f1;}.success{border-color:var(--secondary);background:#f0fff5;}
+  code{background:#eef3f8;color:#0b315f;padding:2px 5px;border-radius:5px;font-family:Consolas,Menlo,monospace;font-size:.94em;}
+  pre{background:var(--code);color:var(--codeText);padding:16px;border-radius:14px;overflow:auto;border:1px solid #26384a;position:relative;}
+  pre small{color:#91b4d9;}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:15px;}
+  th,td{border:1px solid var(--border);padding:10px;vertical-align:top;} th{background:#eef6ff;color:#103a63;text-align:left;}
+  .toc-title{font-weight:700;color:#08345f;margin-right:10px;}
+  .pill{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;background:#e8f2ff;color:#064f9e;margin:2px;}
+  .kbd{border:1px solid #b7c7d8;border-bottom:2px solid #8ca2b7;padding:1px 6px;border-radius:5px;background:#fff;font-family:Consolas,monospace;}
+
+  /* Animated diagrams */
+  .diagram{background:linear-gradient(180deg,#ffffff,#f5faff);border:1px dashed #b8d4f2;border-radius:18px;padding:22px;margin:18px 0;overflow:hidden;}
+  .flow{display:flex;align-items:center;justify-content:space-around;gap:18px;flex-wrap:wrap;min-height:150px;}
+  .box{min-width:145px;text-align:center;border-radius:16px;padding:16px;background:white;border:2px solid #b8d4f2;box-shadow:0 8px 18px rgba(0,0,0,.06);font-weight:700;color:#103a63;position:relative;}
+  .box small{display:block;font-weight:500;color:var(--muted);margin-top:5px;}
+  .arrow{height:4px;width:90px;background:#0b63ce;border-radius:999px;position:relative;animation:pulseArrow 1.6s infinite ease-in-out;}
+  .arrow:after{content:"";position:absolute;right:-2px;top:-6px;border-left:14px solid #0b63ce;border-top:8px solid transparent;border-bottom:8px solid transparent;}
+  @keyframes pulseArrow{0%,100%{opacity:.35;transform:scaleX(.85);}50%{opacity:1;transform:scaleX(1.08);}}
+
+  .container-life{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:28px;align-items:center;}
+  .state{padding:17px;border-radius:16px;background:#fff;border:2px solid #c7def8;text-align:center;font-weight:700;box-shadow:0 6px 16px rgba(0,0,0,.05);} 
+  .state span{display:block;color:#617383;font-weight:500;font-size:13px;}
+  .state.run{animation:glow 1.8s infinite alternate;border-color:#0f9d58;}
+  @keyframes glow{from{box-shadow:0 0 0 rgba(15,157,88,.0);}to{box-shadow:0 0 18px rgba(15,157,88,.35);}}
+
+  .network-demo{position:relative;height:300px;background:#f7fbff;border-radius:16px;border:1px solid var(--border);overflow:hidden;}
+  .host{position:absolute;inset:18px;border:3px solid #557fa8;border-radius:20px;background:#ffffffcc;}
+  .bridge-line{position:absolute;left:90px;right:90px;bottom:64px;height:16px;background:#315f8a;border-radius:999px;}
+  .mini{position:absolute;width:105px;height:72px;border:2px solid #0b63ce;border-radius:14px;background:#eaf4ff;text-align:center;padding-top:12px;font-weight:700;color:#0b315f;}
+  .mini.c1{left:80px;top:58px}.mini.c2{right:80px;top:58px}.mini.web{left:50%;transform:translateX(-50%);top:20px;background:#eefaf2;border-color:#0f9d58;}
+  .packet{position:absolute;width:16px;height:16px;background:#0f9d58;border-radius:50%;left:140px;top:96px;animation:packetMove 2.4s infinite linear;box-shadow:0 0 12px rgba(15,157,88,.5);} 
+  @keyframes packetMove{0%{left:140px;top:96px;}40%{left:50%;top:206px;}80%{left:calc(100% - 160px);top:96px;}100%{left:140px;top:96px;}}
+
+  .volume-demo{position:relative;height:270px;background:#fbfdff;border:1px solid var(--border);border-radius:18px;overflow:hidden;}
+  .disk{position:absolute;left:60px;bottom:38px;width:190px;height:90px;border-radius:50%;background:#e8f2ff;border:3px solid #0b63ce;text-align:center;padding-top:29px;font-weight:700;color:#0b315f;}
+  .cont{position:absolute;right:70px;top:46px;width:230px;height:150px;border-radius:16px;border:3px solid #0f9d58;background:#effcf4;text-align:center;padding-top:45px;font-weight:700;color:#24523c;}
+  .mount-line{position:absolute;left:250px;right:300px;top:145px;height:5px;background:#6a4bc3;border-radius:999px;animation:pulseArrow 1.5s infinite;}
+  .mount-line:after{content:"";position:absolute;right:-2px;top:-6px;border-left:14px solid #6a4bc3;border-top:8px solid transparent;border-bottom:8px solid transparent;}
+
+  .lab{border-left:6px solid #0b63ce;background:#fbfdff;padding:18px;border-radius:12px;margin:18px 0;}
+  .checklist li{margin:6px 0;}
+  footer{padding:26px;text-align:center;color:var(--muted);border-top:1px solid var(--border);margin-top:30px;}
+  @media print{nav{position:static}.diagram{break-inside:avoid}section{box-shadow:none;break-inside:avoid}pre{white-space:pre-wrap}.arrow{animation:none}.packet{animation:none}.state.run{animation:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Docker Containers — Reference Guide with Labs</h1>
+  <p>For trainees learning how to create, run, manage, network, limit, and persist Docker containers using practical commands. The examples are intentionally simple and use common images such as <code>hello-world</code>, <code>nginx</code>, <code>alpine</code>, and <code>busybox</code>.</p>
+</header>
+<nav>
+  <span class="toc-title">Jump to:</span>
+  <a href="#prereq">Prerequisites</a><a href="#create">Create Containers</a><a href="#fgbg">Foreground / Background</a><a href="#lifecycle">Lifecycle</a><a href="#resources">CPU & Memory</a><a href="#networking">Networking</a><a href="#volumes">Volumes</a><a href="#persistence">Persistence</a><a href="#labs">Labs</a><a href="#troubleshoot">Troubleshooting</a>
+</nav>
+<main>
+<section id="prereq">
+  <h2>0. Prerequisites and Safety Checks</h2>
+  <div class="grid">
+    <div class="card"><h3>Required</h3><p>Docker Engine or Docker Desktop installed and running.</p><pre>docker version
+docker info</pre></div>
+    <div class="card"><h3>Linux permission check</h3><p>If you see permission denied for <code>/var/run/docker.sock</code>, use <code>sudo</code> or add the user to the Docker group.</p><pre>sudo usermod -aG docker $USER
+newgrp docker
+docker run hello-world</pre></div>
+    <div class="card"><h3>Images used</h3><pre>docker pull hello-world
+docker pull nginx:alpine
+docker pull alpine:latest
+docker pull busybox:latest</pre></div>
+  </div>
+  <div class="warn"><strong>Security note:</strong> membership in the <code>docker</code> group is effectively root-equivalent on a Linux host. Use it only on trusted training machines.</div>
+</section>
+
+<section id="create">
+  <h2>1. Creating Containers from Images</h2>
+  <p>A Docker image is a read-only template. A container is a running or stopped instance created from that image.</p>
+  <div class="diagram">
+    <div class="flow">
+      <div class="box">Image<small>nginx:alpine</small></div><div class="arrow"></div><div class="box">Container<small>web1</small></div><div class="arrow"></div><div class="box">Process<small>nginx running</small></div>
+    </div>
+  </div>
+  <h3>Basic creation and execution</h3>
+  <pre># Pull image locally
+docker pull nginx:alpine
+
+# Create and run a new container
+docker run --name web1 nginx:alpine
+
+# In another terminal, check it
+docker ps</pre>
+  <p>When you use <code>docker run</code>, Docker performs image lookup, container creation, and process startup in one command.</p>
+  <h3>Create without starting</h3>
+  <pre>docker create --name web-created nginx:alpine
+docker ps -a
+docker start web-created
+docker ps</pre>
+  <div class="note"><strong>When to use <code>docker create</code>:</strong> when you want to prepare container configuration first and start it later.</div>
+</section>
+
+<section id="fgbg">
+  <h2>2. Running Containers in Foreground and Background</h2>
+  <table>
+    <tr><th>Mode</th><th>Command style</th><th>Use case</th></tr>
+    <tr><td>Foreground</td><td><code>docker run IMAGE</code></td><td>Interactive learning, seeing logs directly.</td></tr>
+    <tr><td>Detached/background</td><td><code>docker run -d IMAGE</code></td><td>Services such as web servers and databases.</td></tr>
+    <tr><td>Interactive terminal</td><td><code>docker run -it IMAGE sh</code></td><td>Shell access for testing commands inside a container.</td></tr>
+  </table>
+  <h3>Foreground example</h3>
+  <pre>docker run --rm alpine:latest echo "Hello from container"</pre>
+  <h3>Interactive foreground shell</h3>
+  <pre>docker run --rm -it alpine:latest sh
+# Inside container:
+cat /etc/os-release
+exit</pre>
+  <h3>Background web container</h3>
+  <pre>docker run -d --name web-bg -p 8080:80 nginx:alpine
+
+docker ps
+curl http://localhost:8080
+
+docker logs web-bg
+docker stop web-bg
+docker rm web-bg</pre>
+  <div class="success"><strong>Validation:</strong> <code>curl http://localhost:8080</code> should return the default NGINX HTML page.</div>
+</section>
+
+<section id="lifecycle">
+  <h2>3. Container Lifecycle Management</h2>
+  <p>A container moves through lifecycle states such as created, running, paused, stopped, and removed.</p>
+  <div class="diagram">
+    <div class="container-life">
+      <div class="state">Created<span>docker create</span></div>
+      <div class="state run">Running<span>docker start / run</span></div>
+      <div class="state">Paused<span>docker pause</span></div>
+      <div class="state">Stopped<span>docker stop</span></div>
+      <div class="state">Removed<span>docker rm</span></div>
+    </div>
+  </div>
+  <h3>Lifecycle command set</h3>
+  <pre># Start a long-running container
+docker run -d --name life-demo nginx:alpine
+
+# List running containers
+docker ps
+
+# List all containers, including stopped
+docker ps -a
+
+# Inspect metadata
+docker inspect life-demo
+
+# See logs
+docker logs life-demo
+
+# Pause and unpause
+docker pause life-demo
+docker ps
+
+docker unpause life-demo
+
+# Stop and start
+docker stop life-demo
+docker start life-demo
+
+# Restart
+docker restart life-demo
+
+# Remove: must stop first unless using -f
+docker stop life-demo
+docker rm life-demo</pre>
+  <h3>Executing commands inside a running container</h3>
+  <pre>docker run -d --name exec-demo nginx:alpine
+
+docker exec exec-demo nginx -v
+docker exec -it exec-demo sh
+# Inside container:
+ps
+exit
+
+docker rm -f exec-demo</pre>
+  <h3>Restart policies</h3>
+  <pre>docker run -d --name restart-demo --restart unless-stopped nginx:alpine
+
+docker inspect -f '{{.HostConfig.RestartPolicy.Name}}' restart-demo
+
+docker rm -f restart-demo</pre>
+  <div class="note"><strong>Common restart policies:</strong> <code>no</code>, <code>on-failure</code>, <code>always</code>, and <code>unless-stopped</code>.</div>
+</section>
+
+<section id="resources">
+  <h2>4. Container Resource Constraints: CPU and Memory</h2>
+  <p>By default, containers can use host CPU and memory as allowed by the host kernel scheduler. Resource limits prevent one container from consuming too much.</p>
+  <h3>Memory limit</h3>
+  <pre>docker run -d --name mem-demo --memory 128m nginx:alpine
+
+docker inspect -f '{{.HostConfig.Memory}}' mem-demo
+
+docker stats mem-demo
+
+docker rm -f mem-demo</pre>
+  <h3>CPU limit</h3>
+  <pre># Limit container to approximately half a CPU
+docker run -d --name cpu-demo --cpus="0.5" nginx:alpine
+
+docker inspect -f '{{.HostConfig.NanoCpus}}' cpu-demo
+
+docker stats cpu-demo
+
+docker rm -f cpu-demo</pre>
+  <h3>CPU share / relative priority</h3>
+  <pre>docker run -d --name cpu-share-demo --cpu-shares 512 nginx:alpine
+
+docker inspect -f '{{.HostConfig.CpuShares}}' cpu-share-demo
+
+docker rm -f cpu-share-demo</pre>
+  <div class="warn"><strong>Training caution:</strong> do not intentionally stress memory on shared or production machines. Out-of-memory tests can affect host stability.</div>
+</section>
+
+<section id="networking">
+  <h2>5. Container Networking</h2>
+  <p>Docker networks allow containers to communicate with each other, the host, and external systems.</p>
+  <div class="diagram network-demo">
+    <div class="host"></div>
+    <div class="mini c1">app1<br><small>container</small></div>
+    <div class="mini c2">app2<br><small>container</small></div>
+    <div class="mini web">Docker Host</div>
+    <div class="bridge-line"></div>
+    <div class="packet"></div>
+  </div>
+  <h3>5.1 Bridge Network</h3>
+  <p>The bridge driver is used for containers on the same Docker host. User-defined bridge networks provide built-in DNS resolution by container name.</p>
+  <pre># Create a user-defined bridge network
+docker network create app-net
+
+# Run two containers on the same network
+docker run -d --name web-a --network app-net nginx:alpine
+docker run --rm --name test-client --network app-net alpine:latest sh -c "wget -qO- http://web-a"
+
+# Inspect network
+docker network inspect app-net
+
+# Cleanup
+docker rm -f web-a
+docker network rm app-net</pre>
+  <div class="success"><strong>Validation:</strong> the <code>wget</code> command should print the NGINX welcome page because <code>web-a</code> resolves by container name.</div>
+
+  <h3>5.2 Host Network</h3>
+  <p>Host networking removes Docker network isolation and lets the container use the host network namespace directly.</p>
+  <pre># Linux only: host network mode
+docker run --rm --network host nginx:alpine</pre>
+  <div class="warn"><strong>Important:</strong> host networking behaves differently on Docker Desktop compared with native Linux. For classroom labs, prefer Linux hosts or explain platform limitations.</div>
+
+  <h3>5.3 Overlay Network</h3>
+  <p>Overlay networks are used for communication across multiple Docker daemon hosts. In Docker Engine, a practical overlay lab normally uses Swarm mode.</p>
+  <pre># Single-machine Swarm demo. Do this only on a lab machine.
+docker swarm init
+
+# Create overlay network
+docker network create -d overlay app-overlay
+
+# Create a service attached to overlay network
+docker service create --name web-svc --network app-overlay -p 8080:80 nginx:alpine
+
+# Validate
+docker service ls
+curl http://localhost:8080
+
+# Cleanup
+docker service rm web-svc
+docker network rm app-overlay
+docker swarm leave --force</pre>
+  <div class="danger"><strong>Do not run <code>docker swarm init</code> casually on production Docker hosts.</strong> It changes the Docker host into a Swarm manager.</div>
+
+  <h3>Useful network commands</h3>
+  <pre>docker network ls
+docker network inspect bridge
+docker network create mynet
+docker network connect mynet CONTAINER_NAME
+docker network disconnect mynet CONTAINER_NAME
+docker network rm mynet</pre>
+</section>
+
+<section id="volumes">
+  <h2>6. Container Volumes</h2>
+  <p>Container writable layers are temporary. For important data, use volumes or bind mounts.</p>
+  <div class="diagram volume-demo">
+    <div class="disk">Host Storage<br><small>volume / folder</small></div>
+    <div class="mount-line"></div>
+    <div class="cont">Container<br><small>/data mounted</small></div>
+  </div>
+
+  <h3>6.1 Bind Mounts</h3>
+  <p>A bind mount maps a known host path into a container.</p>
+  <pre>mkdir -p ~/docker-bind-demo
+echo "Hello from host" > ~/docker-bind-demo/index.html
+
+docker run --rm -p 8081:80 \
+  --mount type=bind,source=$HOME/docker-bind-demo,target=/usr/share/nginx/html,readonly \
+  nginx:alpine
+
+# In another terminal:
+curl http://localhost:8081</pre>
+  <div class="success"><strong>Validation:</strong> browser or curl should show <code>Hello from host</code>.</div>
+
+  <h3>6.2 Named Volumes</h3>
+  <p>A named volume is managed by Docker and can be reused by different containers.</p>
+  <pre>docker volume create app-data
+
+# Write data into the volume
+docker run --rm -v app-data:/data alpine sh -c "echo persistent-data > /data/message.txt"
+
+# Read data from a new container
+docker run --rm -v app-data:/data alpine cat /data/message.txt
+
+# Inspect volume
+docker volume inspect app-data
+
+# Cleanup only after lab is complete
+docker volume rm app-data</pre>
+
+  <h3>6.3 Anonymous Volumes</h3>
+  <p>An anonymous volume is created without an explicit name. It is useful for temporary data but can become confusing if not cleaned up.</p>
+  <pre>docker run --name anon-demo -v /data alpine sh -c "echo temp-data > /data/file.txt"
+
+docker inspect anon-demo --format '{{json .Mounts}}'
+
+docker rm -f anon-demo
+
+# Remove unused anonymous volumes
+docker volume prune</pre>
+  <div class="warn"><strong>Best practice:</strong> use named volumes for persistent data. Use bind mounts for development when the exact host path matters.</div>
+</section>
+
+<section id="persistence">
+  <h2>7. Managing Container Data Persistence</h2>
+  <p>Data written inside a container disappears when the container is removed unless it is stored in a volume or bind mount.</p>
+  <h3>Proof: data lost without volume</h3>
+  <pre>docker run --name no-persist alpine sh -c "echo lost-data > /tmp/data.txt && cat /tmp/data.txt"
+docker rm no-persist
+
+# New container will not have the previous /tmp/data.txt
+docker run --rm alpine sh -c "ls /tmp/data.txt || echo 'file not found'"</pre>
+
+  <h3>Proof: data survives with named volume</h3>
+  <pre>docker volume create persist-vol
+
+docker run --rm -v persist-vol:/appdata alpine sh -c "echo saved-data > /appdata/data.txt"
+docker run --rm -v persist-vol:/appdata alpine cat /appdata/data.txt
+
+docker volume rm persist-vol</pre>
+  <h3>Backup and restore a named volume</h3>
+  <pre># Create sample data
+docker volume create backup-demo
+docker run --rm -v backup-demo:/data alpine sh -c "echo important > /data/file.txt"
+
+# Backup volume to tar file in current directory
+docker run --rm \
+  -v backup-demo:/data \
+  -v "$PWD":/backup \
+  alpine tar czf /backup/backup-demo.tar.gz -C /data .
+
+# Restore into new volume
+docker volume create restore-demo
+docker run --rm \
+  -v restore-demo:/data \
+  -v "$PWD":/backup \
+  alpine tar xzf /backup/backup-demo.tar.gz -C /data
+
+# Validate restore
+docker run --rm -v restore-demo:/data alpine cat /data/file.txt
+
+# Cleanup
+docker volume rm backup-demo restore-demo
+rm -f backup-demo.tar.gz</pre>
+</section>
+
+<section id="labs">
+  <h2>8. Hands-on Labs with Verification</h2>
+  <div class="lab">
+    <h3>Lab 1: Run a foreground container</h3>
+    <pre>docker run --rm alpine echo "Docker container lab started"</pre>
+    <p><strong>Expected:</strong> terminal prints <code>Docker container lab started</code>.</p>
+  </div>
+
+  <div class="lab">
+    <h3>Lab 2: Run NGINX in background and expose it</h3>
+    <pre>docker run -d --name lab-nginx -p 8080:80 nginx:alpine
+
+docker ps --filter name=lab-nginx
+curl http://localhost:8080
+
+docker logs lab-nginx
+
+docker rm -f lab-nginx</pre>
+    <p><strong>Expected:</strong> <code>curl</code> returns the NGINX welcome page.</p>
+  </div>
+
+  <div class="lab">
+    <h3>Lab 3: Lifecycle operations</h3>
+    <pre>docker run -d --name lab-life nginx:alpine
+
+docker stop lab-life
+docker ps -a --filter name=lab-life
+
+docker start lab-life
+docker restart lab-life
+
+docker exec lab-life nginx -v
+
+docker rm -f lab-life</pre>
+    <p><strong>Expected:</strong> <code>nginx -v</code> prints the NGINX version.</p>
+  </div>
+
+  <div class="lab">
+    <h3>Lab 4: Apply memory and CPU constraints</h3>
+    <pre>docker run -d --name lab-limit --memory 128m --cpus="0.5" nginx:alpine
+
+docker inspect -f 'Memory={{.HostConfig.Memory}} NanoCPUs={{.HostConfig.NanoCpus}}' lab-limit
+
+docker stats lab-limit --no-stream
+
+docker rm -f lab-limit</pre>
+    <p><strong>Expected:</strong> inspect output shows non-zero memory and NanoCPU values.</p>
+  </div>
+
+  <div class="lab">
+    <h3>Lab 5: Bridge network with container-name DNS</h3>
+    <pre>docker network create lab-net
+
+docker run -d --name lab-web --network lab-net nginx:alpine
+
+docker run --rm --network lab-net alpine sh -c "wget -qO- http://lab-web | head"
+
+docker rm -f lab-web
+docker network rm lab-net</pre>
+    <p><strong>Expected:</strong> output contains HTML from the NGINX page.</p>
+  </div>
+
+  <div class="lab">
+    <h3>Lab 6: Named volume persistence</h3>
+    <pre>docker volume create lab-data
+
+docker run --rm -v lab-data:/data alpine sh -c "date > /data/date.txt"
+docker run --rm -v lab-data:/data alpine cat /data/date.txt
+
+docker volume rm lab-data</pre>
+    <p><strong>Expected:</strong> second container reads data created by first container.</p>
+  </div>
+
+  <div class="lab">
+    <h3>Lab 7: Bind mount static website</h3>
+    <pre>mkdir -p ~/site-demo
+cat > ~/site-demo/index.html <<'HTML'
+<h1>Hello from Docker bind mount</h1>
+HTML
+
+docker run -d --name bind-web -p 8082:80 \
+  --mount type=bind,source=$HOME/site-demo,target=/usr/share/nginx/html,readonly \
+  nginx:alpine
+
+curl http://localhost:8082
+
+docker rm -f bind-web
+rm -rf ~/site-demo</pre>
+    <p><strong>Expected:</strong> page shows <code>Hello from Docker bind mount</code>.</p>
+  </div>
+</section>
+
+<section id="troubleshoot">
+  <h2>9. Troubleshooting Guide</h2>
+  <table>
+    <tr><th>Problem</th><th>Likely Cause</th><th>Fix</th></tr>
+    <tr><td><code>permission denied /var/run/docker.sock</code></td><td>User is not allowed to access Docker daemon.</td><td>Use <code>sudo</code> or add user to docker group, then re-login or run <code>newgrp docker</code>.</td></tr>
+    <tr><td>Container exits immediately</td><td>Main process completed.</td><td>Use long-running process such as NGINX or run interactive shell with <code>-it</code>.</td></tr>
+    <tr><td>Port already allocated</td><td>Host port is already in use.</td><td>Use another host port, for example <code>-p 8081:80</code>, or stop the process using the port.</td></tr>
+    <tr><td>Cannot resolve container by name</td><td>Containers are on default bridge or different networks.</td><td>Create user-defined bridge network and attach both containers.</td></tr>
+    <tr><td>Volume cannot be removed</td><td>Volume is still used by a container.</td><td>Remove dependent container first: <code>docker rm -f CONTAINER</code>.</td></tr>
+    <tr><td>Overlay network command fails</td><td>Swarm mode not enabled.</td><td>Use <code>docker swarm init</code> on a lab machine, then create overlay network.</td></tr>
+  </table>
+  <h3>Cleanup all lab leftovers</h3>
+  <pre># Carefully remove containers created in labs
+docker rm -f web1 web-created web-bg life-demo exec-demo restart-demo mem-demo cpu-demo cpu-share-demo lab-nginx lab-life lab-limit lab-web bind-web 2>/dev/null || true
+
+# Remove networks created in labs
+docker network rm app-net lab-net 2>/dev/null || true
+
+# Remove volumes created in labs
+docker volume rm app-data persist-vol backup-demo restore-demo lab-data 2>/dev/null || true
+
+# Optional: remove all unused objects. Use carefully.
+docker system prune</pre>
+</section>
+
+<section>
+  <h2>10. Quick Command Cheat Sheet</h2>
+  <pre>docker run IMAGE                         # create and run container foreground
+docker run -d IMAGE                      # detached/background
+docker run --name NAME IMAGE             # assign name
+docker run -p HOSTPORT:CONTAINERPORT IMAGE
+docker ps                               # running containers
+docker ps -a                             # all containers
+docker logs CONTAINER                    # logs
+docker exec -it CONTAINER sh             # shell inside container
+docker stop CONTAINER                    # graceful stop
+docker start CONTAINER                   # start stopped container
+docker restart CONTAINER                 # restart
+docker rm CONTAINER                      # remove stopped container
+docker rm -f CONTAINER                   # force remove running container
+docker inspect CONTAINER                 # detailed metadata
+docker stats                             # live resource usage
+docker network ls / inspect / create / rm
+docker volume ls / inspect / create / rm</pre>
+</section>
+
+<section>
+  <h2>11. Trainer Validation Checklist</h2>
+  <ul class="checklist">
+    <li>Run <code>docker version</code> and confirm client and server sections are visible.</li>
+    <li>Run <code>docker run hello-world</code> before starting the lab.</li>
+    <li>Verify ports <code>8080</code>, <code>8081</code>, and <code>8082</code> are free or change the examples.</li>
+    <li>For Linux trainees, fix Docker socket permission before class.</li>
+    <li>Do not run Swarm overlay lab on production or shared Docker hosts.</li>
+    <li>Use <code>docker system prune</code> only after confirming no important local containers/images are needed.</li>
+  </ul>
+</section>
+</main>
+<footer>
+  Docker Containers Reference Guide — prepared for classroom/lab use. Examples are designed for local Docker Engine or Docker Desktop training environments.
+</footer>
+</body>
+</html>

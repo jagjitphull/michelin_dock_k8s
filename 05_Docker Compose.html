@@ -1,0 +1,228 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Docker Compose Reference & Hands-on Labs</title><style>
+:root{--ink:#132238;--muted:#526072;--line:#d9e2ef;--blue:#2563eb;--green:#16a34a;--amber:#d97706;--code:#0b1220}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:linear-gradient(180deg,#fff,#f7fbff);color:var(--ink);font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;line-height:1.55}header{padding:52px 28px 34px;border-bottom:1px solid var(--line);background:radial-gradient(circle at 20% 5%,#dbeafe 0,#fff 38%)}.wrap{max-width:1180px;margin:auto}.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:28px;align-items:center}.topline{display:inline-flex;padding:7px 12px;border:1px solid #bfdbfe;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-weight:800;font-size:13px}h1{font-size:clamp(34px,5vw,58px);line-height:1.03;margin:18px 0 14px;letter-spacing:-1.3px}.lead{font-size:19px;color:#3c485b;max-width:870px}.pillrow{display:flex;gap:10px;flex-wrap:wrap}.pill{background:#eef6ff;border:1px solid #cfe4ff;color:#174ea6;border-radius:999px;padding:7px 12px;font-weight:800;font-size:13px}nav{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}nav .wrap{display:flex;gap:10px;overflow-x:auto;padding:12px 20px}nav a{white-space:nowrap;text-decoration:none;color:#334155;border:1px solid #e2e8f0;border-radius:999px;padding:8px 12px;font-size:14px;font-weight:800}main{padding:30px 20px 70px}.section{background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:24px;margin:24px auto;padding:28px;box-shadow:0 18px 45px rgba(15,23,42,.06)}h2{font-size:30px;margin:0 0 10px}h3{font-size:21px;margin:24px 0 8px}p{color:#44546a}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.card{border:1px solid #e2e8f0;background:linear-gradient(180deg,#fff,#f8fbff);border-radius:18px;padding:18px}.card h3{margin-top:0}.callout{border-left:5px solid var(--blue);background:#eff6ff;border-radius:14px;padding:14px 16px;margin:18px 0;color:#263b60}.warn{border-left-color:var(--amber);background:#fff7ed}.ok{border-left-color:var(--green);background:#f0fdf4}.lab{border:1px solid #c7d2fe;background:linear-gradient(180deg,#fff,#f7f9ff);border-radius:22px;padding:22px;margin:22px 0}.lab-title{display:flex;gap:12px;align-items:center}.lab-num{display:inline-grid;place-items:center;width:36px;height:36px;background:#2563eb;color:white;border-radius:12px;font-weight:900}.codebox{border:1px solid #1e293b;border-radius:16px;overflow:hidden;margin:14px 0;background:var(--code);box-shadow:0 14px 30px rgba(15,23,42,.16)}.codebar{display:flex;justify-content:space-between;align-items:center;background:#111827;color:#cbd5e1;padding:8px 12px;font-size:13px}.codebar button{border:0;border-radius:9px;background:#2563eb;color:#fff;padding:6px 10px;font-weight:800;cursor:pointer}pre{margin:0;padding:16px 18px;overflow:auto;color:#e5e7eb;font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:13.5px;line-height:1.5}.kbd{font-family:Consolas,monospace;background:#f1f5f9;border:1px solid #cbd5e1;border-bottom-width:2px;border-radius:7px;padding:2px 6px}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{text-align:left;border-bottom:1px solid #e2e8f0;padding:12px;vertical-align:top}th{background:#f1f5f9}.badge{display:inline-block;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:900}.pass{background:#dcfce7;color:#166534}.fail{background:#fee2e2;color:#991b1b}.checklist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.check{padding:12px;border:1px solid #dbeafe;background:#eff6ff;border-radius:14px;font-weight:800;color:#1e3a8a}.visual{border:1px solid #dbeafe;background:linear-gradient(180deg,#f8fbff,#fff);border-radius:24px;padding:12px;box-shadow:0 16px 35px rgba(37,99,235,.08);margin:14px 0}svg{width:100%;height:auto}.panel{fill:#fff;stroke:#bfdbfe;stroke-width:2}.node rect{fill:#eff6ff;stroke:#2563eb;stroke-width:2}.node text,.cycle text{font-weight:900;fill:#17325f}.titleSvg,.miniTitle{font-weight:900;fill:#1e3a8a;font-size:22px}.tiny{font-size:13px;fill:#64748b}.flow{fill:none;stroke:#2563eb;stroke-width:3;stroke-dasharray:10 10;animation:dash 1.2s linear infinite}.delay1{animation-delay:.25s}.delay2{animation-delay:.5s}.arrowHead{fill:#2563eb}.packet{fill:#16a34a}.p2{fill:#d97706}.p3{fill:#0891b2}.networkBox{fill:#f0f9ff;stroke:#7dd3fc;stroke-width:2;stroke-dasharray:7 7}.disk ellipse,.disk rect{fill:#dcfce7;stroke:#16a34a;stroke-width:2}.cycle circle{fill:#fff7ed;stroke:#d97706;stroke-width:3}.n2 circle{fill:#eff6ff;stroke:#2563eb}.n3 circle{fill:#f0fdf4;stroke:#16a34a}@keyframes dash{to{stroke-dashoffset:-20}}@media(max-width:900px){.hero,.grid,.grid.two,.checklist{grid-template-columns:1fr}.section{padding:20px}pre{font-size:12.5px}}
+</style></head><body>
+<header><div class="wrap hero"><div><div class="topline">Docker Compose • Trainee Reference • Validated YAML</div><h1>Docker Compose Reference & Easy Hands-on Labs</h1><p class="lead">A practical HTML reference for defining and running multi-container applications with Docker Compose. Labs use modern <b>Docker Compose v2</b> syntax: <span class="kbd">docker compose</span>.</p><div class="pillrow"><span class="pill">Services</span><span class="pill">Networks</span><span class="pill">Volumes</span><span class="pill">Environment Variables</span><span class="pill">CLI</span><span class="pill">Validated Examples</span></div></div><div class="visual"><svg viewBox="0 0 760 360" role="img" aria-label="Animated Docker Compose service flow"><defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowHead"/></marker></defs><rect x="20" y="24" width="720" height="312" rx="28" class="panel"/><text x="380" y="58" text-anchor="middle" class="titleSvg">docker compose up</text><g class="node"><rect x="292" y="95" width="176" height="74" rx="18"/><text x="380" y="126" text-anchor="middle">compose.yaml</text><text x="380" y="148" text-anchor="middle" class="tiny">desired state</text></g><g class="node"><rect x="70" y="228" width="142" height="62" rx="16"/><text x="141" y="263" text-anchor="middle">web</text></g><g class="node"><rect x="309" y="228" width="142" height="62" rx="16"/><text x="380" y="263" text-anchor="middle">redis</text></g><g class="node"><rect x="548" y="228" width="142" height="62" rx="16"/><text x="619" y="263" text-anchor="middle">volume</text></g><path d="M330 170 C270 195 225 210 168 226" class="flow" marker-end="url(#arrow)"/><path d="M380 170 C380 194 380 206 380 226" class="flow delay1" marker-end="url(#arrow)"/><path d="M430 170 C493 196 535 210 596 226" class="flow delay2" marker-end="url(#arrow)"/><circle r="7" class="packet"><animateMotion dur="3.2s" repeatCount="indefinite" path="M330 170 C270 195 225 210 168 226"/></circle><circle r="7" class="packet p2"><animateMotion dur="3.2s" begin=".5s" repeatCount="indefinite" path="M380 170 C380 194 380 206 380 226"/></circle><circle r="7" class="packet p3"><animateMotion dur="3.2s" begin="1s" repeatCount="indefinite" path="M430 170 C493 196 535 210 596 226"/></circle></svg></div></div></header>
+<nav><div class="wrap"><a href="#intro">Intro</a><a href="#yaml">YAML</a><a href="#services">Services / Networks / Volumes</a><a href="#cli">CLI</a><a href="#env">Environment</a><a href="#labs">Labs</a><a href="#validation">Validation</a><a href="#troubleshooting">Troubleshooting</a></div></nav>
+<main class="wrap">
+<section id="intro" class="section"><h2>1. Introduction to Docker Compose</h2><p><b>Docker Compose</b> lets you describe a complete application stack in a YAML file, then create, start, stop, inspect, and remove that stack with one command set.</p><div class="grid"><div class="card"><h3>Without Compose</h3><p>You manually run many <span class="kbd">docker run</span> commands, create networks, mount volumes, remember ports, and pass environment variables one by one.</p></div><div class="card"><h3>With Compose</h3><p>You write <span class="kbd">compose.yaml</span>. Compose creates the project containers, network, service DNS, and named volumes consistently.</p></div><div class="card"><h3>Best for training</h3><p>Web + database, API + cache, local development stacks, monitoring demos, and repeatable classroom labs.</p></div></div><div class="callout warn"><b>Command correction:</b> current Compose uses <span class="kbd">docker compose</span>. Older tutorials often show <span class="kbd">docker-compose</span>. The old binary may exist, but the labs use v2.</div></section>
+<section id="yaml" class="section"><h2>2. Writing Docker Compose YAML files</h2><p>The recommended filename is <span class="kbd">compose.yaml</span>. Compose Specification style does not require the old top-level <span class="kbd">version:</span> key.</p><div class="grid two"><div><h3>Basic file shape</h3><div class='codebox'><div class='codebar'><span>yaml</span><button onclick='copyCode(this)'>Copy</button></div><pre><code>name: my-training-app
+services:
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - &quot;8080:80&quot;
+  redis:
+    image: redis:7-alpine
+volumes:
+  redis-data:
+networks:
+  backend:</code></pre></div></div><div><h3>YAML rules trainees must remember</h3><ul><li>Indent with spaces, not tabs.</li><li>Quote port mappings like <span class="kbd">"8080:80"</span>.</li><li>Service names become DNS names on the Compose network.</li><li>Named volumes must be declared under top-level <span class="kbd">volumes:</span>.</li><li>Run <span class="kbd">docker compose config</span> before <span class="kbd">up</span>.</li></ul></div></div></section>
+<section id="services" class="section"><h2>3. Defining services, networks, and volumes</h2><div class="visual"><svg viewBox="0 0 720 210"><defs><marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowHead"/></marker></defs><rect x="26" y="35" width="668" height="138" rx="24" class="networkBox"/><text x="360" y="62" text-anchor="middle" class="miniTitle">Service discovery on the Compose network</text><g class="node"><rect x="70" y="95" width="130" height="54" rx="14"/><text x="135" y="127" text-anchor="middle">web</text></g><g class="node"><rect x="500" y="95" width="130" height="54" rx="14"/><text x="565" y="127" text-anchor="middle">redis</text></g><path d="M205 122 C310 82 425 82 495 122" class="flow" marker-end="url(#arrow2)"/><text x="360" y="105" text-anchor="middle" class="tiny">web connects to hostname: redis</text><circle r="6" class="packet"><animateMotion dur="2.8s" repeatCount="indefinite" path="M205 122 C310 82 425 82 495 122"/></circle></svg></div><div class="grid"><div class="card"><h3>Services</h3><p>A service is a container role such as <span class="kbd">web</span>, <span class="kbd">api</span>, <span class="kbd">db</span>, or <span class="kbd">redis</span>. It can use an existing image or build from a Dockerfile.</p></div><div class="card"><h3>Networks</h3><p>Compose creates a default network. Containers can talk to each other by service name, for example <span class="kbd">redis</span> or <span class="kbd">db</span>.</p></div><div class="card"><h3>Volumes</h3><p>Volumes store data outside the container lifecycle. Use them for databases and persistent application state.</p></div></div><div class="visual"><svg viewBox="0 0 720 220"><defs><marker id="arrow3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowHead"/></marker></defs><text x="360" y="36" text-anchor="middle" class="miniTitle">Named volume keeps data after container recreation</text><g class="node"><rect x="74" y="82" width="150" height="60" rx="14"/><text x="149" y="117" text-anchor="middle">db container</text></g><g class="disk"><ellipse cx="560" cy="100" rx="88" ry="28"/><rect x="472" y="100" width="176" height="55"/><ellipse cx="560" cy="155" rx="88" ry="28"/><text x="560" y="132" text-anchor="middle">pgdata</text></g><path d="M230 112 C330 112 388 112 468 112" class="flow" marker-end="url(#arrow3)"/><circle r="6" class="packet"><animateMotion dur="2.4s" repeatCount="indefinite" path="M230 112 C330 112 388 112 468 112"/></circle></svg></div></section>
+<section id="cli" class="section"><h2>4. Docker Compose CLI commands</h2><div class="visual"><svg viewBox="0 0 720 250"><defs><marker id="arrow4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowHead"/></marker></defs><text x="360" y="35" text-anchor="middle" class="miniTitle">Compose CLI lifecycle</text><g class="cycle"><circle cx="150" cy="125" r="50"/><text x="150" y="120" text-anchor="middle">config</text><text x="150" y="140" text-anchor="middle" class="tiny">validate</text></g><g class="cycle n2"><circle cx="360" cy="125" r="50"/><text x="360" y="120" text-anchor="middle">up</text><text x="360" y="140" text-anchor="middle" class="tiny">run</text></g><g class="cycle n3"><circle cx="570" cy="125" r="50"/><text x="570" y="120" text-anchor="middle">down</text><text x="570" y="140" text-anchor="middle" class="tiny">clean</text></g><path d="M202 125 L306 125" class="flow" marker-end="url(#arrow4)"/><path d="M412 125 L516 125" class="flow delay1" marker-end="url(#arrow4)"/><path d="M558 178 C460 238 260 238 162 178" class="flow delay2" marker-end="url(#arrow4)"/></svg></div><h3>Modern v2 command list</h3><div class='codebox'><div class='codebar'><span>bash</span><button onclick='copyCode(this)'>Copy</button></div><pre><code>docker compose version                 # Check Compose v2 plugin
+docker compose config                  # Render and validate compose.yaml
+docker compose up -d                   # Create/start services in background
+docker compose up -d --build           # Rebuild local images, then start
+docker compose ps                      # Show project containers
+docker compose logs -f                 # Follow all service logs
+docker compose logs web --tail=50      # Show last 50 logs from web service
+docker compose exec web sh             # Open shell inside running web container
+docker compose stop                    # Stop services, keep containers
+docker compose start                   # Start stopped services
+docker compose restart web             # Restart one service
+docker compose pull                    # Pull service images
+docker compose build                   # Build services that use build:
+docker compose down                    # Remove containers and networks
+docker compose down -v                 # Also remove named volumes</code></pre></div><h3>Old vs current command form</h3><div class='codebox'><div class='codebar'><span>bash</span><button onclick='copyCode(this)'>Copy</button></div><pre><code># Preferred current syntax
+docker compose up -d
+docker compose down
+docker compose ps
+
+# Legacy standalone syntax, seen in older material
+docker-compose up -d
+docker-compose down
+docker-compose ps</code></pre></div><table><thead><tr><th>Task</th><th>Command</th><th>Use</th></tr></thead><tbody><tr><td>Validate YAML/render variables</td><td><span class="kbd">docker compose config</span></td><td>Before every lab run.</td></tr><tr><td>Start app</td><td><span class="kbd">docker compose up -d</span></td><td>Creates containers, networks, and volumes if missing.</td></tr><tr><td>Inspect status</td><td><span class="kbd">docker compose ps</span></td><td>Check running containers and exposed ports.</td></tr><tr><td>Follow logs</td><td><span class="kbd">docker compose logs -f</span></td><td>Debug startup and app errors.</td></tr><tr><td>Enter container</td><td><span class="kbd">docker compose exec SERVICE sh</span></td><td>Run commands inside a running service.</td></tr><tr><td>Clean containers/networks</td><td><span class="kbd">docker compose down</span></td><td>Leaves named volumes intact.</td></tr><tr><td>Full cleanup</td><td><span class="kbd">docker compose down -v</span></td><td>Also removes named volumes.</td></tr></tbody></table></section>
+<section id="env" class="section"><h2>5. Environment variables in Docker Compose</h2><div class="grid two"><div class="card"><h3>Interpolation variables</h3><p>Variables like <span class="kbd">${APP_PORT}</span> are resolved by Compose while reading <span class="kbd">compose.yaml</span>. They can come from the shell or the project <span class="kbd">.env</span> file.</p></div><div class="card"><h3>Container environment</h3><p>The <span class="kbd">environment:</span> and <span class="kbd">env_file:</span> keys inject variables into the running container process.</p></div></div><div class="callout warn"><b>Do not confuse them:</b> a variable in <span class="kbd">.env</span> is not automatically inside the container unless you pass it with <span class="kbd">environment:</span> or <span class="kbd">env_file:</span>.</div></section>
+<section id="labs" class="section"><h2>6. Easy hands-on labs</h2><div class="callout ok"><b>Prerequisites:</b> Docker Engine installed, Docker runs without permission errors, internet access for pulling images, and Compose v2 available through <span class="kbd">docker compose version</span>.</div>
+<div class="lab"><h3 class="lab-title"><span class="lab-num">0</span> Lab 0 — Pre-check and workspace</h3><p>Use this before starting the labs.</p><div class='codebox'><div class='codebar'><span>bash</span><button onclick='copyCode(this)'>Copy</button></div><pre><code>docker version
+docker compose version
+mkdir -p ~/compose-labs
+cd ~/compose-labs</code></pre></div><p><b>Expected:</b> Docker and Compose versions print successfully.</p></div>
+<div class="lab"><h3 class="lab-title"><span class="lab-num">1</span> Lab 1 — Single NGINX service</h3><p><b>Goal:</b> understand the smallest useful Compose file: one service and one port mapping.</p><div class='codebox'><div class='codebar'><span>bash</span><button onclick='copyCode(this)'>Copy</button></div><pre><code>mkdir -p compose-labs/lab1-nginx
+cd compose-labs/lab1-nginx
+cat &gt; compose.yaml &lt;&lt;&#x27;YAML&#x27;
+name: compose-nginx-lab
+services:
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - &quot;8088:80&quot;
+YAML
+
+docker compose config
+docker compose up -d
+docker compose ps
+curl -I http://localhost:8088
+docker compose logs web --tail=20
+docker compose down</code></pre></div><p><b>Expected verification:</b> <span class="kbd">curl -I http://localhost:8088</span> returns HTTP headers with <span class="kbd">200 OK</span>. If port 8088 is busy, change the left side of <span class="kbd">"8088:80"</span>.</p></div>
+<div class="lab"><h3 class="lab-title"><span class="lab-num">2</span> Lab 2 — Multi-container Flask + Redis app</h3><p><b>Goal:</b> run a small web app and Redis cache. The app connects to Redis using hostname <span class="kbd">redis</span>.</p><div class='codebox'><div class='codebar'><span>bash</span><button onclick='copyCode(this)'>Copy</button></div><pre><code>mkdir -p compose-labs/lab2-counter
+cd compose-labs/lab2-counter
+
+cat &gt; Dockerfile &lt;&lt;&#x27;EOF&#x27;
+FROM python:3.12-alpine
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY app.py .
+EXPOSE 5000
+CMD [&quot;python&quot;, &quot;app.py&quot;]
+EOF
+
+cat &gt; requirements.txt &lt;&lt;&#x27;EOF&#x27;
+flask&gt;=3,&lt;4
+redis&gt;=5,&lt;7
+EOF
+
+cat &gt; app.py &lt;&lt;&#x27;APP_PY&#x27;
+import os
+from flask import Flask
+from redis import Redis, RedisError
+
+app = Flask(__name__)
+redis_host = os.getenv(&quot;REDIS_HOST&quot;, &quot;redis&quot;)
+redis_port = int(os.getenv(&quot;REDIS_PORT&quot;, &quot;6379&quot;))
+app_message = os.getenv(&quot;APP_MESSAGE&quot;, &quot;Docker Compose Flask + Redis demo&quot;)
+r = Redis(host=redis_host, port=redis_port, decode_responses=True)
+
+@app.get(&quot;/&quot;)
+def home():
+    try:
+        count = r.incr(&quot;hits&quot;)
+        return (
+            f&quot;{app_message}&lt;br&gt;&quot;
+            f&quot;Redis host: {redis_host}&lt;br&gt;&quot;
+            f&quot;Page views: {count}\n&quot;
+        )
+    except RedisError as exc:
+        return f&quot;Redis is not ready or unreachable: {exc}\n&quot;, 503
+
+if __name__ == &quot;__main__&quot;:
+    app.run(host=&quot;0.0.0.0&quot;, port=5000)
+APP_PY
+
+cat &gt; compose.yaml &lt;&lt;&#x27;YAML&#x27;
+name: compose-counter-lab
+services:
+  web:
+    build: .
+    ports:
+      - &quot;5000:5000&quot;
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: &quot;6379&quot;
+      APP_MESSAGE: &quot;Hello trainees - Compose connected Flask to Redis&quot;
+    depends_on:
+      redis:
+        condition: service_healthy
+  redis:
+    image: redis:7-alpine
+    command: [&quot;redis-server&quot;, &quot;--appendonly&quot;, &quot;yes&quot;]
+    healthcheck:
+      test: [&quot;CMD&quot;, &quot;redis-cli&quot;, &quot;ping&quot;]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis-data:/data
+volumes:
+  redis-data:
+YAML
+
+docker compose config
+docker compose up -d --build
+docker compose ps
+curl http://localhost:5000
+curl http://localhost:5000
+docker compose exec redis redis-cli GET hits
+docker compose down</code></pre></div><p><b>Expected verification:</b> refreshing <span class="kbd">http://localhost:5000</span> increases the page view count. <span class="kbd">docker compose exec redis redis-cli GET hits</span> returns the stored counter value.</p><p><b>Why this works:</b> Compose creates an internal DNS name for each service. The Flask container reaches Redis using hostname <span class="kbd">redis</span>, not <span class="kbd">localhost</span>. The Redis healthcheck avoids the common classroom issue where the web app starts before Redis is ready.</p></div>
+<div class="lab"><h3 class="lab-title"><span class="lab-num">3</span> Lab 3 — PostgreSQL + Adminer with networks and volume</h3><p><b>Goal:</b> demonstrate database persistence and frontend/backend networks.</p><div class='codebox'><div class='codebar'><span>bash</span><button onclick='copyCode(this)'>Copy</button></div><pre><code>mkdir -p compose-labs/lab3-db
+cd compose-labs/lab3-db
+cat &gt; compose.yaml &lt;&lt;&#x27;YAML&#x27;
+name: compose-db-lab
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: training
+      POSTGRES_PASSWORD: trainingpass
+      POSTGRES_DB: trainingdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+  adminer:
+    image: adminer:4
+    ports:
+      - &quot;8081:8080&quot;
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - db
+networks:
+  frontend:
+  backend:
+volumes:
+  pgdata:
+YAML
+
+docker compose config
+docker compose up -d
+docker compose ps
+docker compose exec db pg_isready -U training -d trainingdb
+docker compose exec db psql -U training -d trainingdb -c &quot;CREATE TABLE IF NOT EXISTS trainees (id serial PRIMARY KEY, name text);&quot;
+docker compose exec db psql -U training -d trainingdb -c &quot;INSERT INTO trainees (name) VALUES (&#x27;Asha&#x27;);&quot;
+docker compose exec db psql -U training -d trainingdb -c &quot;SELECT * FROM trainees;&quot;
+
+# Volume persistence test: this removes containers but keeps pgdata.
+docker compose down
+docker compose up -d
+docker compose exec db psql -U training -d trainingdb -c &quot;SELECT * FROM trainees;&quot;
+
+# Final cleanup including the named volume.
+docker compose down -v</code></pre></div><p><b>Browser verification:</b> open <span class="kbd">http://localhost:8081</span>. Use system <span class="kbd">PostgreSQL</span>, server <span class="kbd">db</span>, username <span class="kbd">training</span>, password <span class="kbd">trainingpass</span>, database <span class="kbd">trainingdb</span>.</p><p><b>Persistence:</b> plain <span class="kbd">docker compose down</span> keeps the named volume; <span class="kbd">docker compose down -v</span> removes it.</p></div>
+<div class="lab"><h3 class="lab-title"><span class="lab-num">4</span> Lab 4 — Environment variables with .env and env_file</h3><p><b>Goal:</b> see the difference between Compose interpolation and variables injected into a container.</p><div class='codebox'><div class='codebar'><span>bash</span><button onclick='copyCode(this)'>Copy</button></div><pre><code>mkdir -p compose-labs/lab4-env
+cd compose-labs/lab4-env
+
+cat &gt; .env &lt;&lt;&#x27;EOF&#x27;
+APP_MESSAGE=Hello from the project .env file
+APP_MODE=training
+EOF
+
+cat &gt; app.env &lt;&lt;&#x27;EOF&#x27;
+TRAINING_BATCH=batch-01
+EOF
+
+cat &gt; compose.yaml &lt;&lt;&#x27;YAML&#x27;
+name: compose-env-lab
+services:
+  app:
+    image: alpine:3.20
+    command: sh -c &#x27;echo &quot;APP_MESSAGE=$$APP_MESSAGE&quot;; echo &quot;APP_MODE=$$APP_MODE&quot;; echo &quot;TRAINING_BATCH=$$TRAINING_BATCH&quot;; sleep 3600&#x27;
+    environment:
+      APP_MESSAGE: &quot;${APP_MESSAGE}&quot;
+      APP_MODE: &quot;${APP_MODE:-dev}&quot;
+    env_file:
+      - app.env
+YAML
+
+docker compose config
+docker compose up -d
+docker compose logs app
+docker compose exec app printenv | grep -E &#x27;APP_MESSAGE|APP_MODE|TRAINING_BATCH&#x27;
+docker compose down</code></pre></div><p><b>Expected verification:</b> logs show <span class="kbd">APP_MESSAGE</span>, <span class="kbd">APP_MODE</span>, and <span class="kbd">TRAINING_BATCH</span>. The double dollar signs <span class="kbd">$$</span> prevent Compose from substituting variables too early.</p></div></section>
+<section id="validation" class="section"><h2>7. Validation and verification notes</h2><p>The Compose YAML examples were statically validated for YAML syntax, service references, network references, named volume references, and Compose Specification style.</p><table><thead><tr><th>Example</th><th>Status</th><th>Checks performed</th></tr></thead><tbody><tr><td>LAB1</td><td><span class='badge pass'>PASS</span></td><td>YAML parses; no obsolete version key; all services have image/build</td></tr><tr><td>LAB2</td><td><span class='badge pass'>PASS</span></td><td>YAML parses; no obsolete version key; all services have image/build; depends_on references valid; named volume references valid; Flask app.py syntax checked</td></tr><tr><td>LAB3</td><td><span class='badge pass'>PASS</span></td><td>YAML parses; no obsolete version key; all services have image/build; depends_on references valid; network references valid; named volume references valid</td></tr><tr><td>LAB4</td><td><span class='badge pass'>PASS</span></td><td>YAML parses; no obsolete version key; all services have image/build</td></tr></tbody></table><div class="callout warn"><b>Runtime note:</b> this file was generated in an environment without Docker installed, so container startup was not executed here. For classroom verification, run <span class="kbd">docker compose config</span> first, then run the exact verification commands in each lab.</div><h3>Instructor pre-flight checklist</h3><div class="checklist"><div class="check">Docker runs without sudo or socket permission errors.</div><div class="check">Ports 8088, 5000, and 8081 are free.</div><div class="check">Internet access allows pulling Docker Hub images.</div><div class="check">Each lab runs from its own directory.</div><div class="check">Use <span class="kbd">down -v</span> only when data deletion is intended.</div><div class="check">Do not commit real secrets in <span class="kbd">.env</span>.</div></div></section>
+<section id="troubleshooting" class="section"><h2>8. Troubleshooting quick reference</h2><table><thead><tr><th>Error / Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead><tbody><tr><td><span class="kbd">permission denied</span> on Docker socket</td><td>User cannot access Docker daemon.</td><td><span class="kbd">sudo usermod -aG docker $USER</span>, then log out and back in.</td></tr><tr><td><span class="kbd">docker compose: command not found</span></td><td>Compose v2 plugin missing.</td><td>Install Docker Compose plugin and verify with <span class="kbd">docker compose version</span>.</td></tr><tr><td>Port already allocated</td><td>Host port is already used.</td><td>Change the left side of the mapping, for example <span class="kbd">"8099:80"</span>.</td></tr><tr><td>App cannot reach Redis/DB</td><td>Wrong hostname or network.</td><td>Use the Compose service name, such as <span class="kbd">redis</span> or <span class="kbd">db</span>. Check logs and <span class="kbd">docker compose ps</span>.</td></tr><tr><td>Data disappears</td><td>Volume removed with <span class="kbd">down -v</span>.</td><td>Use plain <span class="kbd">docker compose down</span> when you need to keep data.</td></tr><tr><td>Environment variable is blank</td><td>Variable was used for interpolation but not injected into the container.</td><td>Use <span class="kbd">environment:</span> or <span class="kbd">env_file:</span>.</td></tr></tbody></table></section>
+<section class="section"><h2>9. Mini assessment</h2><ol><li>Why is <span class="kbd">docker compose</span> preferred over <span class="kbd">docker-compose</span>?</li><li>What is the difference between <span class="kbd">down</span> and <span class="kbd">down -v</span>?</li><li>Why does the Flask app use hostname <span class="kbd">redis</span>?</li><li>What command validates and renders the final Compose configuration?</li><li>Why should database data be stored in a named volume?</li><li>What is the difference between <span class="kbd">.env</span> and <span class="kbd">env_file</span>?</li></ol></section>
+<section class="section"><h2>10. Official references used</h2><ul><li><a href="https://docs.docker.com/compose/">Docker Compose documentation</a></li><li><a href="https://docs.docker.com/reference/cli/docker/compose/">Docker Compose CLI reference</a></li><li><a href="https://docs.docker.com/reference/compose-file/">Compose file reference</a></li><li><a href="https://docs.docker.com/reference/compose-file/services/">Compose services reference</a></li><li><a href="https://docs.docker.com/reference/compose-file/networks/">Compose networks reference</a></li><li><a href="https://docs.docker.com/reference/compose-file/volumes/">Compose volumes reference</a></li><li><a href="https://docs.docker.com/compose/how-tos/environment-variables/">Docker Compose environment variables guide</a></li></ul></section>
+<div style="text-align:center;color:#64748b;font-size:13px;margin:34px 0">Generated for trainee lab use • Last updated: 2026-06-10</div>
+</main><script>function copyCode(btn){const code=btn.closest('.codebox').querySelector('code').innerText;navigator.clipboard.writeText(code).then(()=>{const old=btn.innerText;btn.innerText='Copied';setTimeout(()=>btn.innerText=old,1200);});}</script></body></html>
