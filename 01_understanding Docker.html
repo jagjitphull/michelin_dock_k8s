@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docker / Containerization - Beginner Reference</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --muted: #5b667a;
+      --primary: #1d63ed;
+      --primary-dark: #0f3f9d;
+      --soft: #eaf1ff;
+      --line: #d9e2f2;
+      --good: #0f766e;
+      --warn: #b45309;
+      --code: #111827;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0b3b8c, #1d63ed);
+      color: white;
+      padding: 48px 28px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 38px;
+      line-height: 1.15;
+    }
+
+    header p {
+      max-width: 900px;
+      margin: 14px auto 0;
+      font-size: 18px;
+      opacity: 0.95;
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    nav {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-top: -42px;
+      box-shadow: 0 10px 26px rgba(31, 41, 55, 0.08);
+    }
+
+    nav h2 { margin-top: 0; }
+    nav a {
+      color: var(--primary-dark);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    nav a:hover { text-decoration: underline; }
+
+    section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 26px;
+      margin: 24px 0;
+      box-shadow: 0 4px 16px rgba(31, 41, 55, 0.05);
+    }
+
+    h2 {
+      color: var(--primary-dark);
+      margin-top: 0;
+      border-bottom: 2px solid var(--soft);
+      padding-bottom: 8px;
+    }
+
+    h3 { color: #12356d; margin-bottom: 8px; }
+
+    .simple-box {
+      background: var(--soft);
+      border-left: 5px solid var(--primary);
+      padding: 16px 18px;
+      border-radius: 10px;
+      margin: 16px 0;
+    }
+
+    .key-point {
+      background: #ecfdf5;
+      border-left: 5px solid var(--good);
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin: 16px 0;
+    }
+
+    .warning-box {
+      background: #fff7ed;
+      border-left: 5px solid var(--warn);
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin: 16px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eef4ff;
+      color: #12356d;
+    }
+
+    code {
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-family: Consolas, Monaco, monospace;
+    }
+
+    pre {
+      background: var(--code);
+      color: #e5e7eb;
+      padding: 16px;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-size: 14px;
+    }
+
+    .diagram {
+      background: #ffffff;
+      border: 1px dashed #9db4dc;
+      border-radius: 14px;
+      padding: 18px;
+      margin: 18px 0;
+      overflow-x: auto;
+    }
+
+    svg text {
+      font-family: Arial, Helvetica, sans-serif;
+      fill: #1f2937;
+    }
+
+    .caption {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: -8px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card-mini {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      padding: 16px;
+      border-radius: 12px;
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 24px 10px 40px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 760px) {
+      header h1 { font-size: 30px; }
+      main { padding: 18px; }
+      .grid-2 { grid-template-columns: 1fr; }
+      section { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Docker / Containerization</h1>
+    <p>Beginner-friendly reference notes for understanding Docker, containers, Docker architecture, Docker vs. virtual machines, and Docker editions.</p>
+  </header>
+
+  <main>
+    <nav>
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#intro">Introduction to Docker</a></li>
+        <li><a href="#what-is-docker">What is Docker?</a></li>
+        <li><a href="#why-docker">Why Docker?</a></li>
+        <li><a href="#docker-vs-vm">Docker vs. Virtual Machines</a></li>
+        <li><a href="#architecture">Docker Architecture Overview</a></li>
+        <li><a href="#editions">Docker Editions</a></li>
+        <li><a href="#summary">Simple Summary</a></li>
+        <li><a href="#references">References</a></li>
+      </ol>
+    </nav>
+
+    <section id="intro">
+      <h2>1. Introduction to Docker</h2>
+      <p>
+        Docker is a platform used to package, run, and manage applications inside <strong>containers</strong>.
+        A container is like a small, isolated box that contains an application and everything it needs to run.
+      </p>
+
+      <div class="simple-box">
+        <strong>Simple meaning:</strong><br />
+        Docker helps us run the same application in the same way on a developer laptop, test server, cloud server, or production server.
+      </div>
+
+      <h3>Real-life example</h3>
+      <p>
+        Suppose you develop a Python web application. On your laptop it works because you have the correct Python version,
+        correct libraries, and correct configuration. But when you move it to another server, it may fail because that server
+        has a different Python version or missing libraries.
+      </p>
+      <p>
+        Docker solves this by packing the application, libraries, runtime, and settings together into a container image.
+      </p>
+
+      <div class="diagram">
+        <svg width="940" height="230" viewBox="0 0 940 230" role="img" aria-label="Application packaging without and with Docker">
+          <rect x="20" y="30" width="400" height="160" rx="16" fill="#fff7ed" stroke="#f59e0b" />
+          <text x="220" y="60" text-anchor="middle" font-size="18" font-weight="700">Without Docker</text>
+          <rect x="55" y="85" width="100" height="55" rx="8" fill="#fed7aa" stroke="#f97316" />
+          <text x="105" y="116" text-anchor="middle" font-size="13">App</text>
+          <rect x="170" y="85" width="100" height="55" rx="8" fill="#fed7aa" stroke="#f97316" />
+          <text x="220" y="108" text-anchor="middle" font-size="13">Libraries</text>
+          <text x="220" y="126" text-anchor="middle" font-size="13">missing?</text>
+          <rect x="285" y="85" width="100" height="55" rx="8" fill="#fed7aa" stroke="#f97316" />
+          <text x="335" y="108" text-anchor="middle" font-size="13">Different</text>
+          <text x="335" y="126" text-anchor="middle" font-size="13">runtime</text>
+          <text x="220" y="168" text-anchor="middle" font-size="14">Application may behave differently</text>
+
+          <rect x="520" y="30" width="400" height="160" rx="16" fill="#eff6ff" stroke="#2563eb" />
+          <text x="720" y="60" text-anchor="middle" font-size="18" font-weight="700">With Docker</text>
+          <rect x="580" y="82" width="280" height="75" rx="12" fill="#dbeafe" stroke="#2563eb" />
+          <text x="720" y="105" text-anchor="middle" font-size="14" font-weight="700">Container Image</text>
+          <text x="720" y="127" text-anchor="middle" font-size="13">App + runtime + libraries + settings</text>
+          <text x="720" y="175" text-anchor="middle" font-size="14">Same package runs everywhere</text>
+        </svg>
+      </div>
+      <p class="caption">Diagram: Docker bundles application dependencies so the application runs consistently.</p>
+    </section>
+
+    <section id="what-is-docker">
+      <h2>2. What is Docker?</h2>
+      <p>
+        Docker is an open platform for developing, shipping, and running applications. It separates the application from the
+        underlying infrastructure, so the same application package can run in many environments.
+      </p>
+
+      <h3>Important Docker terms</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Term</th>
+            <th>Simple Explanation</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Image</strong></td>
+            <td>A ready-made package containing application code, runtime, libraries, and settings.</td>
+            <td><code>nginx:latest</code>, <code>mysql:8</code>, <code>ubuntu:24.04</code></td>
+          </tr>
+          <tr>
+            <td><strong>Container</strong></td>
+            <td>A running instance of an image.</td>
+            <td>Running NGINX web server from the <code>nginx</code> image.</td>
+          </tr>
+          <tr>
+            <td><strong>Dockerfile</strong></td>
+            <td>A text file containing instructions to build an image.</td>
+            <td>Install Python, copy app files, start the app.</td>
+          </tr>
+          <tr>
+            <td><strong>Registry</strong></td>
+            <td>A place where images are stored and shared.</td>
+            <td>Docker Hub, private registry.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker Engine</strong></td>
+            <td>The core software that builds and runs containers.</td>
+            <td>Installed on Linux servers or used through Docker Desktop.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="diagram">
+        <svg width="940" height="250" viewBox="0 0 940 250" role="img" aria-label="Image to container flow">
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#2563eb" />
+            </marker>
+          </defs>
+          <rect x="40" y="70" width="180" height="100" rx="14" fill="#eef2ff" stroke="#4f46e5" />
+          <text x="130" y="105" text-anchor="middle" font-size="17" font-weight="700">Dockerfile</text>
+          <text x="130" y="130" text-anchor="middle" font-size="13">Build instructions</text>
+          <text x="130" y="150" text-anchor="middle" font-size="13">for image</text>
+
+          <line x1="230" y1="120" x2="340" y2="120" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow)" />
+          <text x="285" y="105" text-anchor="middle" font-size="13">docker build</text>
+
+          <rect x="350" y="70" width="180" height="100" rx="14" fill="#eff6ff" stroke="#2563eb" />
+          <text x="440" y="105" text-anchor="middle" font-size="17" font-weight="700">Image</text>
+          <text x="440" y="130" text-anchor="middle" font-size="13">Application package</text>
+          <text x="440" y="150" text-anchor="middle" font-size="13">read-only template</text>
+
+          <line x1="540" y1="120" x2="650" y2="120" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow)" />
+          <text x="595" y="105" text-anchor="middle" font-size="13">docker run</text>
+
+          <rect x="660" y="70" width="220" height="100" rx="14" fill="#ecfdf5" stroke="#10b981" />
+          <text x="770" y="105" text-anchor="middle" font-size="17" font-weight="700">Container</text>
+          <text x="770" y="130" text-anchor="middle" font-size="13">Running application</text>
+          <text x="770" y="150" text-anchor="middle" font-size="13">isolated process</text>
+        </svg>
+      </div>
+      <p class="caption">Diagram: Dockerfile creates an image; image runs as a container.</p>
+    </section>
+
+    <section id="why-docker">
+      <h2>3. Why Docker?</h2>
+      <p>
+        Docker became popular because it solves a common problem in software delivery: applications behave differently across environments.
+        Docker gives a standard way to package and run applications.
+      </p>
+
+      <div class="grid-2">
+        <div class="card-mini">
+          <h3>1. Consistency</h3>
+          <p>The same container image can run on developer laptop, test server, staging, and production.</p>
+        </div>
+        <div class="card-mini">
+          <h3>2. Faster Deployment</h3>
+          <p>Containers start quickly because they share the host OS kernel and do not boot a full guest OS.</p>
+        </div>
+        <div class="card-mini">
+          <h3>3. Isolation</h3>
+          <p>Each container has its own process space, filesystem view, network settings, and dependencies.</p>
+        </div>
+        <div class="card-mini">
+          <h3>4. Portability</h3>
+          <p>A Docker image can be pushed to a registry and pulled on another system.</p>
+        </div>
+        <div class="card-mini">
+          <h3>5. Easy Scaling</h3>
+          <p>Multiple containers of the same application can be started to handle more load.</p>
+        </div>
+        <div class="card-mini">
+          <h3>6. DevOps Friendly</h3>
+          <p>Docker works well with CI/CD pipelines, Kubernetes, testing, and cloud deployment.</p>
+        </div>
+      </div>
+
+      <h3>Simple example problem</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Without Docker</th>
+            <th>With Docker</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Developer says: “It works on my machine.”</td>
+            <td>Team runs the same image everywhere.</td>
+          </tr>
+          <tr>
+            <td>Manual installation of runtime and libraries.</td>
+            <td>Dependencies are already inside the image.</td>
+          </tr>
+          <tr>
+            <td>Harder to reproduce bugs.</td>
+            <td>Same container can be used for debugging.</td>
+          </tr>
+          <tr>
+            <td>Slow setup for new developers.</td>
+            <td>New developer can run one command and start the app.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="key-point">
+        <strong>Key point:</strong> Docker is not only for developers. It is also useful for testers, system administrators, DevOps engineers, SRE teams, and cloud engineers.
+      </div>
+    </section>
+
+    <section id="docker-vs-vm">
+      <h2>4. Docker vs. Virtual Machines</h2>
+      <p>
+        Docker containers and virtual machines both provide isolation, but they work differently.
+        A virtual machine runs a full guest operating system. A Docker container shares the host operating system kernel.
+      </p>
+
+      <div class="diagram">
+        <svg width="1000" height="430" viewBox="0 0 1000 430" role="img" aria-label="Docker containers versus virtual machines architecture">
+          <rect x="30" y="35" width="440" height="360" rx="18" fill="#eff6ff" stroke="#2563eb" />
+          <text x="250" y="65" text-anchor="middle" font-size="20" font-weight="700">Docker Containers</text>
+
+          <rect x="70" y="90" width="100" height="85" rx="10" fill="#dbeafe" stroke="#2563eb" />
+          <text x="120" y="115" text-anchor="middle" font-size="13" font-weight="700">Container 1</text>
+          <text x="120" y="137" text-anchor="middle" font-size="12">App</text>
+          <text x="120" y="155" text-anchor="middle" font-size="12">Libraries</text>
+
+          <rect x="200" y="90" width="100" height="85" rx="10" fill="#dbeafe" stroke="#2563eb" />
+          <text x="250" y="115" text-anchor="middle" font-size="13" font-weight="700">Container 2</text>
+          <text x="250" y="137" text-anchor="middle" font-size="12">App</text>
+          <text x="250" y="155" text-anchor="middle" font-size="12">Libraries</text>
+
+          <rect x="330" y="90" width="100" height="85" rx="10" fill="#dbeafe" stroke="#2563eb" />
+          <text x="380" y="115" text-anchor="middle" font-size="13" font-weight="700">Container 3</text>
+          <text x="380" y="137" text-anchor="middle" font-size="12">App</text>
+          <text x="380" y="155" text-anchor="middle" font-size="12">Libraries</text>
+
+          <rect x="70" y="205" width="360" height="55" rx="10" fill="#bfdbfe" stroke="#2563eb" />
+          <text x="250" y="238" text-anchor="middle" font-size="15" font-weight="700">Docker Engine</text>
+
+          <rect x="70" y="280" width="360" height="55" rx="10" fill="#e0f2fe" stroke="#0284c7" />
+          <text x="250" y="313" text-anchor="middle" font-size="15" font-weight="700">Host Operating System Kernel</text>
+
+          <rect x="70" y="350" width="360" height="30" rx="8" fill="#f8fafc" stroke="#64748b" />
+          <text x="250" y="370" text-anchor="middle" font-size="13">Physical / Cloud Server Hardware</text>
+
+          <rect x="530" y="35" width="440" height="360" rx="18" fill="#fff7ed" stroke="#f59e0b" />
+          <text x="750" y="65" text-anchor="middle" font-size="20" font-weight="700">Virtual Machines</text>
+
+          <rect x="560" y="90" width="110" height="140" rx="10" fill="#fed7aa" stroke="#f97316" />
+          <text x="615" y="115" text-anchor="middle" font-size="13" font-weight="700">VM 1</text>
+          <text x="615" y="138" text-anchor="middle" font-size="12">App</text>
+          <text x="615" y="158" text-anchor="middle" font-size="12">Libraries</text>
+          <text x="615" y="178" text-anchor="middle" font-size="12">Guest OS</text>
+
+          <rect x="695" y="90" width="110" height="140" rx="10" fill="#fed7aa" stroke="#f97316" />
+          <text x="750" y="115" text-anchor="middle" font-size="13" font-weight="700">VM 2</text>
+          <text x="750" y="138" text-anchor="middle" font-size="12">App</text>
+          <text x="750" y="158" text-anchor="middle" font-size="12">Libraries</text>
+          <text x="750" y="178" text-anchor="middle" font-size="12">Guest OS</text>
+
+          <rect x="830" y="90" width="110" height="140" rx="10" fill="#fed7aa" stroke="#f97316" />
+          <text x="885" y="115" text-anchor="middle" font-size="13" font-weight="700">VM 3</text>
+          <text x="885" y="138" text-anchor="middle" font-size="12">App</text>
+          <text x="885" y="158" text-anchor="middle" font-size="12">Libraries</text>
+          <text x="885" y="178" text-anchor="middle" font-size="12">Guest OS</text>
+
+          <rect x="560" y="255" width="380" height="55" rx="10" fill="#fdba74" stroke="#f97316" />
+          <text x="750" y="288" text-anchor="middle" font-size="15" font-weight="700">Hypervisor</text>
+
+          <rect x="560" y="325" width="380" height="35" rx="8" fill="#ffedd5" stroke="#f97316" />
+          <text x="750" y="348" text-anchor="middle" font-size="13">Host Operating System</text>
+
+          <rect x="560" y="370" width="380" height="25" rx="8" fill="#f8fafc" stroke="#64748b" />
+          <text x="750" y="387" text-anchor="middle" font-size="12">Physical / Cloud Server Hardware</text>
+        </svg>
+      </div>
+      <p class="caption">Diagram: Containers share the host OS kernel. VMs include separate guest operating systems.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Point</th>
+            <th>Docker Container</th>
+            <th>Virtual Machine</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Operating System</td>
+            <td>Shares host OS kernel.</td>
+            <td>Runs a full guest OS.</td>
+          </tr>
+          <tr>
+            <td>Startup Time</td>
+            <td>Usually seconds or less.</td>
+            <td>Usually slower because OS must boot.</td>
+          </tr>
+          <tr>
+            <td>Size</td>
+            <td>Usually smaller.</td>
+            <td>Usually larger.</td>
+          </tr>
+          <tr>
+            <td>Isolation</td>
+            <td>Process-level isolation using OS features.</td>
+            <td>Strong isolation using hypervisor and separate OS.</td>
+          </tr>
+          <tr>
+            <td>Best Use</td>
+            <td>Application packaging, microservices, CI/CD, cloud-native apps.</td>
+            <td>Running different operating systems, legacy apps, full server isolation.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warning-box">
+        <strong>Important:</strong> Docker containers are not full virtual machines. A container is mainly an isolated process with its own filesystem, network, and resource limits.
+      </div>
+    </section>
+
+    <section id="architecture">
+      <h2>5. Docker Architecture Overview</h2>
+      <p>
+        Docker uses a client-server architecture. The user runs commands using the Docker client.
+        The Docker client talks to the Docker daemon. The daemon builds images, runs containers, manages networks, and manages volumes.
+      </p>
+
+      <div class="diagram">
+        <svg width="1000" height="420" viewBox="0 0 1000 420" role="img" aria-label="Docker architecture overview">
+          <defs>
+            <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#1d63ed" />
+            </marker>
+          </defs>
+
+          <rect x="40" y="150" width="180" height="90" rx="14" fill="#eef2ff" stroke="#4f46e5" />
+          <text x="130" y="182" text-anchor="middle" font-size="17" font-weight="700">Docker Client</text>
+          <text x="130" y="208" text-anchor="middle" font-size="13">docker run</text>
+          <text x="130" y="226" text-anchor="middle" font-size="13">docker build</text>
+
+          <line x1="230" y1="195" x2="340" y2="195" stroke="#1d63ed" stroke-width="3" marker-end="url(#arrow2)" />
+          <text x="285" y="180" text-anchor="middle" font-size="13">REST API</text>
+
+          <rect x="350" y="90" width="260" height="210" rx="16" fill="#eff6ff" stroke="#2563eb" />
+          <text x="480" y="122" text-anchor="middle" font-size="18" font-weight="700">Docker Daemon</text>
+          <text x="480" y="148" text-anchor="middle" font-size="13">dockerd</text>
+
+          <rect x="380" y="170" width="90" height="55" rx="8" fill="#dbeafe" stroke="#2563eb" />
+          <text x="425" y="202" text-anchor="middle" font-size="13">Images</text>
+          <rect x="490" y="170" width="90" height="55" rx="8" fill="#dbeafe" stroke="#2563eb" />
+          <text x="535" y="202" text-anchor="middle" font-size="13">Containers</text>
+          <rect x="380" y="235" width="90" height="45" rx="8" fill="#dbeafe" stroke="#2563eb" />
+          <text x="425" y="263" text-anchor="middle" font-size="13">Networks</text>
+          <rect x="490" y="235" width="90" height="45" rx="8" fill="#dbeafe" stroke="#2563eb" />
+          <text x="535" y="263" text-anchor="middle" font-size="13">Volumes</text>
+
+          <line x1="620" y1="150" x2="760" y2="105" stroke="#1d63ed" stroke-width="3" marker-end="url(#arrow2)" />
+          <line x1="620" y1="195" x2="760" y2="195" stroke="#1d63ed" stroke-width="3" marker-end="url(#arrow2)" />
+          <line x1="620" y1="240" x2="760" y2="285" stroke="#1d63ed" stroke-width="3" marker-end="url(#arrow2)" />
+
+          <rect x="770" y="55" width="180" height="90" rx="14" fill="#ecfdf5" stroke="#10b981" />
+          <text x="860" y="88" text-anchor="middle" font-size="17" font-weight="700">Registry</text>
+          <text x="860" y="113" text-anchor="middle" font-size="13">Docker Hub / private</text>
+          <text x="860" y="131" text-anchor="middle" font-size="13">push / pull images</text>
+
+          <rect x="770" y="155" width="180" height="90" rx="14" fill="#f8fafc" stroke="#64748b" />
+          <text x="860" y="188" text-anchor="middle" font-size="17" font-weight="700">Host OS</text>
+          <text x="860" y="213" text-anchor="middle" font-size="13">Linux kernel features</text>
+          <text x="860" y="231" text-anchor="middle" font-size="13">namespaces, cgroups</text>
+
+          <rect x="770" y="255" width="180" height="90" rx="14" fill="#fff7ed" stroke="#f59e0b" />
+          <text x="860" y="288" text-anchor="middle" font-size="17" font-weight="700">Storage</text>
+          <text x="860" y="313" text-anchor="middle" font-size="13">Images, layers</text>
+          <text x="860" y="331" text-anchor="middle" font-size="13">volumes, logs</text>
+        </svg>
+      </div>
+      <p class="caption">Diagram: Docker client sends commands to Docker daemon; daemon manages containers, images, networks, volumes, and registries.</p>
+
+      <h3>Main components</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Docker Client</strong></td>
+            <td>The command-line tool or UI used by the user. Example command: <code>docker run nginx</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker Daemon</strong></td>
+            <td>The background service that receives commands and performs container operations.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker Images</strong></td>
+            <td>Read-only templates used to create containers.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker Containers</strong></td>
+            <td>Running instances of images.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker Registry</strong></td>
+            <td>Stores images. Docker Hub is the common public registry.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker Volumes</strong></td>
+            <td>Used to store persistent data outside the container lifecycle.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker Networks</strong></td>
+            <td>Allow containers to communicate with each other and with external systems.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Simple command flow</h3>
+      <pre><code>User runs command:
+
+docker run nginx
+
+Flow:
+1. Docker client sends request to Docker daemon.
+2. Docker daemon checks whether nginx image exists locally.
+3. If not available, daemon pulls image from registry.
+4. Daemon creates and starts a container from the image.
+5. Application starts inside the container.</code></pre>
+    </section>
+
+    <section id="editions">
+      <h2>6. Docker Editions</h2>
+      <p>
+        Historically, Docker was often discussed as <strong>Docker Community Edition (Docker CE)</strong> and
+        <strong>Docker Enterprise Edition (Docker EE)</strong>. Modern Docker product naming is different, especially for Docker Desktop subscriptions.
+      </p>
+
+      <div class="simple-box">
+        <strong>Current practical view:</strong><br />
+        For learning and normal Linux server usage, people usually install <strong>Docker Engine</strong>, also known as Docker CE on Linux.
+        For desktop development, people use <strong>Docker Desktop</strong>. Organizations may use paid Docker plans such as Pro, Team, or Business.
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Edition / Product</th>
+            <th>Simple Meaning</th>
+            <th>Typical Use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Docker Community Edition / Docker Engine CE</strong></td>
+            <td>Free Docker Engine used to run containers, especially on Linux.</td>
+            <td>Learning, labs, development servers, small deployments.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker Desktop</strong></td>
+            <td>Desktop application for Mac, Windows, and Linux. Includes GUI and container tools.</td>
+            <td>Local developer laptop setup.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker Pro</strong></td>
+            <td>Paid individual plan with extra Docker features and higher limits.</td>
+            <td>Individual professional developers.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker Team</strong></td>
+            <td>Paid plan for teams needing collaboration and management features.</td>
+            <td>Small and medium development teams.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker Business</strong></td>
+            <td>Enterprise-focused plan with centralized management, security, compliance, and support options.</td>
+            <td>Medium and large organizations.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker Enterprise Edition / Docker EE</strong></td>
+            <td>Older enterprise product naming. In many modern discussions, Docker Business is the relevant enterprise product.</td>
+            <td>Legacy references, older training material, enterprise environments.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warning-box">
+        <strong>Licensing note:</strong> Docker Desktop is free for personal use, education, non-commercial open source projects, and qualifying small businesses. Larger organizations generally require a paid subscription for Docker Desktop usage.
+      </div>
+    </section>
+
+    <section id="summary">
+      <h2>7. Simple Summary</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Question</th>
+            <th>Simple Answer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>What is Docker?</td>
+            <td>A platform to package and run applications inside containers.</td>
+          </tr>
+          <tr>
+            <td>What is a container?</td>
+            <td>A lightweight isolated environment for running an application.</td>
+          </tr>
+          <tr>
+            <td>Why use Docker?</td>
+            <td>Consistency, speed, portability, isolation, and easier deployment.</td>
+          </tr>
+          <tr>
+            <td>Docker vs VM?</td>
+            <td>Containers share the host OS kernel; VMs run separate guest operating systems.</td>
+          </tr>
+          <tr>
+            <td>What is Docker architecture?</td>
+            <td>Docker client talks to Docker daemon, which manages images, containers, networks, volumes, and registries.</td>
+          </tr>
+          <tr>
+            <td>Which edition for learning?</td>
+            <td>Use Docker Engine on Linux or Docker Desktop on laptop/desktop systems.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Beginner mental model</h3>
+      <div class="key-point">
+        <strong>Dockerfile → Image → Container</strong><br />
+        Dockerfile is the recipe. Image is the packed application. Container is the running application.
+      </div>
+    </section>
+
+    <section id="references">
+      <h2>8. References</h2>
+      <p>The content was prepared using general Docker knowledge and checked against Docker’s official documentation/product pages.</p>
+      <ul>
+        <li>Docker Docs — What is Docker?</li>
+        <li>Docker Docs — Get Docker / Docker Engine</li>
+        <li>Docker Docs — Docker Desktop</li>
+        <li>Docker Desktop license and subscription information</li>
+        <li>Docker Business and pricing pages</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="footer">
+    Docker / Containerization Beginner Reference &mdash; Prepared as a simple HTML training document.
+  </div>
+</body>
+</html>

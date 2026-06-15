@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Docker Installation and Setup - Reference Document</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --ink: #1f2937;
+        --muted: #4b5563;
+        --blue: #0b72b9;
+        --blue2: #e8f4ff;
+        --green: #0f766e;
+        --red: #b91c1c;
+        --yellow: #fef3c7;
+        --border: #d8dee9;
+        --code-bg: #111827;
+        --code-ink: #f9fafb;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: 1.6;
+        background: var(--bg);
+        color: var(--ink);
+    }
+    header {
+        background: linear-gradient(135deg, #0b72b9, #064f80);
+        color: white;
+        padding: 36px 28px;
+        text-align: center;
+    }
+    header h1 { margin: 0 0 10px; font-size: 34px; }
+    header p { margin: 0; font-size: 17px; opacity: 0.95; }
+    .container {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 24px;
+    }
+    .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 22px;
+        margin: 18px 0;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.04);
+    }
+    h2 {
+        color: var(--blue);
+        border-bottom: 2px solid var(--blue2);
+        padding-bottom: 8px;
+        margin-top: 0;
+    }
+    h3 { color: #0f3f66; margin-top: 24px; }
+    h4 { color: var(--green); margin-bottom: 6px; }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 14px 0;
+        background: white;
+    }
+    th, td {
+        border: 1px solid var(--border);
+        padding: 10px;
+        text-align: left;
+        vertical-align: top;
+    }
+    th {
+        background: var(--blue2);
+        color: #0f3f66;
+    }
+    code {
+        background: #eef2f7;
+        padding: 2px 5px;
+        border-radius: 4px;
+        font-family: Consolas, Monaco, "Courier New", monospace;
+    }
+    pre {
+        background: var(--code-bg);
+        color: var(--code-ink);
+        padding: 15px;
+        border-radius: 10px;
+        overflow-x: auto;
+        font-size: 14px;
+        line-height: 1.45;
+    }
+    pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+    }
+    .note {
+        border-left: 5px solid var(--blue);
+        background: var(--blue2);
+        padding: 12px 14px;
+        border-radius: 8px;
+        margin: 12px 0;
+    }
+    .warn {
+        border-left: 5px solid #d97706;
+        background: var(--yellow);
+        padding: 12px 14px;
+        border-radius: 8px;
+        margin: 12px 0;
+    }
+    .danger {
+        border-left: 5px solid var(--red);
+        background: #fee2e2;
+        padding: 12px 14px;
+        border-radius: 8px;
+        margin: 12px 0;
+    }
+    .diagram {
+        background: #fbfdff;
+        border: 1px dashed #9db7d0;
+        border-radius: 12px;
+        padding: 18px;
+        margin: 16px 0;
+        overflow-x: auto;
+    }
+    .toc a {
+        display: block;
+        color: var(--blue);
+        text-decoration: none;
+        padding: 5px 0;
+    }
+    .toc a:hover { text-decoration: underline; }
+    .kbd {
+        font-family: Consolas, Monaco, monospace;
+        border: 1px solid #bbb;
+        border-bottom-width: 2px;
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: white;
+    }
+    .pill {
+        display: inline-block;
+        background: #e6f7ef;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 13px;
+        margin: 3px;
+    }
+    .two-col {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+    }
+    footer {
+        text-align: center;
+        color: var(--muted);
+        padding: 28px;
+        font-size: 14px;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Docker Installation and Setup</h1>
+    <p>Participant Reference Document with Concepts, Platform Setup, CLI Commands, Diagrams, and Complete Examples</p>
+</header>
+
+<div class="container">
+
+<section class="card toc">
+    <h2>Table of Contents</h2>
+    <a href="#objectives">1. Learning Objectives</a>
+    <a href="#concepts">2. Core Docker Concepts</a>
+    <a href="#architecture">3. Docker Architecture</a>
+    <a href="#install-platforms">4. Installing Docker on Windows, macOS, and Linux</a>
+    <a href="#desktop-toolbox">5. Docker Desktop vs Docker Toolbox</a>
+    <a href="#post-install">6. Post-Installation Verification</a>
+    <a href="#cli">7. Basic Docker CLI Commands</a>
+    <a href="#examples">8. Complete Hands-on Examples</a>
+    <a href="#network-volume">9. Docker Network and Volume Examples</a>
+    <a href="#troubleshooting">10. Common Troubleshooting</a>
+    <a href="#cheatsheet">11. Command Cheat Sheet</a>
+    <a href="#assessment">12. Practice Questions</a>
+    <a href="#sources">13. References</a>
+</section>
+
+<section id="objectives" class="card">
+    <h2>1. Learning Objectives</h2>
+    <p>After completing this reference document, participants should be able to:</p>
+    <ul>
+        <li>Explain what Docker is and why containers are useful.</li>
+        <li>Install Docker on Windows, macOS, and Linux.</li>
+        <li>Differentiate Docker Desktop, Docker Engine, and Docker Toolbox.</li>
+        <li>Use basic Docker CLI commands confidently.</li>
+        <li>Run, stop, inspect, remove, and troubleshoot containers.</li>
+        <li>Work with Docker images, Docker Hub, networks, and volumes.</li>
+        <li>Build a simple custom image using a Dockerfile.</li>
+    </ul>
+</section>
+
+<section id="concepts" class="card">
+    <h2>2. Core Docker Concepts</h2>
+
+    <h3>2.1 What is Docker?</h3>
+    <p>
+        Docker is a containerization platform used to build, ship, and run applications in isolated environments called
+        <strong>containers</strong>. A container packages application code, runtime, libraries, tools, and configuration
+        required by the application.
+    </p>
+
+    <div class="note">
+        <strong>Simple explanation:</strong> Docker solves the common problem: “It works on my machine, but not on another machine.”
+        With Docker, the application runs inside the same packaged environment everywhere.
+    </div>
+
+    <h3>2.2 Container vs Image</h3>
+    <table>
+        <tr>
+            <th>Term</th>
+            <th>Meaning</th>
+            <th>Example</th>
+        </tr>
+        <tr>
+            <td><strong>Image</strong></td>
+            <td>A read-only template used to create containers.</td>
+            <td><code>nginx:latest</code>, <code>ubuntu:24.04</code></td>
+        </tr>
+        <tr>
+            <td><strong>Container</strong></td>
+            <td>A running instance of an image.</td>
+            <td>A running Nginx web server created from the <code>nginx</code> image.</td>
+        </tr>
+        <tr>
+            <td><strong>Registry</strong></td>
+            <td>A place where images are stored and shared.</td>
+            <td>Docker Hub, private registry, GitHub Container Registry.</td>
+        </tr>
+        <tr>
+            <td><strong>Dockerfile</strong></td>
+            <td>A text file containing instructions to build a Docker image.</td>
+            <td><code>FROM nginx</code>, <code>COPY index.html /usr/share/nginx/html/</code></td>
+        </tr>
+    </table>
+
+    <h3>2.3 Image and Container Relationship</h3>
+    <div class="diagram">
+<svg width="920" height="260" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 z" fill="#0b72b9"/>
+        </marker>
+    </defs>
+    <rect x="30" y="55" width="210" height="135" rx="16" fill="#e8f4ff" stroke="#0b72b9" stroke-width="2"/>
+    <text x="135" y="95" text-anchor="middle" font-size="20" fill="#0f3f66" font-weight="bold">Dockerfile</text>
+    <text x="135" y="128" text-anchor="middle" font-size="14" fill="#1f2937">Build instructions</text>
+    <text x="135" y="153" text-anchor="middle" font-size="14" fill="#1f2937">FROM, RUN, COPY, CMD</text>
+
+    <line x1="250" y1="122" x2="360" y2="122" stroke="#0b72b9" stroke-width="3" marker-end="url(#arrow)"/>
+    <text x="305" y="105" text-anchor="middle" font-size="14" fill="#0b72b9">docker build</text>
+
+    <rect x="370" y="55" width="210" height="135" rx="16" fill="#ecfdf5" stroke="#0f766e" stroke-width="2"/>
+    <text x="475" y="95" text-anchor="middle" font-size="20" fill="#065f46" font-weight="bold">Image</text>
+    <text x="475" y="128" text-anchor="middle" font-size="14" fill="#1f2937">Read-only template</text>
+    <text x="475" y="153" text-anchor="middle" font-size="14" fill="#1f2937">Example: myapp:v1</text>
+
+    <line x1="590" y1="122" x2="700" y2="122" stroke="#0b72b9" stroke-width="3" marker-end="url(#arrow)"/>
+    <text x="645" y="105" text-anchor="middle" font-size="14" fill="#0b72b9">docker run</text>
+
+    <rect x="710" y="55" width="180" height="135" rx="16" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+    <text x="800" y="95" text-anchor="middle" font-size="20" fill="#9a3412" font-weight="bold">Container</text>
+    <text x="800" y="128" text-anchor="middle" font-size="14" fill="#1f2937">Running process</text>
+    <text x="800" y="153" text-anchor="middle" font-size="14" fill="#1f2937">Isolated environment</text>
+</svg>
+    </div>
+
+    <h3>2.4 Container vs Virtual Machine</h3>
+    <table>
+        <tr>
+            <th>Point</th>
+            <th>Container</th>
+            <th>Virtual Machine</th>
+        </tr>
+        <tr>
+            <td>Operating System</td>
+            <td>Shares the host OS kernel.</td>
+            <td>Runs a full guest OS.</td>
+        </tr>
+        <tr>
+            <td>Startup Time</td>
+            <td>Usually seconds.</td>
+            <td>Usually minutes.</td>
+        </tr>
+        <tr>
+            <td>Size</td>
+            <td>Usually MBs to a few GBs.</td>
+            <td>Usually several GBs.</td>
+        </tr>
+        <tr>
+            <td>Isolation</td>
+            <td>Process-level isolation using namespaces and cgroups.</td>
+            <td>Hardware-level isolation using a hypervisor.</td>
+        </tr>
+        <tr>
+            <td>Best Use</td>
+            <td>Application packaging and deployment.</td>
+            <td>Running different full operating systems.</td>
+        </tr>
+    </table>
+</section>
+
+<section id="architecture" class="card">
+    <h2>3. Docker Architecture</h2>
+
+    <p>Docker uses a client-server architecture.</p>
+
+    <ul>
+        <li><strong>Docker Client:</strong> The <code>docker</code> command used by the user.</li>
+        <li><strong>Docker Daemon:</strong> Background service <code>dockerd</code> that manages containers, images, networks, and volumes.</li>
+        <li><strong>Docker Registry:</strong> Stores Docker images. Docker Hub is the default public registry.</li>
+        <li><strong>Docker Objects:</strong> Images, containers, networks, volumes, and plugins.</li>
+    </ul>
+
+    <div class="diagram">
+<svg width="960" height="330" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <marker id="arrow2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 z" fill="#0b72b9"/>
+        </marker>
+    </defs>
+
+    <rect x="40" y="80" width="210" height="130" rx="16" fill="#e8f4ff" stroke="#0b72b9" stroke-width="2"/>
+    <text x="145" y="118" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f3f66">Docker Client</text>
+    <text x="145" y="152" text-anchor="middle" font-size="15" fill="#1f2937">docker run</text>
+    <text x="145" y="177" text-anchor="middle" font-size="15" fill="#1f2937">docker build</text>
+
+    <line x1="260" y1="145" x2="390" y2="145" stroke="#0b72b9" stroke-width="3" marker-end="url(#arrow2)"/>
+    <text x="325" y="128" text-anchor="middle" font-size="14" fill="#0b72b9">REST API</text>
+
+    <rect x="400" y="45" width="260" height="220" rx="16" fill="#ecfdf5" stroke="#0f766e" stroke-width="2"/>
+    <text x="530" y="82" text-anchor="middle" font-size="20" font-weight="bold" fill="#065f46">Docker Daemon</text>
+    <rect x="430" y="105" width="200" height="35" rx="8" fill="#ffffff" stroke="#9ca3af"/>
+    <text x="530" y="128" text-anchor="middle" font-size="14">Images</text>
+    <rect x="430" y="150" width="200" height="35" rx="8" fill="#ffffff" stroke="#9ca3af"/>
+    <text x="530" y="173" text-anchor="middle" font-size="14">Containers</text>
+    <rect x="430" y="195" width="200" height="35" rx="8" fill="#ffffff" stroke="#9ca3af"/>
+    <text x="530" y="218" text-anchor="middle" font-size="14">Networks / Volumes</text>
+
+    <line x1="670" y1="145" x2="800" y2="145" stroke="#0b72b9" stroke-width="3" marker-end="url(#arrow2)"/>
+    <text x="735" y="128" text-anchor="middle" font-size="14" fill="#0b72b9">pull / push</text>
+
+    <rect x="810" y="80" width="120" height="130" rx="16" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+    <text x="870" y="118" text-anchor="middle" font-size="20" font-weight="bold" fill="#9a3412">Registry</text>
+    <text x="870" y="152" text-anchor="middle" font-size="15" fill="#1f2937">Docker Hub</text>
+    <text x="870" y="177" text-anchor="middle" font-size="15" fill="#1f2937">Private Registry</text>
+</svg>
+    </div>
+
+    <div class="note">
+        When you run <code>docker run nginx</code>, the Docker client sends the request to the Docker daemon. If the image is missing locally, the daemon pulls it from a registry, creates a container, and starts it.
+    </div>
+</section>
+
+<section id="install-platforms" class="card">
+    <h2>4. Installing Docker on Various Platforms</h2>
+
+    <div class="warn">
+        <strong>Training recommendation:</strong> For laptops/desktops, use Docker Desktop. For Linux servers, use Docker Engine.
+        Avoid Docker Toolbox except for legacy historical discussion.
+    </div>
+
+    <h3>4.1 Installing Docker on Windows</h3>
+
+    <h4>Recommended: Docker Desktop with WSL 2</h4>
+    <p>Docker Desktop is the normal installation path for modern Windows machines.</p>
+
+    <h4>Prerequisites</h4>
+    <ul>
+        <li>Windows 10/11 64-bit.</li>
+        <li>Virtualization enabled in BIOS/UEFI.</li>
+        <li>WSL 2 enabled.</li>
+        <li>Administrator access for installation.</li>
+    </ul>
+
+    <h4>Step-by-step</h4>
+    <ol>
+        <li>Download Docker Desktop for Windows from the official Docker website.</li>
+        <li>Run the installer.</li>
+        <li>Keep <strong>Use WSL 2 instead of Hyper-V</strong> selected where applicable.</li>
+        <li>Restart the machine if prompted.</li>
+        <li>Open Docker Desktop.</li>
+        <li>Open PowerShell or Windows Terminal and verify:</li>
+    </ol>
+
+<pre><code>docker version
+docker info
+docker run hello-world</code></pre>
+
+    <h4>Optional: Enable WSL 2 manually</h4>
+<pre><code>wsl --install
+wsl --set-default-version 2</code></pre>
+
+    <div class="note">
+        On Windows, Linux containers run inside a lightweight Linux VM through WSL 2. This is normal.
+    </div>
+
+    <h3>4.2 Installing Docker on macOS</h3>
+
+    <h4>Recommended: Docker Desktop for Mac</h4>
+    <p>Choose the correct installer based on your CPU:</p>
+    <ul>
+        <li><strong>Apple Silicon:</strong> M1, M2, M3, M4 series.</li>
+        <li><strong>Intel:</strong> Older Intel-based Mac machines.</li>
+    </ul>
+
+    <h4>Step-by-step</h4>
+    <ol>
+        <li>Download Docker Desktop for Mac from the official Docker website.</li>
+        <li>Open the downloaded <code>.dmg</code> file.</li>
+        <li>Drag Docker into the Applications folder.</li>
+        <li>Open Docker Desktop from Applications.</li>
+        <li>Allow required permissions when macOS prompts.</li>
+        <li>Verify using Terminal:</li>
+    </ol>
+
+<pre><code>docker version
+docker info
+docker run hello-world</code></pre>
+
+    <h3>4.3 Installing Docker on Linux</h3>
+
+    <p>On Linux, there are two common options:</p>
+    <table>
+        <tr>
+            <th>Option</th>
+            <th>Best For</th>
+            <th>Notes</th>
+        </tr>
+        <tr>
+            <td>Docker Engine</td>
+            <td>Servers, cloud VMs, production-like training labs.</td>
+            <td>CLI-first, lightweight, no desktop GUI required.</td>
+        </tr>
+        <tr>
+            <td>Docker Desktop for Linux</td>
+            <td>Developer laptops needing GUI features.</td>
+            <td>Includes desktop UI and integrated tools.</td>
+        </tr>
+    </table>
+
+    <h4>Ubuntu / Debian Example: Install Docker Engine from Official Repository</h4>
+
+<pre><code># 1. Remove old conflicting packages if present
+sudo apt-get remove -y docker docker-engine docker.io containerd runc || true
+
+# 2. Update package index and install prerequisites
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg
+
+# 3. Add Docker official GPG key
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# 4. Add Docker repository
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+
+# 5. Install Docker packages
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 6. Verify
+sudo docker version
+sudo docker run hello-world</code></pre>
+
+    <h4>Allow non-root user to run Docker</h4>
+
+<pre><code># Add current user to docker group
+sudo usermod -aG docker $USER
+
+# Apply group change without full logout/login
+newgrp docker
+
+# Verify without sudo
+docker run hello-world</code></pre>
+
+    <div class="danger">
+        <strong>Security note:</strong> Membership in the <code>docker</code> group is effectively root-equivalent on the host. Add only trusted users.
+    </div>
+
+    <h4>Start and enable Docker service</h4>
+
+<pre><code>sudo systemctl enable --now docker
+sudo systemctl status docker</code></pre>
+
+    <h4>RHEL / Rocky Linux / AlmaLinux Example</h4>
+
+<pre><code># 1. Install yum-utils
+sudo dnf install -y yum-utils
+
+# 2. Add Docker repository
+sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+# 3. Install Docker Engine
+sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 4. Start Docker
+sudo systemctl enable --now docker
+
+# 5. Verify
+sudo docker run hello-world</code></pre>
+
+    <h4>Fedora Example</h4>
+
+<pre><code>sudo dnf install -y dnf-plugins-core
+sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable --now docker
+sudo docker run hello-world</code></pre>
+
+</section>
+
+<section id="desktop-toolbox" class="card">
+    <h2>5. Docker Desktop vs Docker Toolbox</h2>
+
+    <table>
+        <tr>
+            <th>Feature</th>
+            <th>Docker Desktop</th>
+            <th>Docker Toolbox</th>
+        </tr>
+        <tr>
+            <td>Status</td>
+            <td>Current Docker product for desktop use.</td>
+            <td>Deprecated/retired legacy solution.</td>
+        </tr>
+        <tr>
+            <td>Platform</td>
+            <td>Windows, macOS, Linux.</td>
+            <td>Old Windows/macOS systems.</td>
+        </tr>
+        <tr>
+            <td>Virtualization</td>
+            <td>Uses WSL 2/Hyper-V on Windows; native virtualization framework on macOS.</td>
+            <td>Used VirtualBox and Docker Machine.</td>
+        </tr>
+        <tr>
+            <td>GUI</td>
+            <td>Includes Docker Dashboard.</td>
+            <td>No modern Docker Desktop dashboard.</td>
+        </tr>
+        <tr>
+            <td>Compose</td>
+            <td>Modern <code>docker compose</code> plugin.</td>
+            <td>Older separate tooling.</td>
+        </tr>
+        <tr>
+            <td>Recommendation</td>
+            <td>Use for modern desktop/laptop setups.</td>
+            <td>Do not use for new training or production work.</td>
+        </tr>
+    </table>
+
+    <div class="warn">
+        Docker Toolbox may appear in old blogs or videos. For current learning and training, use Docker Desktop or Docker Engine.
+    </div>
+</section>
+
+<section id="post-install" class="card">
+    <h2>6. Post-Installation Verification</h2>
+
+    <h3>6.1 Check Docker Client and Server Version</h3>
+<pre><code>docker version</code></pre>
+
+    <p>Expected output includes two sections:</p>
+    <ul>
+        <li><strong>Client:</strong> Docker CLI installed on your machine.</li>
+        <li><strong>Server:</strong> Docker daemon/engine running properly.</li>
+    </ul>
+
+    <h3>6.2 Check Docker System Information</h3>
+<pre><code>docker info</code></pre>
+
+    <p>This shows storage driver, number of containers, images, Docker root directory, plugins, runtime, and operating system details.</p>
+
+    <h3>6.3 Run Test Container</h3>
+<pre><code>docker run hello-world</code></pre>
+
+    <p>This command verifies that Docker can:</p>
+    <ol>
+        <li>Contact the Docker daemon.</li>
+        <li>Pull an image from Docker Hub.</li>
+        <li>Create a container.</li>
+        <li>Run the container successfully.</li>
+    </ol>
+</section>
+
+<section id="cli" class="card">
+    <h2>7. Basic Docker CLI Commands</h2>
+
+    <h3>7.1 <code>docker version</code></h3>
+    <p>Shows Docker client and server version details.</p>
+<pre><code>docker version</code></pre>
+
+    <h3>7.2 <code>docker info</code></h3>
+    <p>Displays detailed information about Docker installation.</p>
+<pre><code>docker info</code></pre>
+
+    <h3>7.3 <code>docker pull</code></h3>
+    <p>Downloads an image from a registry.</p>
+<pre><code>docker pull nginx
+docker pull ubuntu:24.04
+docker pull redis:7</code></pre>
+
+    <h3>7.4 <code>docker run</code></h3>
+    <p>Creates and starts a new container from an image.</p>
+
+<pre><code># Run a simple container
+docker run hello-world
+
+# Run Ubuntu interactively
+docker run -it ubuntu:24.04 bash
+
+# Run Nginx in background and expose port 8080
+docker run -d --name web1 -p 8080:80 nginx
+
+# Run and automatically remove after exit
+docker run --rm alpine echo "Hello from Alpine"</code></pre>
+
+    <h4>Important options for <code>docker run</code></h4>
+    <table>
+        <tr><th>Option</th><th>Meaning</th><th>Example</th></tr>
+        <tr><td><code>-d</code></td><td>Run in detached/background mode.</td><td><code>docker run -d nginx</code></td></tr>
+        <tr><td><code>-it</code></td><td>Interactive terminal.</td><td><code>docker run -it ubuntu bash</code></td></tr>
+        <tr><td><code>--name</code></td><td>Assign a container name.</td><td><code>--name web1</code></td></tr>
+        <tr><td><code>-p</code></td><td>Publish container port to host.</td><td><code>-p 8080:80</code></td></tr>
+        <tr><td><code>-v</code></td><td>Mount volume or host path.</td><td><code>-v mydata:/data</code></td></tr>
+        <tr><td><code>--rm</code></td><td>Remove container after it exits.</td><td><code>docker run --rm alpine</code></td></tr>
+    </table>
+
+    <h3>7.5 <code>docker push</code></h3>
+    <p>
+        The <code>docker push</code> command uploads a local Docker image to a registry such as Docker Hub.
+        Before pushing, the image must already exist locally. Do not tag or push an image name that is not present
+        in <code>docker images</code>.
+    </p>
+
+    <h4>Correct workflow: verify, tag, then push</h4>
+
+<pre><code># 1. Check which images exist locally
+docker images
+
+# 2. Example: assume this image already exists locally
+# REPOSITORY              TAG
+# docker-html-demo        1.0
+
+# 3. Login to Docker Hub
+docker login
+
+# 4. Tag the existing local image for your Docker Hub account
+docker tag docker-html-demo:1.0 your-dockerhub-username/docker-html-demo:1.0
+
+# 5. Verify that the new tagged image exists locally
+docker images | grep docker-html-demo
+
+# 6. Push the image to Docker Hub
+docker push your-dockerhub-username/docker-html-demo:1.0</code></pre>
+
+    <h4>If the image does not exist yet, create it first</h4>
+
+<pre><code># Create a simple image before pushing
+mkdir docker-push-demo
+cd docker-push-demo
+
+cat &gt; index.html &lt;&lt;'EOF'
+&lt;h1&gt;Hello from Docker Push Demo&lt;/h1&gt;
+EOF
+
+cat &gt; Dockerfile &lt;&lt;'EOF'
+FROM nginx:latest
+COPY index.html /usr/share/nginx/html/index.html
+EOF
+
+docker build -t docker-html-demo:1.0 .
+
+# Now verify
+docker images | grep docker-html-demo</code></pre>
+
+    <div class="note">
+        Replace <code>your-dockerhub-username</code> with your real Docker Hub username. 
+        The local image name used in this document is <code>docker-html-demo:1.0</code>, which is created in Example 3.
+    </div>
+
+    <h3>7.6 <code>docker ps</code></h3>
+    <p>Lists containers.</p>
+<pre><code># Show running containers
+docker ps
+
+# Show all containers, including stopped containers
+docker ps -a</code></pre>
+
+    <h3>7.7 <code>docker images</code></h3>
+    <p>Lists local Docker images.</p>
+<pre><code>docker images</code></pre>
+
+    <h3>7.8 <code>docker container start</code> and <code>docker container stop</code></h3>
+    <p>Start or stop an existing container.</p>
+<pre><code>docker container stop web1
+docker container start web1</code></pre>
+
+    <h3>7.9 <code>docker container rm</code></h3>
+    <p>Removes stopped containers.</p>
+<pre><code># Remove one stopped container
+docker container rm web1
+
+# Force remove a running container
+docker container rm -f web1
+
+# Remove all stopped containers
+docker container prune</code></pre>
+
+    <h3>7.10 <code>docker exec</code></h3>
+    <p>Runs a command inside an already running container.</p>
+<pre><code># Open shell inside running Nginx container
+docker exec -it web1 sh
+
+# Run one command inside a container
+docker exec web1 nginx -v</code></pre>
+
+    <h3>7.11 <code>docker logs</code></h3>
+    <p>Displays logs from a container.</p>
+<pre><code># Show logs
+docker logs web1
+
+# Follow logs live
+docker logs -f web1
+
+# Show last 20 lines
+docker logs --tail 20 web1</code></pre>
+
+    <h3>7.12 <code>docker network</code></h3>
+    <p>Manages Docker networks.</p>
+<pre><code># List networks
+docker network ls
+
+# Create a user-defined bridge network
+docker network create appnet
+
+# Inspect network details
+docker network inspect appnet
+
+# Remove network
+docker network rm appnet</code></pre>
+
+    <h3>7.13 <code>docker volume</code></h3>
+    <p>Manages persistent Docker volumes.</p>
+<pre><code># List volumes
+docker volume ls
+
+# Create volume
+docker volume create appdata
+
+# Inspect volume
+docker volume inspect appdata
+
+# Remove volume
+docker volume rm appdata</code></pre>
+</section>
+
+<section id="examples" class="card">
+    <h2>8. Complete Hands-on Labs with Verification</h2>
+
+    <div class="note">
+        <strong>Lab design:</strong> These labs use simple, repeatable commands. Each lab includes cleanup, execution, verification, and expected output hints so trainees can confirm their work.
+    </div>
+
+    <div class="warn">
+        If you get <code>permission denied while trying to connect to the Docker API at unix:///var/run/docker.sock</code>,
+        fix Docker permissions first:
+<pre><code>sudo usermod -aG docker $USER
+newgrp docker
+docker run hello-world</code></pre>
+        Do not use <code>chmod 666 /var/run/docker.sock</code>.
+    </div>
+
+    <h3>Lab 1: Verify Docker Installation using <code>hello-world</code></h3>
+
+    <p><strong>Objective:</strong> Confirm that Docker client, Docker daemon, image pull, container creation, and container execution are working.</p>
+
+    <h4>Step 1: Check Docker version</h4>
+<pre><code>docker version</code></pre>
+
+    <p><strong>Verify:</strong> Output should show both <code>Client</code> and <code>Server</code> sections.</p>
+
+    <h4>Step 2: Check Docker system information</h4>
+<pre><code>docker info</code></pre>
+
+    <p><strong>Verify:</strong> Output should show details such as <code>Containers</code>, <code>Images</code>, <code>Server Version</code>, and <code>Storage Driver</code>.</p>
+
+    <h4>Step 3: Run the test container</h4>
+<pre><code>docker run hello-world</code></pre>
+
+    <p><strong>Expected result:</strong> You should see a message similar to:</p>
+<pre><code>Hello from Docker!
+This message shows that your installation appears to be working correctly.</code></pre>
+
+    <h4>Step 4: Check container history</h4>
+<pre><code>docker ps -a</code></pre>
+
+    <p><strong>Verify:</strong> You should see a stopped container created from the <code>hello-world</code> image.</p>
+
+    <h4>Cleanup</h4>
+<pre><code>docker container prune -f</code></pre>
+
+    <p><strong>Verify cleanup:</strong></p>
+<pre><code>docker ps -a</code></pre>
+
+    <hr>
+
+    <h3>Lab 2: Pull and Run an Nginx Web Server</h3>
+
+    <p><strong>Objective:</strong> Download an image, run a web server container, expose it on a host port, verify browser/curl access, and clean up safely.</p>
+
+    <h4>Step 1: Remove old container if it exists</h4>
+<pre><code>docker rm -f mynginx 2&gt;/dev/null || true</code></pre>
+
+    <h4>Step 2: Pull the Nginx image</h4>
+<pre><code>docker pull nginx:latest</code></pre>
+
+    <p><strong>Verify:</strong></p>
+<pre><code>docker images nginx</code></pre>
+
+    <p>You should see <code>nginx</code> with tag <code>latest</code>.</p>
+
+    <h4>Step 3: Run Nginx container</h4>
+<pre><code>docker run -d --name mynginx -p 8080:80 nginx:latest</code></pre>
+
+    <p><strong>Verify container is running:</strong></p>
+<pre><code>docker ps --filter "name=mynginx"</code></pre>
+
+    <p>You should see status similar to <code>Up</code> and port mapping similar to <code>0.0.0.0:8080-&gt;80/tcp</code>.</p>
+
+    <h4>Step 4: Test from command line</h4>
+<pre><code>curl -I http://localhost:8080</code></pre>
+
+    <p><strong>Expected result:</strong></p>
+<pre><code>HTTP/1.1 200 OK
+Server: nginx</code></pre>
+
+    <h4>Step 5: Test from browser</h4>
+<pre><code>http://localhost:8080</code></pre>
+
+    <p><strong>Expected result:</strong> Nginx welcome page should open.</p>
+
+    <h4>Step 6: View logs</h4>
+<pre><code>docker logs mynginx</code></pre>
+
+    <p><strong>Verify:</strong> After using browser or curl, access logs should appear.</p>
+
+    <h4>Step 7: Stop and remove container</h4>
+<pre><code>docker stop mynginx
+docker rm mynginx</code></pre>
+
+    <p><strong>Verify cleanup:</strong></p>
+<pre><code>docker ps -a --filter "name=mynginx"</code></pre>
+
+    <p>No container should be listed.</p>
+
+    <hr>
+
+    <h3>Lab 3: Run Ubuntu Container Interactively</h3>
+
+    <p><strong>Objective:</strong> Start an interactive Linux container, run commands inside it, exit, restart it, and remove it.</p>
+
+    <h4>Step 1: Remove old container if it exists</h4>
+<pre><code>docker rm -f ubuntu-lab 2&gt;/dev/null || true</code></pre>
+
+    <h4>Step 2: Start Ubuntu container interactively</h4>
+<pre><code>docker run -it --name ubuntu-lab ubuntu:24.04 bash</code></pre>
+
+    <p>You are now inside the container shell. The prompt may look like <code>root@container-id:/#</code>.</p>
+
+    <h4>Step 3: Run commands inside container</h4>
+<pre><code>cat /etc/os-release
+whoami
+hostname
+exit</code></pre>
+
+    <p><strong>Expected result:</strong> <code>whoami</code> should show <code>root</code>. The OS release should show Ubuntu 24.04 details.</p>
+
+    <h4>Step 4: Verify container exists but is stopped</h4>
+<pre><code>docker ps -a --filter "name=ubuntu-lab"</code></pre>
+
+    <p><strong>Verify:</strong> Status should show <code>Exited</code>.</p>
+
+    <h4>Step 5: Start it again and execute a command</h4>
+<pre><code>docker start ubuntu-lab
+docker exec ubuntu-lab cat /etc/os-release</code></pre>
+
+    <p><strong>Verify:</strong> The command should print Ubuntu OS details without opening an interactive shell.</p>
+
+    <h4>Step 6: Open shell again</h4>
+<pre><code>docker exec -it ubuntu-lab bash</code></pre>
+
+    <p>Exit again:</p>
+<pre><code>exit</code></pre>
+
+    <h4>Cleanup</h4>
+<pre><code>docker rm -f ubuntu-lab</code></pre>
+
+    <p><strong>Verify cleanup:</strong></p>
+<pre><code>docker ps -a --filter "name=ubuntu-lab"</code></pre>
+
+    <hr>
+
+    <h3>Lab 4: Create a Simple Custom HTML Image using Dockerfile</h3>
+
+    <p><strong>Objective:</strong> Build a custom Docker image using a Dockerfile and serve a simple HTML page through Nginx.</p>
+
+    <h4>Step 1: Create clean project directory</h4>
+<pre><code>rm -rf docker-html-demo
+mkdir docker-html-demo
+cd docker-html-demo</code></pre>
+
+    <h4>Step 2: Create <code>index.html</code></h4>
+<pre><code>cat &gt; index.html &lt;&lt;'EOF'
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Docker Demo&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Hello from Docker!&lt;/h1&gt;
+    &lt;p&gt;This page is served from a custom Docker image.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+EOF</code></pre>
+
+    <p><strong>Verify file:</strong></p>
+<pre><code>cat index.html</code></pre>
+
+    <h4>Step 3: Create Dockerfile</h4>
+<pre><code>cat &gt; Dockerfile &lt;&lt;'EOF'
+FROM nginx:latest
+COPY index.html /usr/share/nginx/html/index.html
+EOF</code></pre>
+
+    <p><strong>Verify Dockerfile:</strong></p>
+<pre><code>cat Dockerfile</code></pre>
+
+    <h4>Step 4: Build the image</h4>
+<pre><code>docker build -t docker-html-demo:1.0 .</code></pre>
+
+    <p><strong>Verify image exists:</strong></p>
+<pre><code>docker images | grep docker-html-demo</code></pre>
+
+    <p>You should see <code>docker-html-demo</code> with tag <code>1.0</code>.</p>
+
+    <h4>Step 5: Run the custom image</h4>
+<pre><code>docker rm -f html-demo 2&gt;/dev/null || true
+docker run -d --name html-demo -p 8081:80 docker-html-demo:1.0</code></pre>
+
+    <p><strong>Verify container:</strong></p>
+<pre><code>docker ps --filter "name=html-demo"</code></pre>
+
+    <h4>Step 6: Test the web page</h4>
+<pre><code>curl http://localhost:8081</code></pre>
+
+    <p><strong>Expected result:</strong> Output should include:</p>
+<pre><code>Hello from Docker!
+This page is served from a custom Docker image.</code></pre>
+
+    <h4>Step 7: Check logs</h4>
+<pre><code>docker logs html-demo</code></pre>
+
+    <h4>Cleanup</h4>
+<pre><code>docker rm -f html-demo
+cd ..
+rm -rf docker-html-demo</code></pre>
+
+    <p><strong>Optional image cleanup:</strong></p>
+<pre><code>docker image rm docker-html-demo:1.0</code></pre>
+
+    <hr>
+
+    <h3>Lab 5: Push a Custom Image to Docker Hub</h3>
+
+    <p><strong>Objective:</strong> Tag and push a local custom image to Docker Hub.</p>
+
+    <div class="warn">
+        This lab requires a Docker Hub account and internet access. Replace <code>your-dockerhub-username</code> with your actual Docker Hub username.
+    </div>
+
+    <h4>Step 1: Make sure the image exists locally</h4>
+<pre><code>docker images | grep docker-html-demo</code></pre>
+
+    <p><strong>If nothing is shown:</strong> Re-run Lab 4, but do not remove the image at the end.</p>
+
+    <h4>Step 2: Login to Docker Hub</h4>
+<pre><code>docker login</code></pre>
+
+    <p><strong>Verify:</strong> Login should complete successfully.</p>
+
+    <h4>Step 3: Tag the local image</h4>
+<pre><code>docker tag docker-html-demo:1.0 your-dockerhub-username/docker-html-demo:1.0</code></pre>
+
+    <p><strong>Verify tag:</strong></p>
+<pre><code>docker images | grep docker-html-demo</code></pre>
+
+    <p>You should see both:</p>
+<pre><code>docker-html-demo                              1.0
+your-dockerhub-username/docker-html-demo      1.0</code></pre>
+
+    <h4>Step 4: Push the image</h4>
+<pre><code>docker push your-dockerhub-username/docker-html-demo:1.0</code></pre>
+
+    <p><strong>Verify:</strong> Docker should upload layers and finish without error.</p>
+
+    <h4>Step 5: Pull and test the pushed image</h4>
+<pre><code>docker rm -f pushed-demo 2&gt;/dev/null || true
+docker run -d --name pushed-demo -p 8082:80 your-dockerhub-username/docker-html-demo:1.0
+curl http://localhost:8082</code></pre>
+
+    <p><strong>Expected result:</strong> The same custom HTML page should be returned.</p>
+
+    <h4>Cleanup</h4>
+<pre><code>docker rm -f pushed-demo</code></pre>
+
+    <hr>
+
+    <h3>Lab 6: Practice Container Lifecycle Commands</h3>
+
+    <p><strong>Objective:</strong> Practice <code>run</code>, <code>ps</code>, <code>logs</code>, <code>stop</code>, <code>start</code>, <code>exec</code>, and <code>rm</code>.</p>
+
+    <h4>Step 1: Run a lightweight long-running container</h4>
+<pre><code>docker rm -f lifecycle-lab 2&gt;/dev/null || true
+docker run -d --name lifecycle-lab alpine:latest sh -c "while true; do echo Docker lifecycle lab; sleep 5; done"</code></pre>
+
+    <h4>Step 2: Verify it is running</h4>
+<pre><code>docker ps --filter "name=lifecycle-lab"</code></pre>
+
+    <h4>Step 3: Check logs</h4>
+<pre><code>docker logs lifecycle-lab</code></pre>
+
+    <h4>Step 4: Execute a command inside it</h4>
+<pre><code>docker exec lifecycle-lab cat /etc/os-release</code></pre>
+
+    <h4>Step 5: Stop the container</h4>
+<pre><code>docker stop lifecycle-lab</code></pre>
+
+    <p><strong>Verify stopped state:</strong></p>
+<pre><code>docker ps -a --filter "name=lifecycle-lab"</code></pre>
+
+    <h4>Step 6: Start it again</h4>
+<pre><code>docker start lifecycle-lab
+docker ps --filter "name=lifecycle-lab"</code></pre>
+
+    <h4>Cleanup</h4>
+<pre><code>docker rm -f lifecycle-lab</code></pre>
+
+    <hr>
+
+    <h3>Section 8 Validation Checklist for Trainer</h3>
+
+    <table>
+        <tr>
+            <th>Lab</th>
+            <th>Validation Command</th>
+            <th>Expected Result</th>
+        </tr>
+        <tr>
+            <td>Lab 1</td>
+            <td><code>docker run hello-world</code></td>
+            <td>Prints Docker installation success message.</td>
+        </tr>
+        <tr>
+            <td>Lab 2</td>
+            <td><code>curl -I http://localhost:8080</code></td>
+            <td>Returns <code>HTTP/1.1 200 OK</code>.</td>
+        </tr>
+        <tr>
+            <td>Lab 3</td>
+            <td><code>docker exec ubuntu-lab cat /etc/os-release</code></td>
+            <td>Shows Ubuntu OS details.</td>
+        </tr>
+        <tr>
+            <td>Lab 4</td>
+            <td><code>curl http://localhost:8081</code></td>
+            <td>Returns custom HTML page content.</td>
+        </tr>
+        <tr>
+            <td>Lab 5</td>
+            <td><code>docker push your-dockerhub-username/docker-html-demo:1.0</code></td>
+            <td>Push completes successfully after replacing username.</td>
+        </tr>
+        <tr>
+            <td>Lab 6</td>
+            <td><code>docker logs lifecycle-lab</code></td>
+            <td>Shows repeated <code>Docker lifecycle lab</code> log messages.</td>
+        </tr>
+    </table>
+
+    <div class="note">
+        <strong>Validation performed in this document:</strong> Commands were reviewed for correct Docker CLI syntax, proper object names, cleanup safety, dependency order, and expected verification steps. Docker runtime execution must be done on a machine where Docker Engine/Desktop is installed and running.
+    </div>
+</section>
+
+
+
+<section id="network-volume" class="card">
+    <h2>9. Docker Network and Volume Examples</h2>
+
+    <h3>9.1 Docker Network Concept</h3>
+    <p>
+        Docker networks allow containers to communicate with each other. The default bridge network works, but
+        user-defined bridge networks are better because they provide automatic DNS-based name resolution between containers.
+    </p>
+
+    <div class="diagram">
+<svg width="900" height="300" xmlns="http://www.w3.org/2000/svg">
+    <rect x="60" y="50" width="780" height="210" rx="20" fill="#f0f9ff" stroke="#0b72b9" stroke-width="2"/>
+    <text x="450" y="85" text-anchor="middle" font-size="22" font-weight="bold" fill="#0f3f66">User-defined Docker Network: appnet</text>
+
+    <rect x="130" y="130" width="180" height="80" rx="12" fill="#ecfdf5" stroke="#0f766e" stroke-width="2"/>
+    <text x="220" y="165" text-anchor="middle" font-size="18" font-weight="bold" fill="#065f46">web</text>
+    <text x="220" y="190" text-anchor="middle" font-size="14">Nginx/App</text>
+
+    <rect x="590" y="130" width="180" height="80" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+    <text x="680" y="165" text-anchor="middle" font-size="18" font-weight="bold" fill="#9a3412">db</text>
+    <text x="680" y="190" text-anchor="middle" font-size="14">Database</text>
+
+    <line x1="315" y1="170" x2="585" y2="170" stroke="#0b72b9" stroke-width="3" stroke-dasharray="8,5"/>
+    <text x="450" y="155" text-anchor="middle" font-size="14" fill="#0b72b9">Container name DNS</text>
+</svg>
+    </div>
+
+    <h3>9.2 Create Network and Run Containers</h3>
+
+<pre><code># Create network
+docker network create appnet
+
+# Run Nginx on appnet
+docker run -d --name web --network appnet nginx
+
+# Run Alpine and test DNS resolution
+docker run --rm -it --network appnet alpine sh
+
+# Inside Alpine container:
+ping web
+exit</code></pre>
+
+    <h3>9.3 Docker Volume Concept</h3>
+    <p>
+        Containers are temporary by design. If a container is deleted, data written inside the container can be lost.
+        Docker volumes provide persistent storage managed by Docker.
+    </p>
+
+    <div class="diagram">
+<svg width="900" height="310" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <marker id="arrow3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 z" fill="#0b72b9"/>
+        </marker>
+    </defs>
+
+    <rect x="100" y="70" width="260" height="150" rx="16" fill="#ecfdf5" stroke="#0f766e" stroke-width="2"/>
+    <text x="230" y="110" text-anchor="middle" font-size="21" font-weight="bold" fill="#065f46">Container</text>
+    <text x="230" y="145" text-anchor="middle" font-size="15">/usr/share/nginx/html</text>
+    <text x="230" y="172" text-anchor="middle" font-size="15">Application files/data</text>
+
+    <line x1="370" y1="145" x2="520" y2="145" stroke="#0b72b9" stroke-width="3" marker-end="url(#arrow3)"/>
+    <text x="445" y="128" text-anchor="middle" font-size="14" fill="#0b72b9">mount</text>
+
+    <rect x="535" y="70" width="260" height="150" rx="16" fill="#e8f4ff" stroke="#0b72b9" stroke-width="2"/>
+    <text x="665" y="110" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f3f66">Docker Volume</text>
+    <text x="665" y="145" text-anchor="middle" font-size="15">appdata</text>
+    <text x="665" y="172" text-anchor="middle" font-size="15">Persistent storage</text>
+</svg>
+    </div>
+
+    <h3>9.4 Create and Use a Volume</h3>
+
+<pre><code># Create volume
+docker volume create webdata
+
+# Run Nginx with volume mounted
+docker run -d --name vol-nginx -p 8083:80 \
+  -v webdata:/usr/share/nginx/html \
+  nginx
+
+# Create a file inside the container volume
+docker exec -it vol-nginx sh -c 'echo "&lt;h1&gt;Data from Docker Volume&lt;/h1&gt;" &gt; /usr/share/nginx/html/index.html'
+
+# Test
+curl http://localhost:8083
+
+# Remove container
+docker rm -f vol-nginx
+
+# Run another container using the same volume
+docker run -d --name vol-nginx2 -p 8084:80 \
+  -v webdata:/usr/share/nginx/html \
+  nginx
+
+# Data still exists
+curl http://localhost:8084</code></pre>
+
+    <h3>9.5 Cleanup Network and Volume</h3>
+
+<pre><code>docker rm -f web vol-nginx2 2&gt;/dev/null || true
+docker network rm appnet
+docker volume rm webdata</code></pre>
+
+</section>
+
+<section id="troubleshooting" class="card">
+    <h2>10. Common Troubleshooting</h2>
+
+    <table>
+        <tr>
+            <th>Problem</th>
+            <th>Likely Cause</th>
+            <th>Solution</th>
+        </tr>
+        <tr>
+            <td><code>Cannot connect to the Docker daemon</code></td>
+            <td>Docker service not running or user lacks permission.</td>
+            <td>Run <code>sudo systemctl status docker</code>. Start with <code>sudo systemctl start docker</code>. On Linux, check docker group membership.</td>
+        </tr>
+        <tr>
+            <td><code>permission denied while trying to connect to Docker daemon socket</code></td>
+            <td>User not in <code>docker</code> group.</td>
+            <td><code>sudo usermod -aG docker $USER</code>, then logout/login or run <code>newgrp docker</code>.</td>
+        </tr>
+        <tr>
+            <td>Port already allocated</td>
+            <td>Another process/container is using the host port.</td>
+            <td>Use another host port, e.g. <code>-p 8081:80</code>, or stop the conflicting process.</td>
+        </tr>
+        <tr>
+            <td>Container exits immediately</td>
+            <td>Main process completed or failed.</td>
+            <td>Check logs using <code>docker logs container-name</code>.</td>
+        </tr>
+        <tr>
+            <td>Image pull is slow/failing</td>
+            <td>Network, proxy, DNS, or registry issue.</td>
+            <td>Check internet, proxy settings, Docker Desktop settings, or registry login.</td>
+        </tr>
+        <tr>
+            <td>Docker Desktop not starting on Windows</td>
+            <td>WSL 2, virtualization, or Hyper-V issue.</td>
+            <td>Enable virtualization in BIOS/UEFI, update WSL, restart Docker Desktop.</td>
+        </tr>
+    </table>
+
+    <h3>Useful Diagnostic Commands</h3>
+<pre><code>docker version
+docker info
+docker ps -a
+docker images
+docker logs &lt;container-name&gt;
+docker inspect &lt;container-name&gt;
+docker system df
+docker system prune</code></pre>
+
+    <div class="warn">
+        Be careful with <code>docker system prune</code>. It removes unused containers, networks, images, and build cache.
+    </div>
+</section>
+
+<section id="cheatsheet" class="card">
+    <h2>11. Command Cheat Sheet</h2>
+
+    <table>
+        <tr>
+            <th>Task</th>
+            <th>Command</th>
+        </tr>
+        <tr>
+            <td>Check Docker version</td>
+            <td><code>docker version</code></td>
+        </tr>
+        <tr>
+            <td>Check Docker system details</td>
+            <td><code>docker info</code></td>
+        </tr>
+        <tr>
+            <td>Pull image</td>
+            <td><code>docker pull nginx</code></td>
+        </tr>
+        <tr>
+            <td>Run container</td>
+            <td><code>docker run -d --name web -p 8080:80 nginx</code></td>
+        </tr>
+        <tr>
+            <td>List running containers</td>
+            <td><code>docker ps</code></td>
+        </tr>
+        <tr>
+            <td>List all containers</td>
+            <td><code>docker ps -a</code></td>
+        </tr>
+        <tr>
+            <td>List images</td>
+            <td><code>docker images</code></td>
+        </tr>
+        <tr>
+            <td>Stop container</td>
+            <td><code>docker stop web</code></td>
+        </tr>
+        <tr>
+            <td>Start container</td>
+            <td><code>docker start web</code></td>
+        </tr>
+        <tr>
+            <td>Remove container</td>
+            <td><code>docker rm web</code></td>
+        </tr>
+        <tr>
+            <td>Force remove container</td>
+            <td><code>docker rm -f web</code></td>
+        </tr>
+        <tr>
+            <td>Execute inside container</td>
+            <td><code>docker exec -it web sh</code></td>
+        </tr>
+        <tr>
+            <td>View logs</td>
+            <td><code>docker logs web</code></td>
+        </tr>
+        <tr>
+            <td>Follow logs</td>
+            <td><code>docker logs -f web</code></td>
+        </tr>
+        <tr>
+            <td>List networks</td>
+            <td><code>docker network ls</code></td>
+        </tr>
+        <tr>
+            <td>Create network</td>
+            <td><code>docker network create appnet</code></td>
+        </tr>
+        <tr>
+            <td>List volumes</td>
+            <td><code>docker volume ls</code></td>
+        </tr>
+        <tr>
+            <td>Create volume</td>
+            <td><code>docker volume create appdata</code></td>
+        </tr>
+        <tr>
+            <td>Push image</td>
+            <td><code>docker push username/image:tag</code></td>
+        </tr>
+    </table>
+</section>
+
+<section id="assessment" class="card">
+    <h2>12. Practice Questions</h2>
+
+    <h3>Beginner Questions</h3>
+    <ol>
+        <li>What is the difference between a Docker image and a Docker container?</li>
+        <li>Which command is used to check Docker client and server version?</li>
+        <li>Which command lists running containers?</li>
+        <li>What is the purpose of <code>-p 8080:80</code> in <code>docker run</code>?</li>
+        <li>Why should Docker Toolbox not be used for new setups?</li>
+        <li>What is the purpose of a Docker volume?</li>
+        <li>What does <code>docker exec -it container sh</code> do?</li>
+        <li>What is the difference between <code>docker stop</code> and <code>docker rm</code>?</li>
+    </ol>
+
+    <h3>Hands-on Tasks</h3>
+    <ol>
+        <li>Install Docker and run <code>hello-world</code>.</li>
+        <li>Run an Nginx container on host port 8080.</li>
+        <li>Check the logs of the Nginx container.</li>
+        <li>Open a shell inside a running container.</li>
+        <li>Create a custom Docker image serving your own HTML page.</li>
+        <li>Create a Docker volume and verify data persists after container deletion.</li>
+        <li>Create a user-defined Docker network and test container-to-container communication.</li>
+        <li>Tag and push a custom image to Docker Hub.</li>
+    </ol>
+</section>
+
+<section id="sources" class="card">
+    <h2>13. References</h2>
+    <p>The installation guidance in this document is based on official Docker documentation and current Docker product status.</p>
+    <ul>
+        <li>Docker Desktop documentation: <code>https://docs.docker.com/desktop/</code></li>
+        <li>Docker Desktop for Windows installation: <code>https://docs.docker.com/desktop/setup/install/windows-install/</code></li>
+        <li>Docker Engine installation: <code>https://docs.docker.com/engine/install/</code></li>
+        <li>Docker Engine on Ubuntu: <code>https://docs.docker.com/engine/install/ubuntu/</code></li>
+        <li>Docker retired/deprecated products: <code>https://docs.docker.com/retired/</code></li>
+        <li>Docker CLI reference: <code>https://docs.docker.com/reference/cli/docker/</code></li>
+    </ul>
+</section>
+
+</div>
+
+<footer>
+    Docker Installation and Setup Reference Document | Prepared for training use
+</footer>
+
+</body>
+</html>
