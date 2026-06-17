@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kubernetes Architecture and kubeadm Cluster Setup - Validated Trainee Reference</title>
+<style>
+:root{--blue:#2563eb;--green:#16a34a;--orange:#ea580c;--purple:#7c3aed;--dark:#0f172a;--muted:#64748b;--bg:#f8fafc;--card:#fff;}
+*{box-sizing:border-box}body{font-family:Inter,Segoe UI,Arial,sans-serif;margin:0;background:var(--bg);color:#1e293b;line-height:1.6}header{background:linear-gradient(135deg,#0f172a,#1d4ed8);color:white;padding:36px 24px}main{max-width:1180px;margin:auto;padding:24px}h1,h2,h3{color:#0f172a}header h1{color:white;margin:0 0 8px}section{background:var(--card);border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin:18px 0;box-shadow:0 6px 18px rgba(15,23,42,.05)}.toc a{display:block;color:#1d4ed8;text-decoration:none;margin:6px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.card{border:1px solid #e2e8f0;border-radius:14px;padding:16px;background:#fff}.note{border-left:5px solid var(--blue);background:#eff6ff;padding:12px 14px;border-radius:10px;margin:12px 0}.warn{border-left:5px solid var(--orange);background:#fff7ed;padding:12px 14px;border-radius:10px;margin:12px 0}.ok{border-left:5px solid var(--green);background:#f0fdf4;padding:12px 14px;border-radius:10px;margin:12px 0}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #e2e8f0;padding:10px;text-align:left;vertical-align:top}th{background:#e0f2fe}pre{background:#0f172a;color:#e2e8f0;border-radius:14px;padding:16px;overflow:auto;font-size:14px}code{font-family:Consolas,Monaco,monospace}.tag{display:inline-block;background:#e0f2fe;color:#075985;padding:3px 8px;border-radius:999px;font-size:12px;margin:2px}svg{max-width:100%;height:auto}.arrow{fill:none;stroke:#2563eb;stroke-width:4;marker-end:url(#arrowhead);stroke-dasharray:10 8;animation:dash 1.2s linear infinite}.arrow2{stroke:#16a34a}.arrow3{stroke:#ea580c}.packet{filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}@keyframes dash{to{stroke-dashoffset:-36}}.small{font-size:13px;color:var(--muted)}
+</style></head><body>
+<header><h1>Kubernetes Architecture and kubeadm Cluster Setup</h1><p>Validated trainee reference with simple concepts, diagrams, directional cluster flow, and kubeadm labs for Ubuntu 22.04/24.04 using containerd and Kubernetes v1.36 repository.</p></header>
+<main>
+<section class="toc"><h2>Contents</h2>
+<a href="#containers">1. Containerization and Docker Basics</a><a href="#why">2. Why Kubernetes?</a><a href="#versions">3. Versions and Flavors</a><a href="#terms">4. Terminology</a><a href="#arch">5. Cluster Architecture and Flow</a><a href="#control">6. Control Plane Components</a><a href="#node">7. Node Components</a><a href="#setup">8. kubeadm Setup Labs</a><a href="#validation">9. Validation and Troubleshooting</a></section>
+
+<section id="containers"><h2>1. What is Containerization?</h2><p>Containerization packages an application with its dependencies so it can run consistently across laptop, VM, test, and production environments.</p>
+
+<h3>Simple picture: application packaging before and after containers</h3>
+<svg viewBox="0 0 1100 360" role="img" aria-label="Comparison of traditional application deployment and containerized deployment">
+  <defs>
+    <marker id="arrowblueContainers" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0,10 4,0 8" fill="#2563eb"/></marker>
+  </defs>
+  <rect x="20" y="25" width="500" height="300" rx="18" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <text x="270" y="60" text-anchor="middle" font-size="22" font-weight="700">Without Containers</text>
+  <rect x="70" y="95" width="160" height="55" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="150" y="128" text-anchor="middle" font-weight="700">App Code</text>
+  <rect x="70" y="165" width="160" height="55" rx="10" fill="#ffedd5" stroke="#f97316"/><text x="150" y="198" text-anchor="middle" font-weight="700">Libraries</text>
+  <rect x="70" y="235" width="160" height="55" rx="10" fill="#fef3c7" stroke="#d97706"/><text x="150" y="268" text-anchor="middle" font-weight="700">Config</text>
+  <rect x="310" y="115" width="150" height="150" rx="16" fill="#e2e8f0" stroke="#64748b"/>
+  <text x="385" y="160" text-anchor="middle" font-weight="700">Server OS</text>
+  <text x="385" y="190" text-anchor="middle" font-size="14">different versions</text>
+  <text x="385" y="215" text-anchor="middle" font-size="14">different settings</text>
+  <path d="M230 122 C260 122 275 140 310 150" fill="none" stroke="#ef4444" stroke-width="3" marker-end="url(#arrowblueContainers)"/>
+  <path d="M230 192 C260 192 275 192 310 192" fill="none" stroke="#ef4444" stroke-width="3" marker-end="url(#arrowblueContainers)"/>
+  <path d="M230 262 C260 262 275 235 310 225" fill="none" stroke="#ef4444" stroke-width="3" marker-end="url(#arrowblueContainers)"/>
+  <text x="270" y="310" text-anchor="middle" font-size="14" fill="#7c2d12">Risk: “works on my laptop” problem</text>
+
+  <rect x="580" y="25" width="500" height="300" rx="18" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="830" y="60" text-anchor="middle" font-size="22" font-weight="700">With Containers</text>
+  <rect x="635" y="95" width="210" height="160" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="740" y="125" text-anchor="middle" font-weight="700">Container Image</text>
+  <rect x="665" y="145" width="150" height="32" rx="8" fill="#fff" stroke="#2563eb"/><text x="740" y="167" text-anchor="middle" font-size="13">App Code</text>
+  <rect x="665" y="185" width="150" height="32" rx="8" fill="#fff" stroke="#2563eb"/><text x="740" y="207" text-anchor="middle" font-size="13">Dependencies</text>
+  <rect x="665" y="225" width="150" height="32" rx="8" fill="#fff" stroke="#2563eb"/><text x="740" y="247" text-anchor="middle" font-size="13">Runtime Config</text>
+  <path d="M845 175 C875 175 895 175 925 175" fill="none" stroke="#2563eb" stroke-width="3" marker-end="url(#arrowblueContainers)"/>
+  <rect x="925" y="105" width="115" height="140" rx="16" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="982" y="145" text-anchor="middle" font-weight="700">Container</text>
+  <text x="982" y="172" text-anchor="middle" font-size="14">same image</text>
+  <text x="982" y="197" text-anchor="middle" font-size="14">everywhere</text>
+  <text x="830" y="310" text-anchor="middle" font-size="14" fill="#1e3a8a">Benefit: consistent deployment across environments</text>
+</svg>
+
+<div class="grid"><div class="card"><h3>Without containers</h3><p>Application may work on a developer laptop but fail on a server due to different library versions or OS settings.</p></div><div class="card"><h3>With containers</h3><p>The image contains the application and dependencies. The runtime starts the container from the same image everywhere.</p></div></div>
+
+<h3>Docker basics: image to running container</h3>
+<svg viewBox="0 0 1100 330" role="img" aria-label="Docker image build pull run flow">
+  <defs><marker id="arrowgreenContainers" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0,10 4,0 8" fill="#16a34a"/></marker></defs>
+  <rect x="40" y="80" width="180" height="95" rx="14" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <text x="130" y="118" text-anchor="middle" font-weight="700">Dockerfile</text>
+  <text x="130" y="145" text-anchor="middle" font-size="14">build instructions</text>
+  <path d="M220 128 L330 128" fill="none" stroke="#16a34a" stroke-width="4" marker-end="url(#arrowgreenContainers)"/>
+  <text x="275" y="105" text-anchor="middle" font-size="13">docker build</text>
+  <rect x="330" y="65" width="190" height="125" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="425" y="105" text-anchor="middle" font-weight="700">Container Image</text>
+  <text x="425" y="132" text-anchor="middle" font-size="14">read-only package</text>
+  <text x="425" y="158" text-anchor="middle" font-size="14">app + dependencies</text>
+  <path d="M520 128 L645 128" fill="none" stroke="#16a34a" stroke-width="4" marker-end="url(#arrowgreenContainers)"/>
+  <text x="582" y="105" text-anchor="middle" font-size="13">docker push / pull</text>
+  <rect x="645" y="65" width="185" height="125" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="738" y="105" text-anchor="middle" font-weight="700">Image Registry</text>
+  <text x="738" y="132" text-anchor="middle" font-size="14">Docker Hub</text>
+  <text x="738" y="158" text-anchor="middle" font-size="14">private registry</text>
+  <path d="M830 128 L935 128" fill="none" stroke="#16a34a" stroke-width="4" marker-end="url(#arrowgreenContainers)"/>
+  <text x="882" y="105" text-anchor="middle" font-size="13">docker run</text>
+  <rect x="935" y="65" width="125" height="125" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="998" y="105" text-anchor="middle" font-weight="700">Container</text>
+  <text x="998" y="132" text-anchor="middle" font-size="14">running</text>
+  <text x="998" y="158" text-anchor="middle" font-size="14">process</text>
+  <rect x="330" y="230" width="190" height="50" rx="12" fill="#fff" stroke="#94a3b8"/><text x="425" y="260" text-anchor="middle" font-size="14">Example: nginx:latest</text>
+  <rect x="935" y="230" width="125" height="50" rx="12" fill="#fff" stroke="#94a3b8"/><text x="998" y="260" text-anchor="middle" font-size="14">Web server</text>
+</svg>
+
+<h3>Container vs virtual machine</h3>
+<svg viewBox="0 0 1100 390" role="img" aria-label="Container versus virtual machine stack comparison">
+  <rect x="50" y="35" width="470" height="315" rx="18" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <text x="285" y="70" text-anchor="middle" font-size="22" font-weight="700">Container Stack</text>
+  <rect x="95" y="95" width="370" height="45" rx="8" fill="#dcfce7" stroke="#16a34a"/><text x="280" y="124" text-anchor="middle">App A + libraries</text>
+  <rect x="95" y="150" width="370" height="45" rx="8" fill="#dcfce7" stroke="#16a34a"/><text x="280" y="179" text-anchor="middle">App B + libraries</text>
+  <rect x="95" y="205" width="370" height="45" rx="8" fill="#bbf7d0" stroke="#16a34a"/><text x="280" y="234" text-anchor="middle">Container Runtime: containerd / CRI-O</text>
+  <rect x="95" y="260" width="370" height="45" rx="8" fill="#e2e8f0" stroke="#64748b"/><text x="280" y="289" text-anchor="middle">Shared Host Operating System Kernel</text>
+  <rect x="95" y="315" width="370" height="25" rx="6" fill="#cbd5e1" stroke="#64748b"/><text x="280" y="333" text-anchor="middle" font-size="13">Hardware / VM</text>
+
+  <rect x="580" y="35" width="470" height="315" rx="18" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <text x="815" y="70" text-anchor="middle" font-size="22" font-weight="700">Virtual Machine Stack</text>
+  <rect x="625" y="95" width="170" height="70" rx="8" fill="#ffedd5" stroke="#ea580c"/><text x="710" y="122" text-anchor="middle">App A</text><text x="710" y="146" text-anchor="middle" font-size="13">Guest OS</text>
+  <rect x="835" y="95" width="170" height="70" rx="8" fill="#ffedd5" stroke="#ea580c"/><text x="920" y="122" text-anchor="middle">App B</text><text x="920" y="146" text-anchor="middle" font-size="13">Guest OS</text>
+  <rect x="625" y="185" width="380" height="55" rx="8" fill="#fed7aa" stroke="#ea580c"/><text x="815" y="220" text-anchor="middle">Hypervisor</text>
+  <rect x="625" y="255" width="380" height="45" rx="8" fill="#e2e8f0" stroke="#64748b"/><text x="815" y="284" text-anchor="middle">Host Operating System</text>
+  <rect x="625" y="315" width="380" height="25" rx="6" fill="#cbd5e1" stroke="#64748b"/><text x="815" y="333" text-anchor="middle" font-size="13">Hardware</text>
+</svg>
+
+<div class="note"><strong>Docker review:</strong> Docker is commonly used to build and push container images. Kubernetes nodes do not require Docker Engine as the runtime; modern clusters commonly use CRI-compatible runtimes such as containerd or CRI-O.</div></section>
+
+<section id="why"><h2>2. Why Kubernetes?</h2><div class="grid"><div class="card"><h3>Self-healing</h3><p>Restarts failed containers and reschedules Pods when nodes fail.</p></div><div class="card"><h3>Scaling</h3><p>Runs multiple replicas and scales them up or down.</p></div><div class="card"><h3>Service discovery</h3><p>Applications use stable Service names instead of changing Pod IPs.</p></div><div class="card"><h3>Rolling updates</h3><p>Deploys new versions gradually and supports rollback.</p></div><div class="card"><h3>Declarative operation</h3><p>You define desired state in YAML; Kubernetes continuously reconciles reality.</p></div></div></section>
+
+<section id="versions"><h2>3. Kubernetes Versions and Flavors</h2><p>Kubernetes releases are versioned as major.minor.patch, for example 1.36.x. For stable training, keep kubeadm, kubelet, and kubectl on the same minor version across all nodes.</p><table><tr><th>Flavor</th><th>Best use</th><th>Comment</th></tr><tr><td>Upstream Kubernetes</td><td>Self-managed clusters</td><td>Installed using kubeadm or automation.</td></tr><tr><td>Minikube</td><td>Local learning</td><td>Simple single-node cluster.</td></tr><tr><td>Kind</td><td>CI/testing</td><td>Kubernetes nodes run as containers.</td></tr><tr><td>k3s / MicroK8s</td><td>Lightweight labs and edge</td><td>Simplified distributions.</td></tr><tr><td>EKS / AKS / GKE</td><td>Managed cloud Kubernetes</td><td>Cloud provider manages much of the control plane.</td></tr><tr><td>OpenShift</td><td>Enterprise Kubernetes platform</td><td>Adds integrated security, build, registry, and developer features.</td></tr></table></section>
+
+<section id="terms"><h2>4. Kubernetes Terminologies</h2><table><tr><th>Term</th><th>Meaning</th><th>Simple example</th></tr><tr><td>Cluster</td><td>Group of machines running Kubernetes.</td><td>1 control-plane + 2 workers.</td></tr><tr><td>Node</td><td>Machine in the cluster.</td><td>Ubuntu VM with kubelet and containerd.</td></tr><tr><td>Pod</td><td>Smallest deployable unit.</td><td>One nginx container in a Pod.</td></tr><tr><td>Deployment</td><td>Manages replicated stateless Pods.</td><td>3 frontend replicas.</td></tr><tr><td>Service</td><td>Stable network endpoint.</td><td>frontend-service routes to frontend Pods.</td></tr><tr><td>Namespace</td><td>Logical isolation.</td><td>dev, test, prod.</td></tr><tr><td>ConfigMap / Secret</td><td>Configuration and sensitive values.</td><td>DB host / DB password.</td></tr><tr><td>PV / PVC</td><td>Storage resource and storage request.</td><td>Database volume.</td></tr></table></section>
+
+<section id="arch"><h2>5. Kubernetes Cluster Architecture and Directional Flow</h2><p>The diagram below shows what happens when a trainee runs <code>kubectl create deployment web --image=nginx</code>.</p>
+<svg viewBox="0 0 1100 620" role="img" aria-label="Kubernetes architecture flow with arrows">
+<defs><marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0,10 4,0 8" fill="#2563eb"/></marker><marker id="arrowgreen" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0,10 4,0 8" fill="#16a34a"/></marker></defs>
+<rect x="20" y="30" width="250" height="90" rx="14" fill="#dbeafe" stroke="#2563eb"/><text x="145" y="65" text-anchor="middle" font-weight="700">1. User / kubectl</text><text x="145" y="92" text-anchor="middle" font-size="14">Submit desired state</text>
+<rect x="420" y="30" width="260" height="90" rx="14" fill="#e0f2fe" stroke="#0284c7"/><text x="550" y="65" text-anchor="middle" font-weight="700">2. kube-apiserver</text><text x="550" y="92" text-anchor="middle" font-size="14">Authn, authz, validation</text>
+<rect x="810" y="30" width="240" height="90" rx="14" fill="#fef3c7" stroke="#d97706"/><text x="930" y="65" text-anchor="middle" font-weight="700">3. etcd</text><text x="930" y="92" text-anchor="middle" font-size="14">Stores cluster state</text>
+<rect x="420" y="190" width="260" height="80" rx="14" fill="#ede9fe" stroke="#7c3aed"/><text x="550" y="222" text-anchor="middle" font-weight="700">4. scheduler</text><text x="550" y="248" text-anchor="middle" font-size="14">Selects best worker node</text>
+<rect x="740" y="175" width="330" height="345" rx="20" fill="#f0fdf4" stroke="#16a34a"/><text x="905" y="208" text-anchor="middle" font-weight="700">Worker Node</text>
+<rect x="780" y="235" width="250" height="62" rx="12" fill="#dcfce7" stroke="#16a34a"/><text x="905" y="262" text-anchor="middle" font-weight="700">5. kubelet</text><text x="905" y="284" text-anchor="middle" font-size="13">Watches assigned Pods</text>
+<rect x="780" y="320" width="250" height="62" rx="12" fill="#ffedd5" stroke="#ea580c"/><text x="905" y="347" text-anchor="middle" font-weight="700">6. CRI + containerd</text><text x="905" y="369" text-anchor="middle" font-size="13">Pulls image, starts container</text>
+<rect x="780" y="405" width="250" height="62" rx="12" fill="#e0f2fe" stroke="#0284c7"/><text x="905" y="432" text-anchor="middle" font-weight="700">7. CNI + kube-proxy</text><text x="905" y="454" text-anchor="middle" font-size="13">Pod IP and Service routing</text>
+<rect x="835" y="485" width="140" height="55" rx="12" fill="#fff" stroke="#334155"/><text x="905" y="518" text-anchor="middle" font-weight="700">Running Pod</text>
+<path id="a1" class="arrow" d="M270 75 C330 75 360 75 420 75"/><path id="a2" class="arrow arrow3" d="M680 75 C735 75 760 75 810 75" marker-end="url(#arrowhead)"/><path id="a3" class="arrow" d="M550 120 C550 150 550 165 550 190"/><path id="a4" class="arrow arrow2" d="M680 232 C720 232 740 250 780 265" marker-end="url(#arrowgreen)"/><path id="a5" class="arrow arrow2" d="M905 297 L905 320" marker-end="url(#arrowgreen)"/><path id="a6" class="arrow arrow2" d="M905 382 L905 405" marker-end="url(#arrowgreen)"/><path id="a7" class="arrow arrow2" d="M905 467 L905 485" marker-end="url(#arrowgreen)"/>
+<circle r="7" fill="#2563eb" class="packet"><animateMotion dur="2.8s" repeatCount="indefinite"><mpath href="#a1"/></animateMotion></circle><circle r="7" fill="#ea580c" class="packet"><animateMotion dur="2.8s" begin=".4s" repeatCount="indefinite"><mpath href="#a2"/></animateMotion></circle><circle r="7" fill="#7c3aed" class="packet"><animateMotion dur="2.8s" begin=".8s" repeatCount="indefinite"><mpath href="#a3"/></animateMotion></circle><circle r="7" fill="#16a34a" class="packet"><animateMotion dur="2.8s" begin="1.2s" repeatCount="indefinite"><mpath href="#a4"/></animateMotion></circle>
+</svg>
+<table><tr><th>Step</th><th>What happens</th></tr><tr><td>1</td><td>kubectl sends the desired state to kube-apiserver.</td></tr><tr><td>2</td><td>API server validates the request and records state in etcd.</td></tr><tr><td>3</td><td>Scheduler assigns the pending Pod to a suitable worker node.</td></tr><tr><td>4</td><td>Kubelet on the worker sees the assigned Pod.</td></tr><tr><td>5</td><td>Kubelet uses CRI/containerd to pull image and start containers.</td></tr><tr><td>6</td><td>CNI configures Pod networking; kube-proxy handles Service routing.</td></tr><tr><td>7</td><td>Application runs as a Pod and can be exposed through a Service.</td></tr></table></section>
+
+<section id="control"><h2>6. Understanding Kubernetes Control Plane Components</h2><div class="grid"><div class="card"><h3>kube-apiserver</h3><p>Front door of Kubernetes. All users, nodes, and controllers communicate through it.</p></div><div class="card"><h3>etcd</h3><p>Distributed key-value database storing cluster state. Back it up before risky changes.</p></div><div class="card"><h3>kube-scheduler</h3><p>Selects nodes for new Pods using resources, taints, tolerations, affinity, and constraints.</p></div><div class="card"><h3>kube-controller-manager</h3><p>Runs controllers that reconcile desired and actual state.</p></div><div class="card"><h3>CoreDNS</h3><p>Provides DNS service discovery inside the cluster.</p></div></div></section>
+
+<section id="node"><h2>7. Understanding Kubernetes Node Components</h2><div class="grid"><div class="card"><h3>kubelet</h3><p>Node agent. Ensures Pods assigned to the node are running.</p></div><div class="card"><h3>kube-proxy</h3><p>Maintains Service networking rules and routes traffic to Pod backends.</p></div><div class="card"><h3>CRI</h3><p>Container Runtime Interface between kubelet and runtimes such as containerd or CRI-O.</p></div><div class="card"><h3>CNI</h3><p>Container Network Interface used by plugins such as Flannel, Calico, and Cilium.</p></div><div class="card"><h3>CSI</h3><p>Container Storage Interface for storage provisioning and attachment.</p></div></div></section>
+
+<section id="setup"><h2>8. Kubernetes Cluster Setup and Validation Using kubeadm</h2><div class="ok"><strong>Validation status:</strong> The commands in this document were checked for shell syntax and aligned with current official kubeadm/container runtime/package repository guidance. They were not executed as a real privileged multi-node cluster inside this chat environment because that requires root VMs, networking, and reboot-level system changes.</div><h3>Recommended Lab Topology</h3><table><tr><th>Machine</th><th>Role</th><th>Minimum</th><th>Example IP</th></tr><tr><td>k8s-master</td><td>Control plane</td><td>2 vCPU / 4 GB RAM</td><td>192.168.56.10</td></tr><tr><td>k8s-worker1</td><td>Worker</td><td>2 vCPU / 2-4 GB RAM</td><td>192.168.56.11</td></tr><tr><td>k8s-worker2</td><td>Worker</td><td>2 vCPU / 2-4 GB RAM</td><td>192.168.56.12</td></tr></table>
+<h3>Lab 1: Environment Setup</h3><pre><code># Run on each node, changing only the hostname line per VM
+sudo hostnamectl set-hostname k8s-master    # control-plane only
+# sudo hostnamectl set-hostname k8s-worker1 # worker1 only
+# sudo hostnamectl set-hostname k8s-worker2 # worker2 only
+
+# Run on ALL nodes. Replace IPs with your lab IPs.
+sudo tee -a /etc/hosts &gt;/dev/null &lt;&lt;&#x27;EOF&#x27;
+192.168.56.10 k8s-master
+192.168.56.11 k8s-worker1
+192.168.56.12 k8s-worker2
+EOF
+
+ping -c 2 k8s-master
+ping -c 2 k8s-worker1
+ping -c 2 k8s-worker2</code></pre>
+<h3>Lab 2: Install Prerequisites on All Nodes</h3><pre><code># Run on ALL nodes: control-plane and workers
+set -euo pipefail
+
+# 1) Disable swap immediately and permanently
+sudo swapoff -a
+sudo sed -i.bak &#x27;/\sswap\s/s/^/#/&#x27; /etc/fstab
+
+# 2) Load required kernel modules
+cat &lt;&lt;&#x27;EOF&#x27; | sudo tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+# 3) Kubernetes networking sysctl settings
+cat &lt;&lt;&#x27;EOF&#x27; | sudo tee /etc/sysctl.d/99-kubernetes-cri.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF
+sudo sysctl --system
+
+# 4) Install containerd
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg apt-transport-https
+sudo apt-get install -y containerd
+
+# 5) Configure containerd with systemd cgroups
+sudo mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml &gt;/dev/null
+sudo sed -i &#x27;s/SystemdCgroup = false/SystemdCgroup = true/&#x27; /etc/containerd/config.toml
+sudo systemctl restart containerd
+sudo systemctl enable containerd
+
+# 6) Add Kubernetes v1.36 package repository
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.36/deb/Release.key \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+echo &#x27;deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.36/deb/ /&#x27; \
+  | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+# 7) Install kubeadm, kubelet, kubectl and lock versions
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
+
+# 8) Validate node prerequisites
+sudo systemctl is-active --quiet containerd &amp;&amp; echo &quot;containerd: OK&quot;
+lsmod | grep -E &#x27;overlay|br_netfilter&#x27;
+sysctl net.ipv4.ip_forward net.bridge.bridge-nf-call-iptables
+free -h | grep -i swap
+kubeadm version
+kubectl version --client</code></pre>
+<h3>Lab 3: Initialize Cluster Using kubeadm</h3><pre><code># Run only on the CONTROL-PLANE node
+set -euo pipefail
+
+sudo kubeadm init \
+  --apiserver-advertise-address=192.168.56.10 \
+  --pod-network-cidr=10.244.0.0/16 \
+  --cri-socket=unix:///run/containerd/containerd.sock
+
+# Configure kubectl for the normal user
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+# Install Flannel CNI. The 10.244.0.0/16 pod CIDR above matches Flannel default.
+kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+
+# Save the worker join command
+kubeadm token create --print-join-command | tee $HOME/kubeadm-join-command.txt</code></pre>
+<h3>Lab 4: Add Worker Nodes</h3><pre><code># Run on EACH worker node.
+# Use the exact command printed by kubeadm init or saved in kubeadm-join-command.txt.
+sudo kubeadm join 192.168.56.10:6443 \
+  --token &lt;token-from-control-plane&gt; \
+  --discovery-token-ca-cert-hash sha256:&lt;hash-from-control-plane&gt; \
+  --cri-socket=unix:///run/containerd/containerd.sock</code></pre>
+</section>
+
+<section id="validation"><h2>9. Final Validation and Troubleshooting</h2><h3>Cluster Validation</h3><pre><code># Run on the control-plane node after joining workers
+kubectl get nodes -o wide
+kubectl get pods -A -o wide
+kubectl cluster-info
+
+# Expected:
+# 1) All nodes show STATUS=Ready
+# 2) kube-system pods such as coredns, kube-proxy, kube-flannel are Running
+# 3) No pods are stuck in ContainerCreating or CrashLoopBackOff</code></pre><h3>Application Test</h3><pre><code># Deploy a simple test application
+kubectl create deployment web --image=nginx:stable --replicas=2
+kubectl expose deployment web --port=80 --type=NodePort
+kubectl get deploy,pod,svc -o wide
+
+# Test from any node. Replace &lt;node-ip&gt; and &lt;node-port&gt; from kubectl get svc web.
+curl http://&lt;node-ip&gt;:&lt;node-port&gt;</code></pre><h3>Common Troubleshooting Commands</h3><pre><code># Node not Ready
+kubectl describe node &lt;node-name&gt;
+journalctl -u kubelet -xe --no-pager | tail -80
+sudo crictl ps -a
+
+# CNI issue
+kubectl get pods -n kube-system -o wide
+kubectl logs -n kube-flannel -l app=flannel --tail=100
+
+# Join token expired
+kubeadm token create --print-join-command
+
+# Reset a failed lab node carefully. This destroys local cluster state on that node.
+sudo kubeadm reset -f
+sudo rm -rf /etc/cni/net.d $HOME/.kube
+sudo systemctl restart containerd kubelet</code></pre><div class="warn"><strong>Common trainee mistakes:</strong> forgetting to disable swap, using a mismatched pod CIDR and CNI, not configuring containerd systemd cgroups, using old apt.kubernetes.io repositories, running kubeadm init on every node, or copying an expired join token.</div></section>
+
+<section><h2>Trainer Notes</h2><ul><li>Use clean Ubuntu Server VMs. Avoid machines already used for Docker Desktop, minikube, kind, or previous kubeadm labs unless reset carefully.</li><li>Use one Kubernetes minor version for the whole batch. This document uses v1.36 package repository.</li><li>Run all prerequisite commands on every node before <code>kubeadm init</code> or <code>kubeadm join</code>.</li><li>Flannel is used for simplicity. For production/security-focused training, replace with Calico or Cilium and adjust the pod CIDR accordingly.</li></ul></section>
+
+</main></body></html>

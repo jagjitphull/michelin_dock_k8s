@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kubernetes Pod Lifecycle Lab Reference</title>
+  <style>
+    :root{
+      --bg:#ffffff;--ink:#162033;--muted:#5d6b82;--line:#dbe4f0;--soft:#f6f9fc;--soft2:#eef6ff;--blue:#326ce5;--green:#1f9d55;--orange:#f59e0b;--red:#dc2626;--purple:#7c3aed;--code:#101827;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6}
+    .layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}
+    aside{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:#fff;padding:22px 18px}
+    aside h2{font-size:16px;margin:0 0 12px;color:var(--blue)}
+    aside a{display:block;text-decoration:none;color:#31415c;font-size:13px;padding:7px 8px;border-radius:8px}
+    aside a:hover{background:var(--soft2);color:var(--blue)}
+    main{padding:34px 48px 80px;max-width:1240px}
+    h1{font-size:40px;line-height:1.1;margin:0 0 12px;letter-spacing:-1px}
+    h2{font-size:28px;margin-top:54px;border-bottom:2px solid var(--line);padding-bottom:8px;color:#0b1f43}
+    h3{font-size:20px;margin-top:30px;color:#173466}
+    h4{font-size:16px;margin-top:24px;color:#173466}
+    p{margin:10px 0}.lead{font-size:18px;color:#40506a;max-width:920px}.small{font-size:13px;color:var(--muted)}
+    .badge{display:inline-block;background:var(--soft2);color:var(--blue);border:1px solid #b9d4ff;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;margin:3px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;margin:18px 0;box-shadow:0 6px 20px rgba(15,35,70,.06)}
+    .grid{display:grid;gap:18px}.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .note{border-left:5px solid var(--blue);background:var(--soft2);padding:14px 16px;border-radius:12px;margin:16px 0}
+    .warn{border-left:5px solid var(--orange);background:#fff8e6;padding:14px 16px;border-radius:12px;margin:16px 0}
+    .danger{border-left:5px solid var(--red);background:#fff1f2;padding:14px 16px;border-radius:12px;margin:16px 0}
+    table{width:100%;border-collapse:collapse;margin:14px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;display:table}
+    th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:11px 12px;font-size:14px}th{background:#f0f5fb;color:#1c2d4a}tr:last-child td{border-bottom:0}
+    pre{background:var(--code);color:#e6edf7;border-radius:14px;padding:16px 18px;overflow:auto;position:relative;border:1px solid #263348;margin:12px 0 18px;font-size:13px;line-height:1.5}
+    code{font-family:Consolas,Monaco,Menlo,monospace}.copy{position:absolute;top:9px;right:9px;border:1px solid #536179;background:#1b2638;color:white;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:12px}.copy:hover{background:#2d3f5a}
+    .hero{background:linear-gradient(135deg,#fff 0%,#f4f8ff 55%,#eef6ff 100%);border:1px solid var(--line);border-radius:24px;padding:30px;margin-bottom:30px;overflow:hidden;position:relative}
+    .hero:after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(50,108,229,.18),rgba(50,108,229,0) 70%);animation:pulse 3s ease-in-out infinite}
+    @keyframes pulse{0%,100%{transform:scale(.9);opacity:.6}50%{transform:scale(1.08);opacity:1}}
+    .anim-flow{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:16px 0;padding:18px;background:#fbfdff;border:1px dashed #b6c8e5;border-radius:16px}
+    .node{min-width:120px;text-align:center;border:2px solid var(--blue);border-radius:16px;padding:12px 14px;background:#fff;font-weight:700;box-shadow:0 6px 16px rgba(50,108,229,.12)}
+    .arrow{width:44px;height:3px;background:linear-gradient(90deg,var(--blue),#8ab4ff);position:relative;animation:arrowMove 1.5s linear infinite}.arrow:after{content:"";position:absolute;right:-1px;top:-5px;border-left:10px solid #8ab4ff;border-top:7px solid transparent;border-bottom:7px solid transparent}@keyframes arrowMove{0%{opacity:.35;transform:translateX(-4px)}50%{opacity:1;transform:translateX(5px)}100%{opacity:.35;transform:translateX(-4px)}}
+    .podbox{border:3px solid var(--blue);border-radius:24px;padding:18px;background:#f8fbff;position:relative}.podbox:before{content:"POD";position:absolute;top:-14px;left:18px;background:#fff;color:var(--blue);font-weight:800;padding:0 8px}.containerbox{border:2px solid #8ab4ff;background:#fff;border-radius:14px;padding:14px;margin:8px;text-align:center;font-weight:700;min-height:70px;display:flex;align-items:center;justify-content:center}.shared{background:#edf7ed;border:1px solid #9bd4aa;border-radius:12px;padding:10px;margin-top:12px;text-align:center;color:#186a35}
+    .lifecycle{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.phase{padding:12px 15px;border-radius:14px;color:white;font-weight:800;min-width:110px;text-align:center}.pending{background:#64748b}.running{background:#1f9d55}.succeeded{background:#2563eb}.failed{background:#dc2626}.unknown{background:#7c3aed}.phase.pulse{animation:phaseGlow 1.6s infinite}@keyframes phaseGlow{0%,100%{box-shadow:0 0 0 0 rgba(50,108,229,.35)}50%{box-shadow:0 0 0 10px rgba(50,108,229,0)}}
+    .lab{border:1px solid #c7d8f7;border-radius:18px;overflow:hidden;margin:22px 0;background:#fff}.lab .lab-head{background:#eef6ff;padding:15px 18px;border-bottom:1px solid #c7d8f7;display:flex;justify-content:space-between;gap:10px;align-items:center}.lab h3{margin:0}.steps{counter-reset:step;padding:0;margin:0;list-style:none}.steps li{counter-increment:step;padding:14px 18px 14px 54px;border-bottom:1px solid var(--line);position:relative}.steps li:before{content:counter(step);position:absolute;left:18px;top:14px;width:24px;height:24px;border-radius:50%;background:var(--blue);color:white;text-align:center;line-height:24px;font-weight:800;font-size:12px}.steps li:last-child{border-bottom:0}
+    .pattern{min-height:180px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.pill{padding:9px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;font-weight:700}.sidecar{border-color:#9bd4aa;background:#f0fbf4}.adapter{border-color:#f4c776;background:#fff8e6}.ambassador{border-color:#c4b5fd;background:#f5f3ff}
+    .checklist li{margin:8px 0}.kbd{background:#eef2f7;border:1px solid #ccd6e3;border-bottom-width:2px;border-radius:6px;padding:1px 6px;font-family:monospace;font-size:13px}
+    .footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+    @media(max-width:950px){.layout{grid-template-columns:1fr}aside{position:relative;height:auto}.grid.two,.grid.three{grid-template-columns:1fr}main{padding:24px 18px}h1{font-size:31px}.arrow{transform:rotate(90deg)}}
+    @media print{aside,.copy{display:none}.layout{display:block}main{padding:0}.card,.lab{box-shadow:none;break-inside:avoid}pre{white-space:pre-wrap}}
+  </style>
+</head>
+<body>
+<div class="layout">
+<aside>
+  <h2>Pod Lifecycle Labs</h2>
+  <a href="#overview">1. Pod Overview</a>
+  <a href="#kubectl">2. kubectl CLI Basics</a>
+  <a href="#imperative">3. Imperative Pod Creation</a>
+  <a href="#declarative">4. Declarative Pod Creation</a>
+  <a href="#read">5. Read / Inspect / Backup</a>
+  <a href="#access">6. Access Pods</a>
+  <a href="#exec">7. Exec and Temporary Pods</a>
+  <a href="#multi">8. Multi-container Pods</a>
+  <a href="#commands">9. Container Commands</a>
+  <a href="#labels">10. Labels and Annotations</a>
+  <a href="#lifecycle">11. Pod Lifecycle</a>
+  <a href="#controllers">12. Pod Controllers</a>
+  <a href="#patterns">13. Pod Patterns</a>
+  <a href="#init">14. Init Containers</a>
+  <a href="#static">15. Static Pods</a>
+  <a href="#labs">16. Complete Lab Set</a>
+  <a href="#cleanup">17. Cleanup</a>
+</aside>
+<main>
+<section class="hero">
+  <span class="badge">White Background</span><span class="badge">Animated Concepts</span><span class="badge">Hands-on Labs</span><span class="badge">kubectl Focused</span>
+  <h1>Kubernetes: Managing Pod Lifecycle</h1>
+  <p class="lead">A trainee-friendly HTML lab reference covering Pod creation, inspection, lifecycle, labels, annotations, multi-container patterns, init containers, static Pods, and practical kubectl exercises.</p>
+  <div class="note"><strong>Recommended lab setup:</strong> Kubernetes cluster using Minikube, kind, kubeadm, or a managed cluster. Trainees need <code>kubectl</code> configured and working. Verify with <code>kubectl cluster-info</code> and <code>kubectl get nodes</code>.</div>
+</section>
+
+<section id="overview">
+<h2>1. Pod Overview</h2>
+<p>A <strong>Pod</strong> is the smallest deployable compute object in Kubernetes. A Pod can contain one container or multiple tightly coupled containers that share the same Pod network namespace and can share volumes.</p>
+<div class="anim-flow">
+  <div class="node">User</div><div class="arrow"></div><div class="node">kubectl</div><div class="arrow"></div><div class="node">API Server</div><div class="arrow"></div><div class="node">Scheduler</div><div class="arrow"></div><div class="node">Node / Kubelet</div><div class="arrow"></div><div class="node">Pod Running</div>
+</div>
+<div class="grid two">
+  <div class="card">
+    <h3>Single-container Pod</h3>
+    <div class="podbox"><div class="containerbox">nginx container</div><div class="shared">Shared Pod IP + localhost namespace</div></div>
+    <p>Most beginner examples use this model. It is simple and enough for many labs.</p>
+  </div>
+  <div class="card">
+    <h3>Multi-container Pod</h3>
+    <div class="podbox"><div class="containerbox">main app</div><div class="containerbox">helper sidecar</div><div class="shared">Shared volume + network</div></div>
+    <p>Use only when containers must be co-located and managed as one unit.</p>
+  </div>
+</div>
+<div class="warn"><strong>Trainer note:</strong> Do not teach trainees to put unrelated applications in the same Pod. Separate lifecycle usually means separate Pods and a Service between them.</div>
+</section>
+
+<section id="kubectl">
+<h2>2. Lab: Getting Started with kubectl CLI</h2>
+<p><code>kubectl</code> communicates with the Kubernetes control plane. General syntax:</p>
+<pre><button class="copy">Copy</button><code>kubectl [command] [TYPE] [NAME] [flags]</code></pre>
+<div class="lab">
+  <div class="lab-head"><h3>Lab 1: Verify kubectl and cluster access</h3><span class="badge">Beginner</span></div>
+  <ol class="steps">
+    <li>Check the client and server version.
+<pre><button class="copy">Copy</button><code>kubectl version</code></pre></li>
+    <li>Check cluster information.
+<pre><button class="copy">Copy</button><code>kubectl cluster-info</code></pre></li>
+    <li>List nodes.
+<pre><button class="copy">Copy</button><code>kubectl get nodes -o wide</code></pre></li>
+    <li>Create a dedicated namespace for this lab.
+<pre><button class="copy">Copy</button><code>kubectl create namespace pod-lifecycle-lab
+kubectl config set-context --current --namespace=pod-lifecycle-lab</code></pre></li>
+  </ol>
+</div>
+</section>
+
+<section id="imperative">
+<h2>3. Creating a Pod with Imperative Syntax</h2>
+<p>Imperative commands are useful for quick tests, demos, and troubleshooting. They are not ideal as the final source of truth for production workloads.</p>
+<div class="lab">
+  <div class="lab-head"><h3>Lab 2: Create Pods using imperative commands</h3><span class="badge">Pod</span></div>
+  <ol class="steps">
+    <li>Create an nginx Pod.
+<pre><button class="copy">Copy</button><code>kubectl run web-imperative --image=nginx:1.27 --port=80</code></pre></li>
+    <li>Check the Pod status.
+<pre><button class="copy">Copy</button><code>kubectl get pods
+kubectl get pod web-imperative -o wide</code></pre></li>
+    <li>Describe the Pod.
+<pre><button class="copy">Copy</button><code>kubectl describe pod web-imperative</code></pre></li>
+    <li>Generate a YAML manifest without creating the object. This is a good bridge from imperative to declarative work.
+<pre><button class="copy">Copy</button><code>kubectl run web-dryrun --image=nginx:1.27 --port=80 \
+  --dry-run=client -o yaml &gt; pod-web-dryrun.yaml</code></pre></li>
+  </ol>
+</div>
+</section>
+
+<section id="declarative">
+<h2>4. Creating a Pod with Declarative Syntax</h2>
+<p>Declarative syntax means you write the desired state in YAML and apply it. This is the preferred way for repeatable labs and real-world infrastructure.</p>
+<div class="lab">
+  <div class="lab-head"><h3>Lab 3: Create a Pod using declarative YAML</h3><span class="badge">YAML</span></div>
+  <ol class="steps">
+    <li>Create a file named <code>pod-web.yaml</code>.
+<pre><button class="copy">Copy</button><code>cat &lt;&lt;'YAML' &gt; pod-web.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-declarative
+  labels:
+    app: web
+    env: dev
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.27
+    ports:
+    - containerPort: 80
+YAML</code></pre></li>
+    <li>Apply the manifest.
+<pre><button class="copy">Copy</button><code>kubectl apply -f pod-web.yaml</code></pre></li>
+    <li>Verify the Pod.
+<pre><button class="copy">Copy</button><code>kubectl get pod web-declarative -o wide</code></pre></li>
+  </ol>
+</div>
+<div class="note"><strong>Simple use case:</strong> A developer wants to test a container image quickly before creating a Deployment. A standalone Pod is acceptable for the lab. For production, use a controller such as Deployment, StatefulSet, DaemonSet, or Job.</div>
+</section>
+
+<section id="read">
+<h2>5. Reading Pod Information, Metadata, JSON/YAML, and Backup</h2>
+<div class="grid two">
+  <div class="card"><h3>Read basic info</h3><pre><button class="copy">Copy</button><code>kubectl get pods
+kubectl get pod web-declarative -o wide
+kubectl describe pod web-declarative</code></pre></div>
+  <div class="card"><h3>Read metadata</h3><pre><button class="copy">Copy</button><code>kubectl get pod web-declarative \
+  -o jsonpath='{.metadata.name}{"\n"}{.metadata.labels}{"\n"}'</code></pre></div>
+</div>
+<h3>Listing objects in JSON or YAML</h3>
+<pre><button class="copy">Copy</button><code>kubectl get pod web-declarative -o yaml
+kubectl get pod web-declarative -o json
+kubectl get pods -o yaml
+kubectl get pods -o json</code></pre>
+<h3>Backing up resources using list operation</h3>
+<pre><button class="copy">Copy</button><code>mkdir -p backup
+kubectl get pods -o yaml &gt; backup/pods-backup.yaml
+kubectl get pod web-declarative -o yaml &gt; backup/web-declarative-pod.yaml</code></pre>
+<div class="warn"><strong>Important:</strong> A raw backup from <code>kubectl get -o yaml</code> includes runtime/status fields. For clean reusable YAML, remove fields such as <code>status</code>, <code>resourceVersion</code>, <code>uid</code>, <code>creationTimestamp</code>, and <code>managedFields</code>.</div>
+<h3>Getting more information from the list operation</h3>
+<pre><button class="copy">Copy</button><code>kubectl get pods -o wide
+kubectl get pods --show-labels
+kubectl get pods --sort-by=.metadata.name
+kubectl get pods -L app,env
+kubectl get pods -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,NODE:.spec.nodeName,IP:.status.podIP</code></pre>
+</section>
+
+<section id="access">
+<h2>6. Accessing a Pod from the Outside World</h2>
+<p>A Pod IP is usually reachable only inside the cluster network. For labs, use <code>port-forward</code>. For cluster-level exposure, create a Service.</p>
+<div class="anim-flow"><div class="node">Browser</div><div class="arrow"></div><div class="node">localhost:8080</div><div class="arrow"></div><div class="node">kubectl port-forward</div><div class="arrow"></div><div class="node">Pod :80</div></div>
+<div class="grid two">
+  <div class="card">
+    <h3>Option A: Port-forward</h3>
+<pre><button class="copy">Copy</button><code>kubectl port-forward pod/web-declarative 8080:80</code></pre>
+    <p>Open <span class="kbd">http://localhost:8080</span> from your browser or run:</p>
+<pre><button class="copy">Copy</button><code>curl http://localhost:8080</code></pre>
+  </div>
+  <div class="card">
+    <h3>Option B: NodePort Service</h3>
+<pre><button class="copy">Copy</button><code>kubectl expose pod web-declarative --type=NodePort --port=80 --target-port=80 --name=web-svc
+kubectl get svc web-svc</code></pre>
+    <p>For Minikube:</p>
+<pre><button class="copy">Copy</button><code>minikube service web-svc -n pod-lifecycle-lab</code></pre>
+  </div>
+</div>
+</section>
+
+<section id="exec">
+<h2>7. Entering a Container and Creating Temporary Pods</h2>
+<h3>Entering into a container inside a Pod</h3>
+<pre><button class="copy">Copy</button><code>kubectl exec -it web-declarative -- /bin/sh
+# inside the container
+hostname
+exit</code></pre>
+<h3>Running commands in containers</h3>
+<pre><button class="copy">Copy</button><code>kubectl exec web-declarative -- nginx -v
+kubectl logs web-declarative</code></pre>
+<h3>Creating a temporary Pod</h3>
+<pre><button class="copy">Copy</button><code>kubectl run tmp-shell --rm -it --image=busybox:1.36 --restart=Never -- sh
+# inside temporary Pod
+wget -qO- http://web-svc
+exit</code></pre>
+<div class="note"><strong>Use case:</strong> Temporary Pods are useful for DNS checks, connectivity checks, curl/wget tests, and short-lived troubleshooting without permanently adding tools into application containers.</div>
+</section>
+
+<section id="multi">
+<h2>8. Multi-container Pod</h2>
+<h3>Concrete scenarios where you need multi-container Pods</h3>
+<div class="grid three">
+  <div class="card"><h3>Sidecar</h3><p>Helper container enhances the main container, for example log shipping, file sync, proxy, or hot reload helper.</p></div>
+  <div class="card"><h3>Adapter</h3><p>Transforms application output into a standard format, for example converting custom metrics into Prometheus-friendly output.</p></div>
+  <div class="card"><h3>Ambassador</h3><p>Acts as a local proxy for remote service access, so the app talks to <code>localhost</code> while the ambassador handles routing.</p></div>
+</div>
+<h3>When not to create a multi-container Pod</h3>
+<table><thead><tr><th>Situation</th><th>Better design</th><th>Reason</th></tr></thead><tbody>
+<tr><td>Frontend and database</td><td>Separate Pods + Service</td><td>Different lifecycle, scaling, storage, and security needs.</td></tr>
+<tr><td>Two unrelated apps</td><td>Separate workloads</td><td>A crash or restart should not bind their fate together.</td></tr>
+<tr><td>Independent scaling requirement</td><td>Deployment per component</td><td>Kubernetes scales Pods, not individual containers inside a Pod.</td></tr>
+<tr><td>Separate ownership teams</td><td>Separate services</td><td>Deployment, rollback, and access control become cleaner.</td></tr>
+</tbody></table>
+<h3>What happens when Kubernetes fails to launch one container in a Pod?</h3>
+<div class="warn">If one container cannot start, the Pod usually remains unhealthy. Depending on restart policy and failure type, you may see states such as <code>ImagePullBackOff</code>, <code>CrashLoopBackOff</code>, or a Pod that is <code>Running</code> but not <code>Ready</code>. The healthy container may still run, but the Pod should not be treated as fully ready.</div>
+<h3>Lab 4: Multi-container Pod sharing a volume</h3>
+<pre><button class="copy">Copy</button><code>cat &lt;&lt;'YAML' &gt; pod-multi.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-demo
+  labels:
+    app: multi-demo
+spec:
+  volumes:
+  - name: shared-data
+    emptyDir: {}
+  containers:
+  - name: writer
+    image: busybox:1.36
+    command: ["sh", "-c"]
+    args:
+    - while true; do date &gt;&gt; /data/time.txt; sleep 5; done
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data
+  - name: reader
+    image: busybox:1.36
+    command: ["sh", "-c"]
+    args:
+    - while true; do echo '--- file content ---'; cat /data/time.txt 2&gt;/dev/null || true; sleep 5; done
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data
+YAML
+kubectl apply -f pod-multi.yaml
+kubectl get pod multi-demo
+kubectl logs multi-demo -c reader</code></pre>
+<h3>Accessing a specific container inside a multi-container Pod</h3>
+<pre><button class="copy">Copy</button><code>kubectl exec -it multi-demo -c writer -- sh
+kubectl exec -it multi-demo -c reader -- sh
+kubectl logs multi-demo -c writer
+kubectl logs multi-demo -c reader</code></pre>
+<h3>Understanding the Pod deletion grace period</h3>
+<p>When a Pod is deleted, Kubernetes gives containers time to stop gracefully before force killing them. The default grace period is commonly 30 seconds unless changed in the Pod or delete command.</p>
+<pre><button class="copy">Copy</button><code>kubectl delete pod multi-demo --grace-period=10
+# Force deletion only for stuck lab Pods, not normal production cleanup:
+kubectl delete pod multi-demo --grace-period=0 --force</code></pre>
+</section>
+
+<section id="commands">
+<h2>9. Overriding Default Commands Run by Containers</h2>
+<p>Container images define default command behavior, but Kubernetes lets you override it using <code>command</code> and <code>args</code>.</p>
+<div class="card">
+<pre><button class="copy">Copy</button><code>cat &lt;&lt;'YAML' &gt; pod-command-override.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: command-demo
+spec:
+  restartPolicy: Never
+  containers:
+  - name: busybox
+    image: busybox:1.36
+    command: ["sh", "-c"]
+    args: ["echo Starting custom command; for i in 1 2 3; do echo Loop-$i; sleep 2; done; echo Finished"]
+YAML
+kubectl apply -f pod-command-override.yaml
+kubectl logs command-demo</code></pre>
+</div>
+<table><thead><tr><th>Field</th><th>Meaning</th><th>Docker comparison</th></tr></thead><tbody>
+<tr><td><code>command</code></td><td>Overrides executable/entrypoint</td><td>Similar to Docker ENTRYPOINT override</td></tr>
+<tr><td><code>args</code></td><td>Arguments passed to command</td><td>Similar to Docker CMD override</td></tr>
+</tbody></table>
+</section>
+
+<section id="labels">
+<h2>10. Labeling and Annotating Pods</h2>
+<h3>What are labels and why do we need them?</h3>
+<p>Labels are key-value pairs used to organize, query, and select Kubernetes objects. Services, controllers, and CLI filters commonly use labels.</p>
+<h3>What are annotations and how do they differ from labels?</h3>
+<table><thead><tr><th>Feature</th><th>Labels</th><th>Annotations</th></tr></thead><tbody>
+<tr><td>Purpose</td><td>Identification, grouping, filtering, selection</td><td>Non-identifying metadata</td></tr>
+<tr><td>Used by selectors?</td><td>Yes</td><td>No</td></tr>
+<tr><td>Examples</td><td><code>app=web</code>, <code>env=dev</code>, <code>tier=frontend</code></td><td><code>owner=training-team</code>, <code>description=demo pod</code></td></tr>
+<tr><td>Best for</td><td>Automation and object selection</td><td>Notes, tooling hints, build info, URLs</td></tr>
+</tbody></table>
+<div class="lab">
+  <div class="lab-head"><h3>Lab 5: Working with labels and annotations</h3><span class="badge">Metadata</span></div>
+  <ol class="steps">
+    <li>Create a labeled Pod.
+<pre><button class="copy">Copy</button><code>kubectl run label-demo --image=nginx:1.27 --labels=app=nginx,env=dev,tier=frontend</code></pre></li>
+    <li>List labels attached to a Pod.
+<pre><button class="copy">Copy</button><code>kubectl get pod label-demo --show-labels
+kubectl get pods -L app,env,tier</code></pre></li>
+    <li>Filter by labels.
+<pre><button class="copy">Copy</button><code>kubectl get pods -l app=nginx
+kubectl get pods -l 'env in (dev,test)'
+kubectl get pods -l app=nginx,tier=frontend</code></pre></li>
+    <li>Add or update a label on a running Pod.
+<pre><button class="copy">Copy</button><code>kubectl label pod label-demo version=v1
+kubectl label pod label-demo env=test --overwrite</code></pre></li>
+    <li>Delete a label attached to a running Pod.
+<pre><button class="copy">Copy</button><code>kubectl label pod label-demo tier-</code></pre></li>
+    <li>Add an annotation.
+<pre><button class="copy">Copy</button><code>kubectl annotate pod label-demo owner='training-team'
+kubectl annotate pod label-demo description='Pod lifecycle lab example' --overwrite
+kubectl describe pod label-demo</code></pre></li>
+  </ol>
+</div>
+</section>
+
+<section id="lifecycle">
+<h2>11. Understanding the Pod Lifecycle</h2>
+<p>Pods follow a lifecycle from creation through scheduling, container startup, running, termination, and final phase.</p>
+<div class="lifecycle"><div class="phase pending pulse">Pending</div><div class="arrow"></div><div class="phase running pulse">Running</div><div class="arrow"></div><div class="phase succeeded">Succeeded</div><div class="phase failed">Failed</div><div class="phase unknown">Unknown</div></div>
+<table><thead><tr><th>Pod Phase</th><th>Meaning</th><th>Typical trainee observation</th></tr></thead><tbody>
+<tr><td><code>Pending</code></td><td>Accepted by cluster, but one or more containers are not yet running.</td><td>Image pulling, scheduling delay, insufficient CPU/memory, PVC pending.</td></tr>
+<tr><td><code>Running</code></td><td>Pod is bound to a node and at least one container is running or starting/restarting.</td><td>Use <code>kubectl get pods</code>, <code>logs</code>, and <code>describe</code>.</td></tr>
+<tr><td><code>Succeeded</code></td><td>All containers terminated successfully and will not restart.</td><td>Common for one-time Pods with <code>restartPolicy: Never</code>.</td></tr>
+<tr><td><code>Failed</code></td><td>At least one container terminated in failure and will not restart.</td><td>Check exit code, events, and logs.</td></tr>
+<tr><td><code>Unknown</code></td><td>Pod state could not be obtained, often due to node communication problems.</td><td>Check node health and kubelet connectivity.</td></tr>
+</tbody></table>
+<h3>Lab 6: Watch Pod lifecycle phases</h3>
+<pre><button class="copy">Copy</button><code>cat &lt;&lt;'YAML' &gt; pod-lifecycle-demo.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: lifecycle-demo
+spec:
+  restartPolicy: Never
+  containers:
+  - name: worker
+    image: busybox:1.36
+    command: ["sh", "-c"]
+    args: ["echo Starting; sleep 10; echo Completed"]
+YAML
+kubectl apply -f pod-lifecycle-demo.yaml
+kubectl get pod lifecycle-demo -w</code></pre>
+<p>Open another terminal while watching:</p>
+<pre><button class="copy">Copy</button><code>kubectl describe pod lifecycle-demo
+kubectl logs lifecycle-demo</code></pre>
+<h3>Common troubleshooting states</h3>
+<table><thead><tr><th>Status</th><th>Likely cause</th><th>First commands to run</th></tr></thead><tbody>
+<tr><td><code>ImagePullBackOff</code></td><td>Wrong image name, private registry, network/DNS issue.</td><td><code>kubectl describe pod POD</code></td></tr>
+<tr><td><code>CrashLoopBackOff</code></td><td>Container starts and exits repeatedly.</td><td><code>kubectl logs POD --previous</code></td></tr>
+<tr><td><code>ErrImagePull</code></td><td>Image pull failed.</td><td><code>kubectl describe pod POD</code></td></tr>
+<tr><td><code>ContainerCreating</code></td><td>Image pull, volume mount, CNI setup still happening.</td><td><code>kubectl describe pod POD</code></td></tr>
+</tbody></table>
+</section>
+
+<section id="controllers">
+<h2>12. Pod Controllers</h2>
+<p>A standalone Pod is not self-healing if the node fails. Controllers create and manage Pods on your behalf.</p>
+<div class="anim-flow"><div class="node">Desired State</div><div class="arrow"></div><div class="node">Controller</div><div class="arrow"></div><div class="node">ReplicaSet / Job</div><div class="arrow"></div><div class="node">Pods</div></div>
+<table><thead><tr><th>Controller</th><th>Use case</th><th>Example</th></tr></thead><tbody>
+<tr><td>Deployment</td><td>Stateless long-running apps</td><td>Web server, API service</td></tr>
+<tr><td>ReplicaSet</td><td>Maintains replica count; usually managed by Deployment</td><td>Internal part of Deployment workflow</td></tr>
+<tr><td>StatefulSet</td><td>Stable identity and storage</td><td>Databases, clustered systems</td></tr>
+<tr><td>DaemonSet</td><td>One Pod per node or selected nodes</td><td>Log agent, node exporter, CNI agent</td></tr>
+<tr><td>Job</td><td>Run-to-completion workload</td><td>Batch import, report generation</td></tr>
+<tr><td>CronJob</td><td>Scheduled Job</td><td>Nightly backup, periodic cleanup</td></tr>
+</tbody></table>
+<div class="note"><strong>Training rule:</strong> Use standalone Pods to learn concepts. Use controllers for real deployment patterns.</div>
+</section>
+
+<section id="patterns">
+<h2>13. Pod Patterns: Sidecar, Adapter, Ambassador</h2>
+<div class="grid three">
+  <div class="card">
+    <h3>Sidecar Pattern</h3>
+    <div class="pattern"><span class="pill">main app</span><span class="pill sidecar">log sidecar</span></div>
+    <p>The sidecar supports the main application. Example: app writes logs to a shared volume, sidecar reads and ships them.</p>
+  </div>
+  <div class="card">
+    <h3>Adapter Pattern</h3>
+    <div class="pattern"><span class="pill">app output</span><span class="arrow"></span><span class="pill adapter">adapter</span><span class="arrow"></span><span class="pill">standard output</span></div>
+    <p>The adapter normalizes output. Example: transform custom metrics into a consistent HTTP metrics endpoint.</p>
+  </div>
+  <div class="card">
+    <h3>Ambassador Pattern</h3>
+    <div class="pattern"><span class="pill">app</span><span class="arrow"></span><span class="pill ambassador">localhost proxy</span><span class="arrow"></span><span class="pill">remote service</span></div>
+    <p>The ambassador hides remote access details. Example: app connects to localhost while the proxy routes to an external service.</p>
+  </div>
+</div>
+<h3>Lab 7: Sidecar container Pod</h3>
+<pre><button class="copy">Copy</button><code>cat &lt;&lt;'YAML' &gt; pod-sidecar.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sidecar-demo
+spec:
+  volumes:
+  - name: logs
+    emptyDir: {}
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: ["sh", "-c"]
+    args: ["while true; do echo app-log-$(date) &gt;&gt; /var/log/app/app.log; sleep 3; done"]
+    volumeMounts:
+    - name: logs
+      mountPath: /var/log/app
+  - name: log-reader
+    image: busybox:1.36
+    command: ["sh", "-c"]
+    args: ["tail -n+1 -f /var/log/app/app.log"]
+    volumeMounts:
+    - name: logs
+      mountPath: /var/log/app
+YAML
+kubectl apply -f pod-sidecar.yaml
+kubectl logs sidecar-demo -c log-reader</code></pre>
+<h3>Lab 8: Adapter container Pod</h3>
+<pre><button class="copy">Copy</button><code>cat &lt;&lt;'YAML' &gt; pod-adapter.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: adapter-demo
+spec:
+  volumes:
+  - name: data
+    emptyDir: {}
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: ["sh", "-c"]
+    args: ["while true; do echo temperature=$(date +%S) &gt; /data/raw.txt; sleep 5; done"]
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  - name: adapter
+    image: busybox:1.36
+    command: ["sh", "-c"]
+    args: ["while true; do awk -F= '{print \"app_temperature_seconds \"$2}' /data/raw.txt 2>/dev/null; sleep 5; done"]
+    volumeMounts:
+    - name: data
+      mountPath: /data
+YAML
+kubectl apply -f pod-adapter.yaml
+kubectl logs adapter-demo -c adapter</code></pre>
+<h3>Lab 9: Ambassador container Pod</h3>
+<pre><button class="copy">Copy</button><code>cat &lt;&lt;'YAML' &gt; pod-ambassador.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ambassador-demo
+spec:
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: ["sh", "-c"]
+    args: ["while true; do wget -qO- http://localhost:8080 2>/dev/null | head -n1; sleep 5; done"]
+  - name: ambassador
+    image: alpine/socat:1.8.0.0
+    args: ["TCP-LISTEN:8080,fork,reuseaddr", "TCP:example.com:80"]
+YAML
+kubectl apply -f pod-ambassador.yaml
+kubectl logs ambassador-demo -c app</code></pre>
+</section>
+
+<section id="init">
+<h2>14. Init Containers</h2>
+<p>Init containers run before the main application containers. Each init container must complete successfully before the next one starts. They are useful for setup, checks, permissions, migrations, and dependency waiting.</p>
+<div class="anim-flow"><div class="node">init-1</div><div class="arrow"></div><div class="node">init-2</div><div class="arrow"></div><div class="node">main app</div><div class="arrow"></div><div class="node">Pod Ready</div></div>
+<div class="lab">
+  <div class="lab-head"><h3>Lab 10: Init container Pod</h3><span class="badge">Startup Control</span></div>
+  <ol class="steps">
+    <li>Create a Pod where init container prepares content for nginx.
+<pre><button class="copy">Copy</button><code>cat &lt;&lt;'YAML' &gt; pod-init.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-demo
+spec:
+  volumes:
+  - name: web-content
+    emptyDir: {}
+  initContainers:
+  - name: init-html
+    image: busybox:1.36
+    command: ["sh", "-c"]
+    args: ["echo 'Hello from init container' &gt; /work/index.html"]
+    volumeMounts:
+    - name: web-content
+      mountPath: /work
+  containers:
+  - name: nginx
+    image: nginx:1.27
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: web-content
+      mountPath: /usr/share/nginx/html
+YAML
+kubectl apply -f pod-init.yaml</code></pre></li>
+    <li>Inspect init container status.
+<pre><button class="copy">Copy</button><code>kubectl get pod init-demo
+kubectl describe pod init-demo
+kubectl port-forward pod/init-demo 8081:80
+curl http://localhost:8081</code></pre></li>
+  </ol>
+</div>
+</section>
+
+<section id="static">
+<h2>15. Static Pods</h2>
+<p>Static Pods are managed directly by the kubelet on a specific node, not by the API server. The kubelet watches a local manifest directory, commonly <code>/etc/kubernetes/manifests</code> in kubeadm-based clusters. The API server may show mirror Pods for visibility.</p>
+<div class="danger"><strong>Production caution:</strong> Do not casually edit static Pod manifests on production control-plane nodes. kubeadm control plane components are often static Pods. A wrong edit can break the cluster.</div>
+<div class="lab">
+  <div class="lab-head"><h3>Lab 11: Understanding Static Pods</h3><span class="badge">Node-level</span></div>
+  <ol class="steps">
+    <li>SSH to a lab node where you have sudo access. Check kubelet static Pod path.
+<pre><button class="copy">Copy</button><code>sudo grep -R "staticPodPath" /var/lib/kubelet/config.yaml /etc/kubernetes/kubelet.conf 2>/dev/null || true</code></pre></li>
+    <li>Create a static Pod manifest only on a safe lab node.
+<pre><button class="copy">Copy</button><code>sudo tee /etc/kubernetes/manifests/static-web.yaml &gt;/dev/null &lt;&lt'YAML'
+apiVersion: v1
+kind: Pod
+metadata:
+  name: static-web
+  labels:
+    app: static-web
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.27
+    ports:
+    - containerPort: 80
+YAML</code></pre></li>
+    <li>From your kubectl machine, check for the mirror Pod. Its name usually includes the node name.
+<pre><button class="copy">Copy</button><code>kubectl get pods -A | grep static-web</code></pre></li>
+    <li>Remove the static Pod by deleting the manifest from the node.
+<pre><button class="copy">Copy</button><code>sudo rm -f /etc/kubernetes/manifests/static-web.yaml</code></pre></li>
+  </ol>
+</div>
+</section>
+
+<section id="labs">
+<h2>16. Complete Lab Set and Trainer Flow</h2>
+<table><thead><tr><th>Lab</th><th>Topic</th><th>Expected outcome</th></tr></thead><tbody>
+<tr><td>Lab 1</td><td>Getting started with kubectl CLI</td><td>Trainees can verify cluster access and set namespace.</td></tr>
+<tr><td>Lab 2</td><td>Creating Pods using imperative commands</td><td>Trainees can quickly create and inspect Pods.</td></tr>
+<tr><td>Lab 3</td><td>Creating Pods using declarative method</td><td>Trainees can apply YAML manifests.</td></tr>
+<tr><td>Lab 4</td><td>Working with multi-container Pods</td><td>Trainees understand shared volumes and container-specific logs/exec.</td></tr>
+<tr><td>Lab 5</td><td>Working with labels and annotations</td><td>Trainees can label, filter, update, delete labels, and annotate Pods.</td></tr>
+<tr><td>Lab 6</td><td>Formatting output with kubectl</td><td>Trainees can use YAML, JSON, wide, custom-columns, jsonpath.</td></tr>
+<tr><td>Lab 7</td><td>Working with single-container Pods</td><td>Trainees can expose and access nginx Pod.</td></tr>
+<tr><td>Lab 8</td><td>Working with sidecar container Pod</td><td>Trainees understand helper-container pattern.</td></tr>
+<tr><td>Lab 9</td><td>Working with adapter container Pod</td><td>Trainees understand output normalization.</td></tr>
+<tr><td>Lab 10</td><td>Working with ambassador container Pod</td><td>Trainees understand local proxy pattern.</td></tr>
+<tr><td>Lab 11</td><td>Init container Pods</td><td>Trainees understand startup sequencing.</td></tr>
+<tr><td>Lab 12</td><td>Understanding Static Pods</td><td>Trainees understand kubelet-managed node-level Pods.</td></tr>
+</tbody></table>
+<h3>Assessment questions</h3>
+<ol class="checklist">
+<li>Why should you not run frontend and database containers in the same Pod?</li>
+<li>What is the difference between <code>kubectl get</code> and <code>kubectl describe</code>?</li>
+<li>When would you prefer <code>port-forward</code> over <code>NodePort</code>?</li>
+<li>Why are labels better than annotations for selecting Pods?</li>
+<li>What happens if an init container fails?</li>
+<li>How do you read logs from a specific container in a multi-container Pod?</li>
+<li>Why are standalone Pods not recommended for production app deployment?</li>
+<li>What is the main risk of editing static Pod manifests on a control-plane node?</li>
+</ol>
+</section>
+
+<section id="cleanup">
+<h2>17. Cleanup Commands</h2>
+<pre><button class="copy">Copy</button><code>kubectl delete pod web-imperative web-declarative label-demo lifecycle-demo command-demo \
+  multi-demo sidecar-demo adapter-demo ambassador-demo init-demo --ignore-not-found
+kubectl delete svc web-svc --ignore-not-found
+kubectl delete namespace pod-lifecycle-lab --ignore-not-found</code></pre>
+</section>
+
+<section>
+<h2>Appendix: Quick kubectl Command Reference</h2>
+<table><thead><tr><th>Task</th><th>Command</th></tr></thead><tbody>
+<tr><td>Create Pod imperatively</td><td><code>kubectl run NAME --image=IMAGE</code></td></tr>
+<tr><td>Create from YAML</td><td><code>kubectl apply -f file.yaml</code></td></tr>
+<tr><td>List Pods</td><td><code>kubectl get pods -o wide</code></td></tr>
+<tr><td>Describe Pod</td><td><code>kubectl describe pod NAME</code></td></tr>
+<tr><td>Pod YAML</td><td><code>kubectl get pod NAME -o yaml</code></td></tr>
+<tr><td>Pod JSON</td><td><code>kubectl get pod NAME -o json</code></td></tr>
+<tr><td>Exec shell</td><td><code>kubectl exec -it NAME -- sh</code></td></tr>
+<tr><td>Exec into specific container</td><td><code>kubectl exec -it NAME -c CONTAINER -- sh</code></td></tr>
+<tr><td>Logs from specific container</td><td><code>kubectl logs NAME -c CONTAINER</code></td></tr>
+<tr><td>Port-forward</td><td><code>kubectl port-forward pod/NAME 8080:80</code></td></tr>
+<tr><td>Add/update label</td><td><code>kubectl label pod NAME key=value --overwrite</code></td></tr>
+<tr><td>Delete label</td><td><code>kubectl label pod NAME key-</code></td></tr>
+<tr><td>Add annotation</td><td><code>kubectl annotate pod NAME key=value</code></td></tr>
+</tbody></table>
+</section>
+
+<div class="footer">
+  <p><strong>Sources used for validation:</strong> Kubernetes documentation on Pods, Pod lifecycle, kubectl, labels/selectors, init containers, static Pods, and probes. This HTML uses self-contained CSS/SVG-like diagrams and JavaScript; no external assets are required.</p>
+</div>
+</main>
+</div>
+<script>
+  document.querySelectorAll('pre').forEach(pre => {
+    const btn = pre.querySelector('.copy');
+    if(!btn) return;
+    btn.addEventListener('click', async () => {
+      const code = pre.querySelector('code').innerText;
+      try { await navigator.clipboard.writeText(code); btn.textContent = 'Copied'; setTimeout(()=>btn.textContent='Copy',1200); }
+      catch(e){ btn.textContent = 'Select'; setTimeout(()=>btn.textContent='Copy',1200); }
+    });
+  });
+</script>
+</body>
+</html>
