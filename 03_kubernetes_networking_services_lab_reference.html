@@ -1,0 +1,391 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kubernetes Networking and Services - Trainee Lab Reference</title>
+  <style>
+    :root{--bg:#fff;--text:#1f2937;--muted:#64748b;--blue:#2563eb;--green:#16a34a;--orange:#f97316;--purple:#7c3aed;--red:#dc2626;--border:#d1d5db;--code:#0f172a;--codeText:#e5e7eb;--shadow:0 8px 24px rgba(15,23,42,.08)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;line-height:1.65}header{padding:42px 24px 30px;background:linear-gradient(135deg,#eff6ff,#fff 50%,#f8fafc);border-bottom:1px solid var(--border)}.wrap{max-width:1180px;margin:0 auto;padding:0 20px}h1{font-size:38px;line-height:1.15;margin:0 0 10px;color:#0f172a}h2{font-size:28px;margin-top:48px;border-left:7px solid var(--blue);padding-left:14px;color:#111827}h3{font-size:22px;margin-top:30px;color:#1e3a8a}h4{font-size:18px;margin-top:24px;color:#111827}.subtitle{font-size:18px;color:var(--muted);max-width:900px}.badge{display:inline-block;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:999px;padding:4px 10px;font-size:13px;margin-right:6px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin:18px 0}.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow)}.card h3,.card h4{margin-top:0}.note{background:#f8fafc;border-left:5px solid var(--blue);padding:14px 16px;border-radius:8px;margin:16px 0}.warn{background:#fee2e2;border-left:5px solid var(--red);padding:14px 16px;border-radius:8px;margin:16px 0}.success{background:#dcfce7;border-left:5px solid var(--green);padding:14px 16px;border-radius:8px;margin:16px 0}.orangebox{background:#ffedd5;border-left:5px solid var(--orange);padding:14px 16px;border-radius:8px;margin:16px 0}code{background:#eef2f7;color:#111827;border-radius:5px;padding:2px 5px;font-family:Consolas,Monaco,monospace;font-size:.95em}pre{background:var(--code);color:var(--codeText);padding:16px;border-radius:12px;overflow:auto;box-shadow:var(--shadow);font-size:14px;line-height:1.45}pre code{background:transparent;color:inherit;padding:0}table{width:100%;border-collapse:collapse;margin:18px 0;background:#fff;box-shadow:var(--shadow);border-radius:12px;overflow:hidden}th,td{border:1px solid var(--border);padding:12px;text-align:left;vertical-align:top}th{background:#eff6ff;color:#1e3a8a}.toc a{display:block;padding:8px 10px;border-bottom:1px dashed #e5e7eb;color:#1d4ed8;text-decoration:none}.toc a:hover{background:#eff6ff}.diagram{background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:22px;margin:22px 0;overflow:hidden}.lane{display:flex;align-items:center;justify-content:space-around;gap:18px;flex-wrap:wrap;margin:20px 0}.box{min-width:150px;text-align:center;border:2px solid #bfdbfe;background:#eff6ff;border-radius:16px;padding:14px 16px;font-weight:700;position:relative}.box.green{background:#ecfdf5;border-color:#86efac}.box.orange{background:#fff7ed;border-color:#fdba74}.box.purple{background:#f5f3ff;border-color:#c4b5fd}.arrow{height:4px;width:90px;background:linear-gradient(90deg,var(--blue),#60a5fa);position:relative;border-radius:4px;animation:flow 1.8s infinite linear}.arrow::after{content:"";position:absolute;right:-3px;top:-6px;border-left:14px solid #60a5fa;border-top:8px solid transparent;border-bottom:8px solid transparent}@keyframes flow{0%{box-shadow:0 0 0 rgba(37,99,235,0)}50%{box-shadow:0 0 18px rgba(37,99,235,.55)}100%{box-shadow:0 0 0 rgba(37,99,235,0)}}.packet{width:18px;height:18px;border-radius:50%;background:var(--orange);position:absolute;top:-7px;left:0;animation:packet 2.4s infinite linear}@keyframes packet{0%{left:0;opacity:.2}15%{opacity:1}100%{left:calc(100% - 18px);opacity:.2}}.service-demo{position:relative;min-height:310px;background:linear-gradient(#f8fafc,#fff);border-radius:16px;border:1px dashed #cbd5e1;padding:20px;overflow:hidden}.service-svg{width:100%;height:270px;display:block}.svc-node{fill:#dbeafe;stroke:#2563eb;stroke-width:3}.pod-node{fill:#dcfce7;stroke:#22c55e;stroke-width:3}.svc-text{font:800 16px Segoe UI,Arial,sans-serif;fill:#0f172a}.small-svg{font:600 12px Segoe UI,Arial,sans-serif;fill:#64748b}.selector-path{stroke:#94a3b8;stroke-width:4;stroke-linecap:round;stroke-dasharray:9 8;animation:dashFlow 1.4s linear infinite}.selector-packet{fill:#f97316;filter:drop-shadow(0 0 5px rgba(249,115,22,.45))}@keyframes dashFlow{to{stroke-dashoffset:-34}}@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}.dns-name{font-family:Consolas,Monaco,monospace;background:#ecfeff;border:1px solid #67e8f9;border-radius:10px;padding:12px;text-align:center;font-weight:700;color:#155e75}.steps{counter-reset:step}.step{counter-increment:step;margin:18px 0;padding:18px;border:1px solid var(--border);border-radius:14px;background:#fff;box-shadow:var(--shadow)}.step::before{content:"Step " counter(step);display:inline-block;background:#1d4ed8;color:white;border-radius:999px;padding:3px 12px;font-weight:700;margin-bottom:10px}.checklist li{margin:8px 0}.footer{margin-top:50px;padding:28px;background:#f8fafc;border-top:1px solid var(--border);font-size:14px;color:#475569}.small{font-size:14px;color:#64748b}@media print{.arrow,.packet,.selector-path,.selector-packet{animation:none}pre{white-space:pre-wrap}.card,.diagram,.step{box-shadow:none}a{color:#111827}}
+  </style>
+</head>
+<body>
+<header><div class="wrap"><span class="badge">Kubernetes</span><span class="badge">Networking</span><span class="badge">Services</span><span class="badge">Hands-on Labs</span><h1>Kubernetes Networking and Services<br/>Trainee Reference Guide</h1><p class="subtitle">A practical white-background HTML guide with animated concepts, simple use cases, working commands, YAML manifests, troubleshooting checks, and trainee assessment questions.</p></div></header>
+<main class="wrap">
+<section class="card toc"><h2>Table of Contents</h2><a href="#objectives">1. Learning Objectives</a><a href="#prereq">2. Lab Prerequisites</a><a href="#cluster-communication">3. Cluster Communications</a><a href="#pod-node-networking">4. Pod and Node Networking</a><a href="#cni">5. Container Network Interface</a><a href="#pod-ip-dynamic">6. Dynamic Pod IP Assignment</a><a href="#service-routing">7. How Services Route Traffic to Pods</a><a href="#dns">8. Kubernetes DNS for Services</a><a href="#service-types">9. Service Types</a><a href="#ingress">10. Ingress Controller and Ingress Rules</a><a href="#nodeport-vs-portforward">11. NodePort or kubectl port-forward?</a><a href="#lab-clusterip">12. Lab: Exposing Applications using ClusterIP Service</a><a href="#lab-nodeport">13. Lab: Exposing Applications using NodePort Service</a><a href="#lab-validation">14. Lab Validation and Verification Notes</a><a href="#troubleshooting">15. Troubleshooting Checklist</a><a href="#assessment">16. Assessment Questions</a></section>
+<section id="objectives"><h2>1. Learning Objectives</h2><div class="grid"><div class="card"><h3>Understand</h3><p>How Pods, Nodes, Services, DNS, CNI, and Ingress work together inside a Kubernetes cluster.</p></div><div class="card"><h3>Practice</h3><p>Create an application, expose it internally with ClusterIP, and expose it externally using NodePort.</p></div><div class="card"><h3>Troubleshoot</h3><p>Use <code>kubectl get</code>, <code>describe</code>, <code>logs</code>, <code>exec</code>, <code>curl</code>, and DNS lookup commands to identify common networking issues.</p></div></div></section>
+<section id="prereq"><h2>2. Lab Prerequisites</h2><ul class="checklist"><li>A running Kubernetes cluster: <code>minikube</code>, <code>kind</code>, kubeadm, Docker Desktop Kubernetes, or a cloud cluster.</li><li><code>kubectl</code> configured and connected to the cluster.</li><li>Basic knowledge of Pods, Deployments, labels, and YAML.</li><li>For NodePort testing, access to at least one reachable node IP or minikube service access.</li></ul><pre><code># Verify kubectl connectivity
+kubectl cluster-info
+kubectl get nodes -o wide
+kubectl get pods -A</code></pre><div class="note"><strong>Namespace used:</strong> <code>netlab</code>. Keeping labs in a separate namespace makes cleanup easy.</div></section>
+<section id="cluster-communication"><h2>3. Cluster Communications</h2><p>Kubernetes networking connects several communication paths. Containers in the same Pod can use <code>localhost</code>. Pods normally talk to other Pods through Services, and external users access applications through NodePort, LoadBalancer, or Ingress.</p><table><thead><tr><th>Communication Path</th><th>Example</th><th>Typical Object</th></tr></thead><tbody><tr><td>Container to container in same Pod</td><td>App talks to sidecar on <code>localhost</code></td><td>Pod</td></tr><tr><td>Pod to Pod</td><td>Frontend talks to backend</td><td>Pod IP, usually via Service</td></tr><tr><td>Pod to Service</td><td>App calls <code>backend.netlab.svc.cluster.local</code></td><td>Service + DNS</td></tr><tr><td>External user to app</td><td>Browser opens application</td><td>NodePort, LoadBalancer, Ingress</td></tr></tbody></table><div class="diagram"><h3>Animated Concept: Request Flow</h3><div class="lane"><div class="box orange">User / Client</div><div class="arrow"><span class="packet"></span></div><div class="box purple">Ingress / NodePort / LB</div><div class="arrow"><span class="packet"></span></div><div class="box">Service</div><div class="arrow"><span class="packet"></span></div><div class="box green">Pod</div></div><p class="small">The moving dot represents a request packet. In a real cluster, kube-proxy or eBPF dataplane, CNI routing, DNS, and node networking participate in the flow.</p></div></section>
+<section id="pod-node-networking"><h2>4. Pod and Node Networking</h2><p>Every Node has a node IP. Every Pod gets its own Pod IP from the cluster Pod network. Pods are ephemeral, so when a Pod is recreated it can receive a different IP.</p><div class="diagram"><h3>Pod and Node Networking View</h3><div class="lane"><div class="box orange">Node 1<br/><span class="small">192.168.1.11</span><br/><br/><span class="box green">Pod A<br/>10.244.1.5</span></div><div class="arrow"><span class="packet"></span></div><div class="box orange">Node 2<br/><span class="small">192.168.1.12</span><br/><br/><span class="box green">Pod B<br/>10.244.2.8</span></div></div></div><div class="note"><strong>Important:</strong> Application code should talk to a Service name, not to an individual Pod IP. A Service gives a stable virtual IP and DNS name while Pods behind it can change.</div></section>
+<section id="cni"><h2>5. Container Network Interface (CNI)</h2><p>CNI is the plugin mechanism used by Kubernetes networking solutions to connect Pods to the cluster network. Examples include Calico, Cilium, Flannel, Weave Net, Antrea, and cloud provider CNIs.</p><div class="grid"><div class="card"><h3>What CNI does</h3><ul><li>Assigns Pod IP addresses.</li><li>Connects Pod network interfaces.</li><li>Enables Pod-to-Pod communication.</li><li>May enforce NetworkPolicies, depending on plugin support.</li></ul></div><div class="card"><h3>What CNI does not replace</h3><ul><li>It does not replace Services.</li><li>It does not automatically create application DNS names.</li><li>It does not expose applications externally by itself.</li></ul></div></div><pre><code># Check which CNI/networking pods are running
+kubectl get pods -n kube-system -o wide
+
+# Common names you may see:
+# cilium, calico, flannel, weave, aws-node, antrea, kube-router</code></pre></section>
+<section id="pod-ip-dynamic"><h2>6. Understanding Pod IP Assignment is Dynamic</h2><p>A Pod IP is assigned when the Pod is created. If the Pod is deleted and recreated, the new Pod can receive a different IP.</p><div class="warn"><strong>Never hardcode Pod IP addresses in application code.</strong> Hardcoded Pod IPs can break after restart, rescheduling, scaling, or rolling update.</div><h3>Mini Demonstration</h3><pre><code>kubectl create namespace netlab
+kubectl -n netlab run temp-nginx --image=nginx:1.27 --restart=Never
+kubectl -n netlab get pod temp-nginx -o wide
+
+# Delete and recreate the Pod
+kubectl -n netlab delete pod temp-nginx
+kubectl -n netlab run temp-nginx --image=nginx:1.27 --restart=Never
+kubectl -n netlab get pod temp-nginx -o wide</code></pre><p>The IP may change. Even if it appears unchanged in a small local cluster, production design must still assume Pod IPs are temporary.</p></section>
+<section id="service-routing"><h2>7. Understanding How Services Route Traffic to Pods</h2><p>A Service selects Pods using labels. Traffic sent to the Service is forwarded to one of the matching backend Pod endpoints.</p><div class="diagram"><h3>Animated Concept: Service Selector to Pods</h3><div class="service-demo">
+  <svg class="service-svg" viewBox="0 0 900 270" role="img" aria-label="Animated Kubernetes Service selector routing to matching Pods">
+    <defs>
+      <path id="route-left" d="M450 82 C360 120 260 145 170 190" />
+      <path id="route-mid" d="M450 82 C450 115 450 155 450 190" />
+      <path id="route-right" d="M450 82 C540 120 640 145 730 190" />
+    </defs>
+
+    <rect class="svc-node" x="350" y="20" width="200" height="70" rx="28" />
+    <text class="svc-text" x="450" y="50" text-anchor="middle">Service</text>
+    <text class="small-svg" x="450" y="72" text-anchor="middle">selector: app=web</text>
+
+    <use href="#route-left" class="selector-path" />
+    <use href="#route-mid" class="selector-path" />
+    <use href="#route-right" class="selector-path" />
+
+    <circle class="selector-packet" r="8">
+      <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath href="#route-left" /></animateMotion>
+    </circle>
+    <circle class="selector-packet" r="8">
+      <animateMotion dur="2s" repeatCount="indefinite" begin=".35s"><mpath href="#route-mid" /></animateMotion>
+    </circle>
+    <circle class="selector-packet" r="8">
+      <animateMotion dur="2s" repeatCount="indefinite" begin=".7s"><mpath href="#route-right" /></animateMotion>
+    </circle>
+
+    <rect class="pod-node" x="80" y="190" width="180" height="62" rx="16" />
+    <text class="svc-text" x="170" y="218" text-anchor="middle">Pod 1</text>
+    <text class="small-svg" x="170" y="240" text-anchor="middle">app=web</text>
+
+    <rect class="pod-node" x="360" y="190" width="180" height="62" rx="16" />
+    <text class="svc-text" x="450" y="218" text-anchor="middle">Pod 2</text>
+    <text class="small-svg" x="450" y="240" text-anchor="middle">app=web</text>
+
+    <rect class="pod-node" x="640" y="190" width="180" height="62" rx="16" />
+    <text class="svc-text" x="730" y="218" text-anchor="middle">Pod 3</text>
+    <text class="small-svg" x="730" y="240" text-anchor="middle">app=web</text>
+  </svg>
+</div><p class="small">The moving orange packets show Service traffic being distributed to Pods that match the selector <code>app=web</code>. The Service does not care about Pod names; it finds backend Pods through labels.</p></div><table><thead><tr><th>Object</th><th>Purpose</th><th>Command</th></tr></thead><tbody><tr><td>Service</td><td>Stable virtual access point for Pods</td><td><code>kubectl get svc</code></td></tr><tr><td>EndpointSlice</td><td>Stores backend Pod IPs selected by the Service</td><td><code>kubectl get endpointslice</code></td></tr><tr><td>kube-proxy / dataplane</td><td>Implements forwarding rules on nodes</td><td><code>kubectl get pods -n kube-system</code></td></tr></tbody></table></section>
+<section id="dns"><h2>8. Understanding How DNS Names are Generated for Services</h2><p>Kubernetes creates DNS records for Services. Applications should use these names instead of Pod IP addresses.</p><div class="grid"><div class="card"><h3>Short name</h3><div class="dns-name">web-clusterip</div><p>Works from Pods in the same namespace.</p></div><div class="card"><h3>Namespace-qualified name</h3><div class="dns-name">web-clusterip.netlab</div><p>Useful from another namespace.</p></div><div class="card"><h3>Full service DNS name</h3><div class="dns-name">web-clusterip.netlab.svc.cluster.local</div><p>Fully qualified cluster DNS name.</p></div></div><pre><code># Test DNS and HTTP from a temporary BusyBox Pod
+kubectl -n netlab run dns-demo \
+  --image=busybox:1.36 \
+  --restart=Never \
+  --rm -i \
+  -- nslookup web-clusterip
+
+kubectl -n netlab run http-demo \
+  --image=busybox:1.36 \
+  --restart=Never \
+  --rm -i \
+  -- wget -qO- http://web-clusterip</code></pre></section>
+<section id="service-types"><h2>9. Understanding Different Types of Services</h2><table><thead><tr><th>Service Type</th><th>Scope</th><th>Use Case</th><th>Example Access</th></tr></thead><tbody><tr><td><strong>ClusterIP</strong></td><td>Inside cluster only</td><td>Microservice-to-microservice communication</td><td><code>http://web-clusterip</code></td></tr><tr><td><strong>NodePort</strong></td><td>Outside through node IP and high port</td><td>Training, bare-metal demos, simple external testing</td><td><code>http://&lt;NodeIP&gt;:30080</code></td></tr><tr><td><strong>LoadBalancer</strong></td><td>Outside through cloud/external load balancer</td><td>Production-style external exposure where supported</td><td><code>http://&lt;External-IP&gt;</code></td></tr><tr><td><strong>ExternalName</strong></td><td>DNS alias to external service</td><td>Map in-cluster name to external DNS name</td><td><code>external-db.default.svc.cluster.local</code></td></tr></tbody></table><h3>Service Type Examples</h3><h4>ClusterIP</h4><pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: web-clusterip
+spec:
+  type: ClusterIP
+  selector:
+    app: web
+  ports:
+    - port: 80
+      targetPort: 80</code></pre><h4>NodePort</h4><pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: web-nodeport
+spec:
+  type: NodePort
+  selector:
+    app: web
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080</code></pre><h4>LoadBalancer</h4><pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: web-loadbalancer
+spec:
+  type: LoadBalancer
+  selector:
+    app: web
+  ports:
+    - port: 80
+      targetPort: 80</code></pre><h4>ExternalName</h4><pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: external-google
+spec:
+  type: ExternalName
+  externalName: www.google.com</code></pre></section>
+<section id="ingress"><h2>10. Ingress Controller and Ingress Rules</h2><p>An Ingress defines HTTP/HTTPS routing rules. It does not process traffic by itself; the cluster must have an Ingress Controller such as NGINX Ingress Controller, Traefik, HAProxy, or a cloud provider controller.</p><div class="diagram"><h3>Animated Concept: Ingress HTTP Routing</h3><div class="lane"><div class="box orange">Browser<br/>training.local</div><div class="arrow"><span class="packet"></span></div><div class="box purple">Ingress Controller</div><div class="arrow"><span class="packet"></span></div><div class="box">Service</div><div class="arrow"><span class="packet"></span></div><div class="box green">Pods</div></div></div><h3>Sample Ingress Rule</h3><pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: training.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-clusterip
+                port:
+                  number: 80</code></pre><div class="orangebox"><strong>Important:</strong> Create this Ingress only after installing an Ingress Controller. Without a controller, the Ingress object exists but traffic will not be handled.</div></section>
+<section id="nodeport-vs-portforward"><h2>11. NodePort or kubectl port-forward?</h2><table><thead><tr><th>Option</th><th>Best For</th><th>Not Best For</th><th>Example</th></tr></thead><tbody><tr><td><strong>kubectl port-forward</strong></td><td>Developer testing, debugging, temporary local access</td><td>Sharing with many users or production access</td><td><code>kubectl -n netlab port-forward svc/web-clusterip 8080:80</code></td></tr><tr><td><strong>NodePort</strong></td><td>Training labs, bare-metal demos, simple external access</td><td>Polished production exposure, TLS routing, hostname-based routing</td><td><code>http://NodeIP:30080</code></td></tr></tbody></table><div class="note"><strong>Practical rule:</strong> Use <code>kubectl port-forward</code> for quick local troubleshooting. Use <code>NodePort</code> when trainees need to access the app using node IP and port. Use Ingress or LoadBalancer for production-style HTTP/HTTPS exposure.</div></section>
+<section id="lab-clusterip"><h2>12. Lab: Exposing Applications using ClusterIP Service</h2>
+<p><strong>Goal:</strong> Deploy an NGINX web application and expose it only inside the Kubernetes cluster using a stable ClusterIP Service.</p>
+<div class="note"><strong>Use case:</strong> A frontend Pod, backend API Pod, or batch job inside the cluster needs to call an internal web service. External users should not directly access this Service.</div>
+<h3>What trainees will prove in this lab</h3><ul><li>Pods receive dynamic IP addresses.</li><li>A Service gives a stable virtual IP and DNS name.</li><li>The Service selector finds matching Pods using labels.</li><li>Traffic continues to work even when Pods scale up or down.</li></ul>
+<div class="steps">
+<div class="step"><h3>Step 1: Check cluster access</h3><pre><code>kubectl version --client
+kubectl cluster-info
+kubectl get nodes -o wide</code></pre><p><strong>Expected:</strong> <code>kubectl get nodes</code> should show at least one node in <code>Ready</code> status.</p></div>
+<div class="step"><h3>Step 2: Create the complete ClusterIP lab manifest</h3><pre><code>cat &lt;&lt;&#x27;EOF&#x27; &gt; web-clusterip-lab.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: netlab
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: netlab
+  labels:
+    app: web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-clusterip
+  namespace: netlab
+  labels:
+    app: web
+spec:
+  type: ClusterIP
+  selector:
+    app: web
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: http
+EOF</code></pre><p>This single file creates a namespace, a 3-replica NGINX Deployment, and a ClusterIP Service named <code>web-clusterip</code>.</p></div>
+<div class="step"><h3>Step 3: Apply the manifest and verify the workload</h3><pre><code>kubectl apply -f web-clusterip-lab.yaml
+kubectl -n netlab rollout status deployment/web --timeout=120s
+kubectl -n netlab get deployment web
+kubectl -n netlab get pods -l app=web -o wide
+kubectl -n netlab get svc web-clusterip -o wide</code></pre><div class="success"><strong>Expected:</strong> Deployment should become available, three Pods should be <code>Running</code>, and Service type should be <code>ClusterIP</code>.</div></div>
+<div class="step"><h3>Step 4: Verify labels, selector, and endpoints</h3><pre><code>kubectl -n netlab get pods --show-labels
+kubectl -n netlab describe svc web-clusterip
+kubectl -n netlab get endpointslice -l kubernetes.io/service-name=web-clusterip -o wide
+kubectl -n netlab get endpoints web-clusterip</code></pre><p><strong>Key check:</strong> The Service selector should show <code>app=web</code>. EndpointSlice should contain Pod IPs. These Pod IPs are backend targets and must not be hardcoded in application code.</p></div>
+<div class="step"><h3>Step 5: Test Kubernetes DNS from inside the cluster</h3><pre><code>kubectl -n netlab run dns-test \
+  --image=busybox:1.36 \
+  --restart=Never \
+  --rm -i \
+  -- nslookup web-clusterip
+
+kubectl -n netlab run dns-fqdn-test \
+  --image=busybox:1.36 \
+  --restart=Never \
+  --rm -i \
+  -- nslookup web-clusterip.netlab.svc.cluster.local</code></pre><div class="success"><strong>Expected:</strong> Both short name <code>web-clusterip</code> and FQDN <code>web-clusterip.netlab.svc.cluster.local</code> should resolve.</div></div>
+<div class="step"><h3>Step 6: Test HTTP access from inside the cluster</h3><pre><code>kubectl -n netlab run http-test \
+  --image=busybox:1.36 \
+  --restart=Never \
+  --rm -i \
+  -- wget -qO- http://web-clusterip
+
+kubectl -n netlab run http-fqdn-test \
+  --image=busybox:1.36 \
+  --restart=Never \
+  --rm -i \
+  -- wget -qO- http://web-clusterip.netlab.svc.cluster.local</code></pre><div class="success"><strong>Expected:</strong> The command should print the NGINX welcome HTML. This proves that internal cluster clients can access the app using the Service name.</div></div>
+<div class="step"><h3>Step 7: Prove that Service backends update when Pods change</h3><pre><code>kubectl -n netlab scale deployment web --replicas=5
+kubectl -n netlab rollout status deployment/web --timeout=120s
+kubectl -n netlab get pods -l app=web -o wide
+kubectl -n netlab get endpointslice -l kubernetes.io/service-name=web-clusterip -o wide
+
+kubectl -n netlab scale deployment web --replicas=2
+kubectl -n netlab rollout status deployment/web --timeout=120s
+kubectl -n netlab get endpointslice -l kubernetes.io/service-name=web-clusterip -o wide</code></pre><p><strong>Observation:</strong> The Service name and ClusterIP do not change. EndpointSlice backend Pod IPs change as replicas are added or removed.</p></div>
+<div class="step"><h3>Step 8: Optional local access using port-forward</h3><pre><code># Terminal 1
+kubectl -n netlab port-forward svc/web-clusterip 8080:80
+
+# Terminal 2
+curl http://127.0.0.1:8080</code></pre><p><strong>Important:</strong> Port-forward is only for local debugging. It does not expose the Service to other users like NodePort, LoadBalancer, or Ingress.</p></div>
+<div class="step"><h3>Step 9: Optional selector troubleshooting mini-lab</h3><pre><code># Break the Service selector intentionally
+kubectl -n netlab patch svc web-clusterip \
+  -p &#x27;{&quot;spec&quot;:{&quot;selector&quot;:{&quot;app&quot;:&quot;wrong-label&quot;}}}&#x27;
+
+kubectl -n netlab get endpointslice -l kubernetes.io/service-name=web-clusterip
+kubectl -n netlab describe svc web-clusterip
+
+# Restore the correct selector
+kubectl -n netlab patch svc web-clusterip \
+  -p &#x27;{&quot;spec&quot;:{&quot;selector&quot;:{&quot;app&quot;:&quot;web&quot;}}}&#x27;
+
+kubectl -n netlab get endpointslice -l kubernetes.io/service-name=web-clusterip -o wide</code></pre><div class="orangebox"><strong>Learning point:</strong> A Service with the wrong selector has no endpoints. If a Service is not working, first compare <code>kubectl get pods --show-labels</code> with <code>kubectl describe svc</code>.</div></div>
+<div class="step"><h3>Step 10: Cleanup</h3><pre><code>kubectl delete -f web-clusterip-lab.yaml
+rm -f web-clusterip-lab.yaml</code></pre></div>
+</div>
+</section>
+<section id="lab-nodeport"><h2>13. Lab: Exposing Applications using NodePort Service</h2>
+<p><strong>Goal:</strong> Expose an NGINX application outside the cluster through <code>NodeIP:NodePort</code>.</p>
+<div class="note"><strong>Use case:</strong> A trainee needs to access an app from a browser or terminal outside the Kubernetes cluster in a lab setup without configuring Ingress or a cloud LoadBalancer.</div>
+<h3>What trainees will prove in this lab</h3><ul><li>NodePort creates a port on every Kubernetes node.</li><li>Traffic reaches the Service using <code>NodeIP:30080</code>.</li><li>The Service still routes traffic to Pods using labels and EndpointSlices.</li><li>NodePort reachability depends on the node network, VM network, local firewall, and cloud security rules.</li></ul>
+<div class="steps">
+<div class="step"><h3>Step 1: Check cluster access</h3><pre><code>kubectl version --client
+kubectl cluster-info
+kubectl get nodes -o wide</code></pre><p><strong>Expected:</strong> Nodes should be <code>Ready</code>. Note the node <code>INTERNAL-IP</code> or reachable external IP.</p></div>
+<div class="step"><h3>Step 2: Create the complete NodePort lab manifest</h3><pre><code>cat &lt;&lt;&#x27;EOF&#x27; &gt; web-nodeport-lab.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: netlab
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: netlab
+  labels:
+    app: web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-nodeport
+  namespace: netlab
+  labels:
+    app: web
+spec:
+  type: NodePort
+  selector:
+    app: web
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: http
+      nodePort: 30080
+EOF</code></pre><p>This file is self-contained. It creates the namespace, Deployment, and NodePort Service. The static NodePort is <code>30080</code>, which is inside the default Kubernetes NodePort range <code>30000-32767</code>.</p></div>
+<div class="step"><h3>Step 3: Apply the manifest and verify the Service</h3><pre><code>kubectl apply -f web-nodeport-lab.yaml
+kubectl -n netlab rollout status deployment/web --timeout=120s
+kubectl -n netlab get pods -l app=web -o wide
+kubectl -n netlab get svc web-nodeport -o wide
+kubectl -n netlab describe svc web-nodeport
+kubectl -n netlab get endpointslice -l kubernetes.io/service-name=web-nodeport -o wide</code></pre><div class="success"><strong>Expected:</strong> Service type should be <code>NodePort</code>, port mapping should show <code>80:30080/TCP</code>, and EndpointSlice should show backend Pod IPs.</div></div>
+<div class="step"><h3>Step 4: Access using node IP on Linux/macOS shell</h3><pre><code>kubectl get nodes -o wide
+
+# Linux/macOS helper: first node InternalIP
+NODE_IP=$(kubectl get nodes -o jsonpath=&#x27;{.items[0].status.addresses[?(@.type==&quot;InternalIP&quot;)].address}&#x27;)
+echo $NODE_IP
+curl http://$NODE_IP:30080</code></pre><div class="success"><strong>Expected:</strong> The command should return the NGINX welcome page.</div></div>
+<div class="step"><h3>Step 5: Manual access from browser or terminal</h3><pre><code># Replace NODE_IP with a reachable node IP from: kubectl get nodes -o wide
+curl http://NODE_IP:30080
+
+# Example only:
+# curl http://192.168.56.20:30080</code></pre><p>Open <code>http://NODE_IP:30080</code> in a browser if the node IP is reachable from your workstation.</p></div>
+<div class="step"><h3>Step 6: Minikube-specific test</h3><pre><code>minikube status
+minikube ip
+curl http://$(minikube ip):30080
+
+# Alternative command that prints the service URL:
+minikube service web-nodeport -n netlab --url</code></pre><p>Minikube usually runs Kubernetes inside a local VM or container. <code>minikube service</code> is often the simplest way to open or print the correct URL.</p></div>
+<div class="step"><h3>Step 7: kind-specific working setup</h3><pre><code>cat &lt;&lt;&#x27;EOF&#x27; &gt; kind-nodeport-config.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+        protocol: TCP
+EOF
+
+kind create cluster --name netlab-kind --config kind-nodeport-config.yaml
+kubectl apply -f web-nodeport-lab.yaml
+kubectl -n netlab rollout status deployment/web --timeout=120s
+curl http://127.0.0.1:30080</code></pre><div class="orangebox"><strong>Important:</strong> In a default kind cluster, NodePort is often not reachable from the host unless you create the cluster with <code>extraPortMappings</code>. Create the kind cluster with the mapping before applying the Service.</div></div>
+<div class="step"><h3>Step 8: Firewall and networking checks when NodePort fails</h3><pre><code># On Linux node, check whether kube-proxy opened NodePort handling
+kubectl -n kube-system get pods -l k8s-app=kube-proxy -o wide
+kubectl -n netlab get svc web-nodeport -o yaml
+
+# If node firewall is active, allow TCP 30080 in your lab environment.
+# Ubuntu example:
+sudo ufw allow 30080/tcp
+
+# RHEL/Rocky example:
+sudo firewall-cmd --add-port=30080/tcp --permanent
+sudo firewall-cmd --reload</code></pre><p>For cloud VMs, also open TCP <code>30080</code> in the cloud security group or network security rule. For corporate laptops, local firewall/VPN policy may block access.</p></div>
+<div class="step"><h3>Step 9: Fallback test using port-forward</h3><pre><code># Useful when NodePort is blocked by laptop VM networking, firewall, or kind without port mapping
+kubectl -n netlab port-forward svc/web-nodeport 8080:80
+
+# In another terminal:
+curl http://127.0.0.1:8080</code></pre><p>If port-forward works but NodePort does not, the application and Service are healthy. The issue is outside the Pod path, usually node reachability, firewall, VM NAT, kind mapping, or cloud security rules.</p></div>
+<div class="step"><h3>Step 10: Cleanup</h3><pre><code>kubectl delete -f web-nodeport-lab.yaml
+rm -f web-nodeport-lab.yaml
+
+# Only if you created the optional kind cluster:
+kind delete cluster --name netlab-kind
+rm -f kind-nodeport-config.yaml</code></pre></div>
+</div>
+</section>
+
+<section id="lab-validation"><h2>14. Lab Validation and Verification Notes</h2><p>The ClusterIP and NodePort labs have been checked for YAML syntax and common Kubernetes consistency mistakes.</p><table><thead><tr><th>Check</th><th>Status</th><th>What was verified</th></tr></thead><tbody><tr><td>YAML syntax</td><td><strong>Passed</strong></td><td><code>web-clusterip-lab.yaml</code>, <code>web-nodeport-lab.yaml</code>, and <code>kind-nodeport-config.yaml</code> parse correctly.</td></tr><tr><td>Deployment selector</td><td><strong>Passed</strong></td><td>Deployment selector <code>app=web</code> matches Pod template label <code>app=web</code>.</td></tr><tr><td>Service selector</td><td><strong>Passed</strong></td><td>ClusterIP and NodePort Services select Pods using <code>app=web</code>.</td></tr><tr><td>Named targetPort</td><td><strong>Passed</strong></td><td>Services use <code>targetPort: http</code>, matching the container port name <code>http</code>.</td></tr><tr><td>NodePort range</td><td><strong>Passed</strong></td><td>Static NodePort <code>30080</code> is inside the default Kubernetes NodePort range <code>30000-32767</code>.</td></tr><tr><td>DNS test image</td><td><strong>Passed</strong></td><td>DNS examples use <code>busybox:1.36</code>, which includes <code>nslookup</code> and <code>wget</code> for simple trainee tests.</td></tr></tbody></table><div class="note"><strong>Important:</strong> These checks validate manifest syntax and lab command consistency. Actual runtime success still depends on a working Kubernetes cluster, CNI plugin, CoreDNS, image pull access, node firewall, VM networking, and cloud security rules.</div></section>
+<section id="troubleshooting"><h2>15. Troubleshooting Checklist</h2><table><thead><tr><th>Problem</th><th>Likely Cause</th><th>Check / Fix</th></tr></thead><tbody><tr><td>Service has no endpoints</td><td>Selector does not match Pod labels</td><td><code>kubectl -n netlab get pods --show-labels</code><br/><code>kubectl -n netlab describe svc web-clusterip</code></td></tr><tr><td>DNS name does not resolve</td><td>CoreDNS issue, wrong namespace, Pod DNS issue</td><td><code>kubectl get pods -n kube-system -l k8s-app=kube-dns</code><br/><code>nslookup web-clusterip.netlab</code></td></tr><tr><td>NodePort not reachable</td><td>Firewall, wrong node IP, kind limitation, cloud security group missing</td><td><code>kubectl get nodes -o wide</code><br/><code>kubectl -n netlab get svc web-nodeport</code></td></tr><tr><td>Pods are not Running</td><td>Image pull issue, scheduling issue, crash</td><td><code>kubectl -n netlab describe pod &lt;pod-name&gt;</code><br/><code>kubectl -n netlab logs &lt;pod-name&gt;</code></td></tr><tr><td>Ingress not working</td><td>No Ingress Controller installed or wrong IngressClass</td><td><code>kubectl get ingressclass</code><br/><code>kubectl get pods -A | grep -i ingress</code></td></tr></tbody></table><h3>Useful Commands</h3><pre><code>kubectl -n netlab get all -o wide
+kubectl -n netlab describe svc web-clusterip
+kubectl -n netlab get endpoints,endpointslice
+kubectl -n netlab get pods --show-labels
+kubectl -n netlab exec -it deploy/web -- sh
+kubectl -n kube-system logs -l k8s-app=kube-dns --tail=50</code></pre></section>
+<section id="assessment"><h2>16. Assessment Questions</h2><ol><li>Why should application code not use hardcoded Pod IP addresses?</li><li>What is the difference between Pod IP, ClusterIP, and Node IP?</li><li>How does a Service know which Pods should receive traffic?</li><li>What is the difference between <code>port</code>, <code>targetPort</code>, and <code>nodePort</code>?</li><li>When should you use <code>kubectl port-forward</code> instead of NodePort?</li><li>Why does Ingress require an Ingress Controller?</li><li>What command helps verify whether a Service has backend endpoints?</li><li>What DNS name would you use to access <code>web-clusterip</code> in namespace <code>netlab</code> from another namespace?</li></ol><h3>Cleanup</h3><pre><code>kubectl delete namespace netlab
+rm -f web-clusterip-lab.yaml web-nodeport-lab.yaml kind-nodeport-config.yaml</code></pre></section>
+<section><h2>Reference Notes</h2><ul><li>Kubernetes Services provide stable access to dynamic Pods and route to selected backends using labels.</li><li>Kubernetes DNS creates records for Services and Pods, allowing applications to use names instead of IPs.</li><li>CNI plugins implement the Kubernetes network model for Pod networking.</li><li>Ingress handles HTTP/HTTPS routing rules but requires an Ingress Controller to process them.</li></ul><p class="small">Sources used for validation: Kubernetes official documentation on Services, DNS for Services and Pods, Network Plugins/CNI, Cluster Networking, Ingress, Ingress Controllers, and Connecting Applications with Services.</p></section>
+</main><footer class="footer"><div class="wrap"><strong>Kubernetes Networking and Services Lab Reference</strong><br/>Designed for beginner-to-intermediate Kubernetes trainees. Test all commands in a non-production lab cluster first.</div></footer>
+</body></html>

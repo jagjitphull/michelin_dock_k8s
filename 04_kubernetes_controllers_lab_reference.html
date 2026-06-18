@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kubernetes Controllers - Trainee Lab Reference</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --panel: #f8fafc;
+      --ink: #111827;
+      --muted: #4b5563;
+      --line: #d1d5db;
+      --soft: #eef2ff;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --orange: #ea580c;
+      --red: #dc2626;
+      --purple: #7c3aed;
+      --code: #0f172a;
+      --codeText: #e5e7eb;
+      --shadow: 0 16px 35px rgba(15, 23, 42, 0.10);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+    .layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); min-height: 100vh; }
+    aside {
+      position: sticky; top: 0; align-self: start; height: 100vh; overflow: auto;
+      border-right: 1px solid var(--line); background: #f9fafb; padding: 24px 18px;
+    }
+    aside h2 { font-size: 18px; margin: 0 0 12px; }
+    aside a { display: block; color: #334155; text-decoration: none; padding: 7px 9px; border-radius: 10px; font-size: 14px; }
+    aside a:hover { background: #e0e7ff; color: #1d4ed8; }
+    main { padding: 34px min(5vw, 64px) 72px; max-width: 1320px; }
+    .hero {
+      border: 1px solid var(--line); border-radius: 26px; padding: 34px;
+      background: linear-gradient(135deg, #ffffff 0%, #eff6ff 58%, #f5f3ff 100%);
+      box-shadow: var(--shadow); overflow: hidden;
+    }
+    .eyebrow { text-transform: uppercase; letter-spacing: .14em; color: var(--blue); font-weight: 800; font-size: 13px; }
+    h1 { margin: 8px 0 10px; line-height: 1.1; font-size: clamp(32px, 5vw, 56px); }
+    h2 { margin-top: 52px; padding-top: 18px; border-top: 2px solid #e5e7eb; font-size: 30px; line-height: 1.2; }
+    h3 { margin-top: 34px; font-size: 23px; }
+    h4 { margin: 22px 0 8px; font-size: 18px; }
+    p { color: var(--muted); }
+    .lead { font-size: 18px; max-width: 980px; }
+    .grid { display: grid; gap: 18px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card { border: 1px solid var(--line); border-radius: var(--radius); background: #fff; padding: 20px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05); }
+    .card h3, .card h4 { margin-top: 0; }
+    .pill { display: inline-flex; align-items:center; gap: 8px; padding: 5px 10px; border-radius: 999px; background: #e0f2fe; color: #075985; font-size: 13px; font-weight: 700; margin: 4px 5px 4px 0; }
+    .warn { border-left: 5px solid var(--orange); background: #fff7ed; padding: 14px 16px; border-radius: 12px; color: #7c2d12; }
+    .ok { border-left: 5px solid var(--green); background: #f0fdf4; padding: 14px 16px; border-radius: 12px; color: #14532d; }
+    .bad { border-left: 5px solid var(--red); background: #fef2f2; padding: 14px 16px; border-radius: 12px; color: #7f1d1d; }
+    table { width: 100%; border-collapse: collapse; margin: 18px 0; background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: table; }
+    th, td { border-bottom: 1px solid var(--line); padding: 12px 13px; text-align: left; vertical-align: top; }
+    th { background: #f1f5f9; color: #1f2937; }
+    tr:last-child td { border-bottom: 0; }
+    .codewrap { position: relative; margin: 14px 0 22px; }
+    pre { margin: 0; overflow: auto; padding: 18px 18px 18px; border-radius: 16px; background: var(--code); color: var(--codeText); border: 1px solid #1e293b; font-size: 14px; line-height: 1.48; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    .copy { position: absolute; right: 10px; top: 10px; border: 0; border-radius: 10px; padding: 6px 10px; cursor: pointer; background: #334155; color: white; font-weight: 700; font-size: 12px; }
+    .copy.done { background: var(--green); }
+    .lab { border: 1px solid #bfdbfe; border-radius: 24px; padding: 24px; margin: 28px 0; background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); box-shadow: var(--shadow); }
+    .lab-title { display:flex; gap:12px; align-items:center; margin-bottom: 12px; }
+    .num { background: var(--blue); color:#fff; width: 34px; height: 34px; display:grid; place-items:center; border-radius: 50%; font-weight: 800; }
+    .steps { counter-reset: step; list-style: none; padding: 0; }
+    .steps > li { counter-increment: step; margin: 24px 0; padding-left: 48px; position: relative; }
+    .steps > li::before { content: counter(step); position: absolute; left: 0; top: 1px; width: 30px; height: 30px; background: #dbeafe; color: #1d4ed8; border-radius: 50%; display: grid; place-items: center; font-weight: 800; }
+    details { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: #fff; margin: 14px 0; }
+    summary { cursor: pointer; font-weight: 800; }
+    .diagram {
+      border: 1px solid var(--line); border-radius: 22px; background: #fff; padding: 18px; margin: 22px 0; overflow: hidden; box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+    }
+    .controller-flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; align-items: stretch; position: relative; }
+    .flowbox { min-height: 105px; border: 2px solid #bfdbfe; background: #eff6ff; border-radius: 18px; padding: 14px; display: flex; flex-direction: column; justify-content: center; text-align: center; font-weight: 800; position: relative; z-index: 1; }
+    .flowbox small { color: var(--muted); display:block; font-weight: 600; margin-top: 6px; }
+    .flowbox.reconcile { border-color: #c4b5fd; background: #f5f3ff; }
+    .flowbox.action { border-color: #bbf7d0; background: #f0fdf4; }
+    .arrowline { position: absolute; top: 54px; left: 10%; right: 10%; height: 4px; background: repeating-linear-gradient(90deg, #2563eb 0 12px, transparent 12px 20px); animation: moveLine 1s linear infinite; z-index: 0; opacity: .7; }
+    @keyframes moveLine { from { background-position: 0 0; } to { background-position: 20px 0; } }
+    .pulse { animation: pulse 1.8s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37,99,235,.18); } 50% { transform: scale(1.03); box-shadow: 0 0 0 12px rgba(37,99,235,0); } }
+    .rollout-stage { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: center; }
+    .rs-stack { border: 1px dashed #94a3b8; border-radius: 18px; padding: 16px; min-height: 180px; background: #f8fafc; }
+    .podrow { display:flex; gap:8px; flex-wrap:wrap; margin-top: 12px; }
+    .pod { width: 42px; height: 42px; border-radius: 13px; display:grid; place-items:center; color:#fff; font-size: 12px; font-weight: 800; }
+    .oldpod { background: #64748b; animation: shrinkOld 4s ease-in-out infinite; }
+    .newpod { background: var(--green); animation: growNew 4s ease-in-out infinite; }
+    @keyframes shrinkOld { 0%,20% { opacity:1; transform:scale(1); } 55%,100% { opacity:.25; transform:scale(.72); } }
+    @keyframes growNew { 0%,20% { opacity:.2; transform:scale(.72); } 55%,100% { opacity:1; transform:scale(1); } }
+    .switcher { display: grid; grid-template-columns: 1fr 110px 1fr; gap: 18px; align-items: center; text-align:center; }
+    .svc { background:#fef3c7; border:2px solid #f59e0b; border-radius: 18px; padding: 18px; font-weight:900; position:relative; }
+    .envbox { border-radius: 18px; padding: 18px; color:#fff; font-weight:900; min-height:130px; display:grid; place-items:center; }
+    .blue { background:#2563eb; } .green { background:#16a34a; }
+    .svc::before, .svc::after { content:""; position:absolute; top:50%; height:4px; width:80px; background:#f59e0b; animation: selectorShift 4s infinite; }
+    .svc::before { right:100%; } .svc::after { left:100%; animation-delay:2s; }
+    @keyframes selectorShift { 0%,45% { opacity:1; } 50%,100% { opacity:.1; } }
+    .autoscale { display:flex; align-items:center; justify-content:center; gap:22px; flex-wrap:wrap; }
+    .gauge { width:180px; height:90px; border-radius: 180px 180px 0 0; background: conic-gradient(from 270deg, #22c55e 0deg 60deg, #f59e0b 60deg 115deg, #ef4444 115deg 180deg, transparent 180deg); position:relative; overflow:hidden; }
+    .needle { position:absolute; width:4px; height:82px; background:#111827; bottom:0; left:50%; transform-origin: bottom center; animation: needle 4s ease-in-out infinite; }
+    @keyframes needle { 0% { transform: rotate(-65deg); } 55%,100% { transform: rotate(55deg); } }
+    .scalePods .pod { background:#2563eb; animation: podAdd 4s infinite; }
+    .scalePods .pod:nth-child(2) { animation-delay:.4s; } .scalePods .pod:nth-child(3) { animation-delay:.8s; } .scalePods .pod:nth-child(4) { animation-delay:1.2s; }
+    @keyframes podAdd { 0%,25% { opacity:.18; transform: translateY(8px); } 60%,100% { opacity:1; transform: translateY(0); } }
+    .footer { margin-top: 60px; padding: 24px; border-radius: 20px; background:#f8fafc; border:1px solid var(--line); }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; } aside { position: relative; height: auto; }
+      .grid.two, .grid.three, .controller-flow, .rollout-stage, .switcher { grid-template-columns: 1fr; }
+      .arrowline, .svc::before, .svc::after { display:none; }
+      main { padding: 22px; }
+    }
+    @media print { aside, .copy { display:none; } .layout { display:block; } pre { white-space: pre-wrap; } main { max-width: none; } }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside>
+    <h2>Controllers Lab Reference</h2>
+    <a href="#objectives">Objectives</a>
+    <a href="#prereq">Lab prerequisites</a>
+    <a href="#controller-basics">Controller fundamentals</a>
+    <a href="#controller-types">Controller types</a>
+    <a href="#kcm">Kube Controller Manager</a>
+    <a href="#deployment-patterns">Deployment patterns</a>
+    <a href="#ccm">Cloud Controller Manager</a>
+    <a href="#autoscaling">HPA vs VPA</a>
+    <a href="#lab-rs">Lab 1: ReplicaSet</a>
+    <a href="#lab-rolling">Lab 2: Rolling Deployment</a>
+    <a href="#lab-bluegreen">Lab 3: Blue-Green</a>
+    <a href="#lab-daemonset">Lab 4: DaemonSet</a>
+    <a href="#lab-statefulset">Lab 5: StatefulSet</a>
+    <a href="#lab-multitier">Lab 6: Multi-Tier</a>
+    <a href="#lab-job-cronjob">Lab 7: Job & CronJob</a>
+    <a href="#lab-hpa">Lab 8: HPA</a>
+    <a href="#best-practices">Deployment best practices</a>
+    <a href="#troubleshooting">Troubleshooting</a>
+    <a href="#cleanup">Full cleanup</a>
+    <a href="#assessment">Assessment</a>
+  </aside>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="eyebrow">Kubernetes Training Reference</div>
+      <h1>Working with Kubernetes Controllers</h1>
+      <p class="lead">A trainee-friendly reference document with concepts, animated explanations, and hands-on labs for ReplicaSet, Deployment strategies, DaemonSet, StatefulSet, Job, CronJob, Cloud Controller Manager, and Pod autoscaling.</p>
+      <div>
+        <span class="pill">White background</span>
+        <span class="pill">Animated concepts</span>
+        <span class="pill">Copy-paste YAML</span>
+        <span class="pill">Validation commands</span>
+        <span class="pill">Cleanup included</span>
+      </div>
+    </section>
+
+    <section id="objectives">
+      <h2>1. Learning Objectives</h2>
+      <div class="grid three">
+        <div class="card"><h3>Understand</h3><p>Explain how Kubernetes controllers watch cluster state and reconcile it with the desired state declared in YAML.</p></div>
+        <div class="card"><h3>Operate</h3><p>Create, expose, scale, update, roll back, and delete controller-managed workloads using <code>kubectl</code>.</p></div>
+        <div class="card"><h3>Validate</h3><p>Verify rollout status, ReplicaSets, Pods, logs, Services, DNS behavior, Jobs, CronJobs, and HPA scale events.</p></div>
+      </div>
+    </section>
+
+    <section id="prereq">
+      <h2>2. Lab Prerequisites</h2>
+      <div class="ok"><strong>Recommended lab environment:</strong> Minikube, Kind, Docker Desktop Kubernetes, kubeadm single-node, or any test Kubernetes cluster. Do not run these labs directly in production.</div>
+      <h3>2.1 Check cluster access</h3>
+      <div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl version --client
+kubectl cluster-info
+kubectl get nodes -o wide</code></pre></div>
+      <h3>2.2 Create a dedicated namespace</h3>
+      <p>Use one namespace so cleanup is easy and trainees do not mix lab objects with other workloads.</p>
+      <div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: Namespace
+metadata:
+  name: controllers-lab</code></pre></div>
+      <div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl apply -f namespace.yaml
+kubectl config set-context --current --namespace=controllers-lab
+kubectl get ns controllers-lab</code></pre></div>
+      <h3>2.3 Optional: verify Metrics Server for HPA lab</h3>
+      <p>The HPA lab requires the Metrics API. If <code>kubectl top nodes</code> fails, install Metrics Server for your lab cluster.</p>
+      <div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl top nodes
+
+# For Minikube:
+minikube addons enable metrics-server
+
+# Generic cluster option:
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+# Verify after 1-2 minutes:
+kubectl get deployment metrics-server -n kube-system
+kubectl top pods -n kube-system</code></pre></div>
+      <div class="warn"><strong>Note:</strong> Some local clusters need extra Metrics Server flags for self-signed kubelet certificates. Use this only in lab environments, not as a production security baseline.</div>
+    </section>
+
+    <section id="controller-basics">
+      <h2>3. Controller Fundamentals</h2>
+      <h3>3.1 What is a Kubernetes Controller?</h3>
+      <p>A Kubernetes controller is a control loop. It continuously watches cluster state through the API server and takes action to move the current state closer to the desired state.</p>
+      <div class="diagram">
+        <h4>Animated Concept: Desired State → Reconciliation → Actual State</h4>
+        <div class="controller-flow">
+          <div class="arrowline"></div>
+          <div class="flowbox pulse">YAML Desired State<small>replicas: 3</small></div>
+          <div class="flowbox">API Server<small>validates object</small></div>
+          <div class="flowbox">etcd<small>stores desired state</small></div>
+          <div class="flowbox reconcile pulse">Controller Loop<small>watches + compares</small></div>
+          <div class="flowbox action">Pods Running<small>actual state becomes 3</small></div>
+        </div>
+      </div>
+      <h3>3.2 Desired State vs Current State</h3>
+      <table>
+        <thead><tr><th>Term</th><th>Meaning</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Desired state</td><td>What the user declares in the Kubernetes object.</td><td><code>replicas: 3</code> in a ReplicaSet or Deployment.</td></tr>
+          <tr><td>Current state</td><td>What is actually running in the cluster right now.</td><td>Only 2 Pods are running because 1 Pod crashed.</td></tr>
+          <tr><td>Reconciliation</td><td>The controller detects the difference and takes corrective action.</td><td>Controller creates 1 replacement Pod.</td></tr>
+        </tbody>
+      </table>
+      <h3>3.3 Controller Pattern</h3>
+      <p>The common pattern is:</p>
+      <div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-text">1. Watch Kubernetes API for object changes.
+2. Read desired state from object spec.
+3. Read current state from cluster resources.
+4. Compare desired state and current state.
+5. Create, update, delete, or request changes.
+6. Repeat continuously.</code></pre></div>
+    </section>
+
+    <section id="controller-types">
+      <h2>4. Various Types of Kubernetes Controllers</h2>
+      <table>
+        <thead><tr><th>Controller</th><th>Main purpose</th><th>Common use case</th></tr></thead>
+        <tbody>
+          <tr><td>ReplicaSet</td><td>Maintains a stable number of identical Pods.</td><td>Keep 3 web Pods running.</td></tr>
+          <tr><td>Deployment</td><td>Manages ReplicaSets and application rollouts.</td><td>Rolling update, rollback, scaling.</td></tr>
+          <tr><td>DaemonSet</td><td>Runs one Pod on every node or selected nodes.</td><td>Log agent, monitoring agent, CNI agent.</td></tr>
+          <tr><td>StatefulSet</td><td>Runs Pods with stable identity and ordered rollout.</td><td>Databases, queues, clustered systems.</td></tr>
+          <tr><td>Job</td><td>Runs one-time tasks to completion.</td><td>Batch processing, migration, report generation.</td></tr>
+          <tr><td>CronJob</td><td>Runs Jobs repeatedly on a schedule.</td><td>Nightly backup, cleanup, scheduled report.</td></tr>
+          <tr><td>HPA</td><td>Scales number of Pods horizontally.</td><td>Add Pods when CPU usage rises.</td></tr>
+          <tr><td>VPA</td><td>Adjusts Pod CPU/memory requests vertically.</td><td>Right-size resource requests over time.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="kcm">
+      <h2>5. Kube-Controller-Manager</h2>
+      <p><strong>kube-controller-manager</strong> is a control plane component that runs many core Kubernetes controllers. Examples include the node controller, job controller, endpoint slice controller, service account controller, deployment controller, ReplicaSet controller, and namespace controller.</p>
+      <div class="grid two">
+        <div class="card"><h3>Why centralized?</h3><p>Multiple control loops are compiled into one binary and run as part of the control plane for simpler operation.</p></div>
+        <div class="card"><h3>Important behavior</h3><p>It does not run your app containers. It watches API objects and creates or updates other Kubernetes objects.</p></div>
+      </div>
+      <h3>5.1 Observe controller-created objects</h3>
+      <p>After you create a Deployment, the Deployment controller creates a ReplicaSet, and the ReplicaSet controller creates Pods.</p>
+      <div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl get deployment,replicaset,pod -n controllers-lab
+kubectl describe deployment &lt;deployment-name&gt; -n controllers-lab
+kubectl get events -n controllers-lab --sort-by=.metadata.creationTimestamp</code></pre></div>
+    </section>
+
+    <section id="deployment-patterns">
+      <h2>6. Deployment Strategies and Release Patterns</h2>
+      <div class="diagram">
+        <h4>Animated Concept: Rolling Deployment</h4>
+        <div class="rollout-stage">
+          <div class="rs-stack">
+            <strong>Old ReplicaSet</strong>
+            <div class="podrow"><div class="pod oldpod">v1</div><div class="pod oldpod">v1</div><div class="pod oldpod">v1</div><div class="pod oldpod">v1</div></div>
+            <p>Old Pods gradually reduce.</p>
+          </div>
+          <div class="rs-stack">
+            <strong>New ReplicaSet</strong>
+            <div class="podrow"><div class="pod newpod">v2</div><div class="pod newpod">v2</div><div class="pod newpod">v2</div><div class="pod newpod">v2</div></div>
+            <p>New Pods gradually increase.</p>
+          </div>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Pattern</th><th>How it works</th><th>Pros</th><th>Risk / caution</th></tr></thead>
+        <tbody>
+          <tr><td>Rolling Deployment</td><td>Gradually replaces old Pods with new Pods.</td><td>Low downtime, default Deployment strategy.</td><td>Old and new versions may run together temporarily.</td></tr>
+          <tr><td>Recreate Deployment</td><td>Deletes old Pods first, then creates new Pods.</td><td>Simple; useful if old and new cannot run together.</td><td>Causes downtime. Avoid for production web workloads unless downtime is acceptable.</td></tr>
+          <tr><td>Blue-Green</td><td>Runs two full environments and switches Service traffic.</td><td>Fast switch and fast rollback.</td><td>Needs extra capacity for both versions.</td></tr>
+          <tr><td>Canary</td><td>Sends small traffic portion to a new version first.</td><td>Reduces blast radius.</td><td>Plain Kubernetes Service gives approximate Pod-level balancing, not exact weighted traffic.</td></tr>
+          <tr><td>A/B Testing</td><td>Routes users by header, cookie, region, or user group.</td><td>Useful for product experiments.</td><td>Needs Ingress/service mesh/application routing logic.</td></tr>
+        </tbody>
+      </table>
+      <h3>6.1 Recreate Deployment example</h3>
+      <p>Use this only as a demonstration. It intentionally creates a downtime window.</p>
+      <div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recreate-demo
+  namespace: controllers-lab
+spec:
+  replicas: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: recreate-demo
+  template:
+    metadata:
+      labels:
+        app: recreate-demo
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80</code></pre></div>
+    </section>
+
+    <section id="ccm">
+      <h2>7. Cloud-Controller Manager</h2>
+      <p>The <strong>cloud-controller-manager</strong> separates cloud-provider-specific control loops from the core Kubernetes control plane. It is mainly relevant when Kubernetes runs on public or private cloud infrastructure.</p>
+      <table>
+        <thead><tr><th>Cloud controller</th><th>Purpose</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Node Controller</td><td>Checks and updates cloud-backed Node information.</td><td>If a VM is deleted from the cloud, the node can be removed or marked unavailable.</td></tr>
+          <tr><td>Route Controller</td><td>Configures cloud network routes where required.</td><td>Ensures Pods on different nodes can communicate through cloud routing.</td></tr>
+          <tr><td>Service Controller</td><td>Creates cloud load balancers for <code>Service type: LoadBalancer</code>.</td><td>Provision an AWS ELB, Azure Load Balancer, or Google Cloud Load Balancer.</td></tr>
+        </tbody>
+      </table>
+      <div class="warn"><strong>Lab note:</strong> Local clusters usually do not have a real cloud-controller-manager. For local training, focus on ClusterIP/NodePort/Ingress. Use managed cloud clusters to demonstrate <code>LoadBalancer</code>.</div>
+    </section>
+
+    <section id="autoscaling">
+      <h2>8. HPA vs VPA for Pod Autoscaling</h2>
+      <div class="diagram">
+        <h4>Animated Concept: HPA adds Pods when load increases</h4>
+        <div class="autoscale">
+          <div class="gauge"><div class="needle"></div></div>
+          <div class="scalePods podrow"><div class="pod">1</div><div class="pod">2</div><div class="pod">3</div><div class="pod">4</div></div>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Feature</th><th>HPA</th><th>VPA</th></tr></thead>
+        <tbody>
+          <tr><td>Full name</td><td>Horizontal Pod Autoscaler</td><td>Vertical Pod Autoscaler</td></tr>
+          <tr><td>What changes?</td><td>Number of Pod replicas.</td><td>CPU and memory requests, and sometimes limits depending on policy.</td></tr>
+          <tr><td>Best for</td><td>Stateless apps that can scale out.</td><td>Right-sizing workloads with changing resource needs.</td></tr>
+          <tr><td>Common metric</td><td>CPU, memory, or custom metrics.</td><td>Historical and current resource usage.</td></tr>
+          <tr><td>Risk</td><td>Too many replicas can increase cost.</td><td>Pod restarts or evictions may occur depending on mode and cluster support.</td></tr>
+          <tr><td>Use together?</td><td colspan="2">Possible, but avoid using both to control the same CPU/memory signal without a clear policy. A common pattern is HPA for traffic scaling and VPA in recommendation/initial mode for requests.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="lab" id="lab-rs">
+      <div class="lab-title"><div class="num">1</div><h2>Lab: Deploying Application using ReplicaSet</h2></div>
+      <p>This lab shows how a ReplicaSet maintains a fixed number of identical Pods.</p>
+      <ol class="steps">
+        <li><strong>Create the ReplicaSet manifest.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-yaml">apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: rs-web
+  namespace: controllers-lab
+  labels:
+    app: rs-web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rs-web
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: rs-web
+        tier: frontend
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi</code></pre></div></li>
+        <li><strong>Apply and verify.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl apply -f rs-nginx.yaml
+kubectl get rs -n controllers-lab
+kubectl get pods -l app=rs-web -n controllers-lab -o wide
+kubectl describe rs rs-web -n controllers-lab</code></pre></div></li>
+        <li><strong>Expose the ReplicaSet using a Service.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl expose rs rs-web --name=rs-web-svc --port=80 --target-port=80 -n controllers-lab
+kubectl get svc rs-web-svc -n controllers-lab
+kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl:8.10.1 -n controllers-lab --command -- curl -s http://rs-web-svc</code></pre></div></li>
+        <li><strong>Test self-healing.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">POD=$(kubectl get pod -l app=rs-web -n controllers-lab -o jsonpath=&#x27;{.items[0].metadata.name}&#x27;)
+echo &quot;Deleting pod: $POD&quot;
+kubectl delete pod &quot;$POD&quot; -n controllers-lab
+kubectl get pods -l app=rs-web -n controllers-lab -w</code></pre></div><p>Expected result: a replacement Pod is created automatically.</p></li>
+        <li><strong>Scale the ReplicaSet.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl scale rs rs-web --replicas=5 -n controllers-lab
+kubectl get rs rs-web -n controllers-lab
+kubectl get pods -l app=rs-web -n controllers-lab</code></pre></div></li>
+        <li><strong>Cleanup this lab.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl delete svc rs-web-svc -n controllers-lab
+kubectl delete rs rs-web -n controllers-lab</code></pre></div></li>
+      </ol>
+    </section>
+
+    <section class="lab" id="lab-rolling">
+      <div class="lab-title"><div class="num">2</div><h2>Lab: Working with Deployments – Rolling</h2></div>
+      <p>This lab shows Deployment creation, Service exposure, scaling, rollout, revision history, and rollback.</p>
+      <ol class="steps">
+        <li><strong>Create a Deployment and Service.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rolling-web
+  namespace: controllers-lab
+  labels:
+    app: rolling-web
+  annotations:
+    kubernetes.io/change-cause: &quot;Initial release: nginx 1.25&quot;
+spec:
+  replicas: 4
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: rolling-web
+  template:
+    metadata:
+      labels:
+        app: rolling-web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25-alpine
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rolling-web-svc
+  namespace: controllers-lab
+  labels:
+    app: rolling-web
+spec:
+  type: ClusterIP
+  selector:
+    app: rolling-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80</code></pre></div></li>
+        <li><strong>Apply and verify rollout.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl apply -f rolling-deployment.yaml
+kubectl rollout status deployment/rolling-web -n controllers-lab
+kubectl get deploy,rs,pod,svc -l app=rolling-web -n controllers-lab
+kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl:8.10.1 -n controllers-lab --command -- curl -I http://rolling-web-svc</code></pre></div></li>
+        <li><strong>Scale the Deployment.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl scale deployment rolling-web --replicas=6 -n controllers-lab
+kubectl rollout status deployment/rolling-web -n controllers-lab
+kubectl get deploy rolling-web -n controllers-lab
+kubectl get pods -l app=rolling-web -n controllers-lab -o wide</code></pre></div></li>
+        <li><strong>Update the Deployment image.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl annotate deployment rolling-web kubernetes.io/change-cause=&quot;Update nginx to 1.27-alpine&quot; -n controllers-lab --overwrite
+kubectl set image deployment/rolling-web nginx=nginx:1.27-alpine -n controllers-lab
+kubectl rollout status deployment/rolling-web -n controllers-lab
+kubectl get rs -l app=rolling-web -n controllers-lab
+kubectl rollout history deployment/rolling-web -n controllers-lab</code></pre></div></li>
+        <li><strong>Inspect revision details.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl rollout history deployment/rolling-web --revision=1 -n controllers-lab
+kubectl rollout history deployment/rolling-web --revision=2 -n controllers-lab
+kubectl describe deployment rolling-web -n controllers-lab | sed -n &#x27;/Events:/,$p&#x27;</code></pre></div></li>
+        <li><strong>Rollback to the previous revision.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl rollout undo deployment/rolling-web -n controllers-lab
+kubectl rollout status deployment/rolling-web -n controllers-lab
+kubectl get rs -l app=rolling-web -n controllers-lab
+kubectl describe deployment rolling-web -n controllers-lab | grep -i Image -A2</code></pre></div></li>
+        <li><strong>Cleanup this lab.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl delete deployment rolling-web -n controllers-lab
+kubectl delete service rolling-web-svc -n controllers-lab</code></pre></div></li>
+      </ol>
+    </section>
+
+    <section class="lab" id="lab-bluegreen">
+      <div class="lab-title"><div class="num">3</div><h2>Lab: Working with Deployments – Blue-Green</h2></div>
+      <div class="diagram">
+        <h4>Animated Concept: Service selector switches from Blue to Green</h4>
+        <div class="switcher">
+          <div class="envbox blue">BLUE Deployment<br/>version=blue</div>
+          <div class="svc pulse">Service<br/>selector</div>
+          <div class="envbox green">GREEN Deployment<br/>version=green</div>
+        </div>
+      </div>
+      <ol class="steps">
+        <li><strong>Create blue and green environments.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blue-index
+  namespace: controllers-lab
+data:
+  index.html: |
+    BLUE version is serving traffic.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: green-index
+  namespace: controllers-lab
+data:
+  index.html: |
+    GREEN version is serving traffic.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-blue
+  namespace: controllers-lab
+  labels:
+    app: bg-web
+    version: blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bg-web
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: bg-web
+        version: blue
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: page
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: page
+          configMap:
+            name: blue-index
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-green
+  namespace: controllers-lab
+  labels:
+    app: bg-web
+    version: green
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bg-web
+      version: green
+  template:
+    metadata:
+      labels:
+        app: bg-web
+        version: green
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: page
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: page
+          configMap:
+            name: green-index
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bg-web-svc
+  namespace: controllers-lab
+  labels:
+    app: bg-web
+spec:
+  type: ClusterIP
+  selector:
+    app: bg-web
+    version: blue
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80</code></pre></div></li>
+        <li><strong>Apply and verify that Service points to Blue.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl apply -f blue-green.yaml
+kubectl get deploy,pod,svc -l app=bg-web -n controllers-lab
+kubectl get endpoints bg-web-svc -n controllers-lab
+kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl:8.10.1 -n controllers-lab --command -- curl -s http://bg-web-svc</code></pre></div><p>Expected output: <code>BLUE version is serving traffic.</code></p></li>
+        <li><strong>Switch traffic to Green by patching the Service selector.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl patch service bg-web-svc -n controllers-lab -p &#x27;{&quot;spec&quot;:{&quot;selector&quot;:{&quot;app&quot;:&quot;bg-web&quot;,&quot;version&quot;:&quot;green&quot;}}}&#x27;
+kubectl get service bg-web-svc -n controllers-lab -o yaml | sed -n &#x27;/selector:/,/ports:/p&#x27;
+kubectl get endpoints bg-web-svc -n controllers-lab
+kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl:8.10.1 -n controllers-lab --command -- curl -s http://bg-web-svc</code></pre></div><p>Expected output: <code>GREEN version is serving traffic.</code></p></li>
+        <li><strong>Rollback instantly to Blue.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl patch service bg-web-svc -n controllers-lab -p &#x27;{&quot;spec&quot;:{&quot;selector&quot;:{&quot;app&quot;:&quot;bg-web&quot;,&quot;version&quot;:&quot;blue&quot;}}}&#x27;
+kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl:8.10.1 -n controllers-lab --command -- curl -s http://bg-web-svc</code></pre></div></li>
+        <li><strong>Optional: simple Canary pattern.</strong><p>This is approximate Pod-level distribution, not exact percentage routing.</p><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-stable
+  namespace: controllers-lab
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: canary-web
+      track: stable
+  template:
+    metadata:
+      labels:
+        app: canary-web
+        track: stable
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-new
+  namespace: controllers-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: canary-web
+      track: canary
+  template:
+    metadata:
+      labels:
+        app: canary-web
+        track: canary
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-web-svc
+  namespace: controllers-lab
+  labels:
+    app: canary-web
+spec:
+  selector:
+    app: canary-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80</code></pre></div><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl apply -f canary-example.yaml
+kubectl get deploy,pods,svc -l app=canary-web -n controllers-lab
+kubectl delete -f canary-example.yaml</code></pre></div></li>
+        <li><strong>Cleanup this lab.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl delete -f blue-green.yaml</code></pre></div></li>
+      </ol>
+    </section>
+
+    <section class="lab" id="lab-daemonset">
+      <div class="lab-title"><div class="num">4</div><h2>Lab: Deploying Application using DaemonSet</h2></div>
+      <p>This lab deploys a simple node agent. A DaemonSet is appropriate for node-local agents such as log collectors, metrics collectors, and network plugins.</p>
+      <ol class="steps">
+        <li><strong>Create the DaemonSet manifest.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-yaml">apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-agent
+  namespace: controllers-lab
+  labels:
+    app: node-agent
+spec:
+  selector:
+    matchLabels:
+      app: node-agent
+  template:
+    metadata:
+      labels:
+        app: node-agent
+    spec:
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: agent
+          image: busybox:1.36
+          command:
+            - /bin/sh
+            - -c
+            - |
+              while true; do
+                echo &quot;$(date) node-agent running on ${NODE_NAME}&quot;;
+                sleep 30;
+              done
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 64Mi</code></pre></div></li>
+        <li><strong>Apply and verify one Pod per schedulable node.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl apply -f daemonset-node-agent.yaml
+kubectl get ds node-agent -n controllers-lab
+kubectl get pods -l app=node-agent -n controllers-lab -o wide
+kubectl logs -l app=node-agent -n controllers-lab --tail=10</code></pre></div></li>
+        <li><strong>Compare nodes and DaemonSet Pods.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl get nodes
+kubectl get pods -l app=node-agent -n controllers-lab --sort-by=.spec.nodeName -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName,STATUS:.status.phase</code></pre></div></li>
+        <li><strong>Cleanup this lab.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl delete ds node-agent -n controllers-lab</code></pre></div></li>
+      </ol>
+    </section>
+
+    <section class="lab" id="lab-statefulset">
+      <div class="lab-title"><div class="num">5</div><h2>Mini Lab: StatefulSet – Stable Pod Identity</h2></div>
+      <p>A StatefulSet gives Pods predictable names such as <code>stateful-nginx-0</code> and <code>stateful-nginx-1</code>. For real stateful applications, add persistent volumes and proper backup/restore design.</p>
+      <ol class="steps">
+        <li><strong>Create a headless Service and StatefulSet.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata:
+  name: stateful-nginx
+  namespace: controllers-lab
+  labels:
+    app: stateful-nginx
+spec:
+  clusterIP: None
+  selector:
+    app: stateful-nginx
+  ports:
+    - name: web
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: stateful-nginx
+  namespace: controllers-lab
+spec:
+  serviceName: stateful-nginx
+  replicas: 2
+  selector:
+    matchLabels:
+      app: stateful-nginx
+  template:
+    metadata:
+      labels:
+        app: stateful-nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - name: web
+              containerPort: 80</code></pre></div></li>
+        <li><strong>Apply and verify stable Pod names.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl apply -f statefulset-nginx.yaml
+kubectl rollout status statefulset/stateful-nginx -n controllers-lab
+kubectl get statefulset,pod,svc -l app=stateful-nginx -n controllers-lab
+kubectl get pod stateful-nginx-0 -n controllers-lab -o wide
+kubectl get pod stateful-nginx-1 -n controllers-lab -o wide</code></pre></div></li>
+        <li><strong>Delete one Pod and observe that the same identity returns.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl delete pod stateful-nginx-0 -n controllers-lab
+kubectl get pods -l app=stateful-nginx -n controllers-lab -w</code></pre></div></li>
+        <li><strong>Cleanup this lab.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl delete -f statefulset-nginx.yaml</code></pre></div></li>
+      </ol>
+    </section>
+
+    <section class="lab" id="lab-multitier">
+      <div class="lab-title"><div class="num">6</div><h2>Lab: Deploying Multi-Tier Application</h2></div>
+      <p>This lab deploys a frontend nginx tier and backend nginx API tier. The frontend proxies <code>/api/</code> to the backend through Kubernetes DNS: <code>http://backend-svc/</code>.</p>
+      <ol class="steps">
+        <li><strong>Create frontend, backend, ConfigMaps, and Services.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-content
+  namespace: controllers-lab
+data:
+  index.html: |
+    API RESPONSE: backend service is reachable through Kubernetes DNS.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-api
+  namespace: controllers-lab
+  labels:
+    app: backend-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend-api
+  template:
+    metadata:
+      labels:
+        app: backend-api
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: backend-page
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: backend-page
+          configMap:
+            name: backend-content
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+  namespace: controllers-lab
+  labels:
+    app: backend-api
+spec:
+  type: ClusterIP
+  selector:
+    app: backend-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-nginx-conf
+  namespace: controllers-lab
+data:
+  default.conf: |
+    server {
+      listen 80;
+      location / {
+        default_type text/plain;
+        return 200 &quot;FRONTEND RESPONSE: frontend is running. Open /api/ to call backend.\n&quot;;
+      }
+      location /api/ {
+        proxy_pass http://backend-svc/;
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-web
+  namespace: controllers-lab
+  labels:
+    app: frontend-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend-web
+  template:
+    metadata:
+      labels:
+        app: frontend-web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: frontend-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: frontend-conf
+          configMap:
+            name: frontend-nginx-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: controllers-lab
+  labels:
+    app: frontend-web
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80</code></pre></div></li>
+        <li><strong>Apply and verify all tiers.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl apply -f multi-tier.yaml
+kubectl rollout status deployment/backend-api -n controllers-lab
+kubectl rollout status deployment/frontend-web -n controllers-lab
+kubectl get deploy,pod,svc -n controllers-lab -l app=backend-api
+kubectl get deploy,pod,svc -n controllers-lab -l app=frontend-web</code></pre></div></li>
+        <li><strong>Verify backend directly from inside the cluster.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl:8.10.1 -n controllers-lab --command -- curl -s http://backend-svc</code></pre></div></li>
+        <li><strong>Verify frontend calling backend.</strong><p>Run port-forward in Terminal 1 and curl in Terminal 2.</p><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash"># Terminal 1
+kubectl port-forward service/frontend-svc 8080:80 -n controllers-lab
+
+# Terminal 2
+curl http://localhost:8080/
+curl http://localhost:8080/api/</code></pre></div><p>Expected result: root path returns frontend response; <code>/api/</code> returns backend response.</p></li>
+        <li><strong>Scale backend and verify Service still works.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl scale deployment backend-api --replicas=4 -n controllers-lab
+kubectl rollout status deployment/backend-api -n controllers-lab
+kubectl get endpoints backend-svc -n controllers-lab
+curl http://localhost:8080/api/</code></pre></div></li>
+        <li><strong>Cleanup this lab.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl delete -f multi-tier.yaml</code></pre></div></li>
+      </ol>
+    </section>
+
+    <section class="lab" id="lab-job-cronjob">
+      <div class="lab-title"><div class="num">7</div><h2>Lab: Working with Job and CronJob</h2></div>
+      <h3>7.1 Job – Run a one-time task</h3>
+      <ol class="steps">
+        <li><strong>Create the Job.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-yaml">apiVersion: batch/v1
+kind: Job
+metadata:
+  name: batch-job
+  namespace: controllers-lab
+spec:
+  completions: 3
+  parallelism: 1
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: task
+          image: busybox:1.36
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo &quot;Starting one-time batch task&quot;;
+              date;
+              echo &quot;Task completed successfully&quot;;</code></pre></div></li>
+        <li><strong>Apply and watch completion.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl apply -f job.yaml
+kubectl get jobs -n controllers-lab
+kubectl wait --for=condition=complete job/batch-job -n controllers-lab --timeout=120s
+kubectl get pods -l job-name=batch-job -n controllers-lab
+kubectl logs -l job-name=batch-job -n controllers-lab --tail=50</code></pre></div></li>
+        <li><strong>Cleanup the Job.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl delete job batch-job -n controllers-lab</code></pre></div></li>
+      </ol>
+      <h3>7.2 CronJob – Run recurring tasks</h3>
+      <ol class="steps">
+        <li><strong>Create the CronJob.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-yaml">apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hello-cron
+  namespace: controllers-lab
+spec:
+  schedule: &quot;*/2 * * * *&quot;
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: task
+              image: busybox:1.36
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo &quot;CronJob triggered at $(date)&quot;;</code></pre></div></li>
+        <li><strong>Apply and verify schedule.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl apply -f cronjob.yaml
+kubectl get cronjob hello-cron -n controllers-lab
+kubectl get jobs -n controllers-lab --watch</code></pre></div></li>
+        <li><strong>Trigger a manual Job from the CronJob template.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl create job manual-hello --from=cronjob/hello-cron -n controllers-lab
+kubectl wait --for=condition=complete job/manual-hello -n controllers-lab --timeout=120s
+kubectl logs -l job-name=manual-hello -n controllers-lab</code></pre></div></li>
+        <li><strong>Cleanup the CronJob lab.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl delete cronjob hello-cron -n controllers-lab
+kubectl delete job manual-hello -n controllers-lab --ignore-not-found=true</code></pre></div></li>
+      </ol>
+    </section>
+
+    <section class="lab" id="lab-hpa">
+      <div class="lab-title"><div class="num">8</div><h2>Lab: Autoscaling of Pods – HPA</h2></div>
+      <p>This lab creates a CPU-based HorizontalPodAutoscaler. It requires Metrics Server.</p>
+      <ol class="steps">
+        <li><strong>Confirm Metrics API works.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl top nodes
+kubectl top pods -n controllers-lab</code></pre></div></li>
+        <li><strong>Create the sample app, Service, and HPA.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-apache
+  namespace: controllers-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: php-apache
+  template:
+    metadata:
+      labels:
+        run: php-apache
+    spec:
+      containers:
+        - name: php-apache
+          image: registry.k8s.io/hpa-example
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 200m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-apache
+  namespace: controllers-lab
+  labels:
+    run: php-apache
+spec:
+  selector:
+    run: php-apache
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: php-apache
+  namespace: controllers-lab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: php-apache
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50</code></pre></div></li>
+        <li><strong>Apply and verify HPA status.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl apply -f hpa-php-apache.yaml
+kubectl rollout status deployment/php-apache -n controllers-lab
+kubectl get deploy,svc,hpa -n controllers-lab
+kubectl describe hpa php-apache -n controllers-lab</code></pre></div></li>
+        <li><strong>Generate load.</strong><p>Run this in a separate terminal and keep it running for a few minutes.</p><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl run load-generator --rm -i --restart=Never --image=busybox:1.36 -n controllers-lab --command -- /bin/sh -c &quot;while true; do wget -q -O- http://php-apache; done&quot;</code></pre></div></li>
+        <li><strong>Watch HPA scale Pods.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl get hpa php-apache -n controllers-lab --watch
+kubectl get pods -l run=php-apache -n controllers-lab -w
+kubectl describe hpa php-apache -n controllers-lab</code></pre></div></li>
+        <li><strong>Stop load and observe scale-down.</strong><p>Stop the load generator with <code>Ctrl+C</code>. HPA scale-down can take several minutes because Kubernetes stabilizes scaling decisions.</p><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl get hpa php-apache -n controllers-lab --watch</code></pre></div></li>
+        <li><strong>Cleanup this lab.</strong><div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl delete -f hpa-php-apache.yaml
+kubectl delete pod load-generator -n controllers-lab --ignore-not-found=true</code></pre></div></li>
+      </ol>
+      <div class="warn"><strong>If HPA does not scale:</strong> check <code>kubectl top pods</code>, resource requests, HPA events, image pull status, and whether the load generator is actually hitting the Service.</div>
+    </section>
+
+    <section id="best-practices">
+      <h2>9. Deployment Object Best Practices</h2>
+      <div class="grid two">
+        <div class="card"><h3>Use declarative management</h3><p>Prefer YAML stored in Git over manual one-off imperative commands. It supports review, repeatability, rollback, and audit.</p></div>
+        <div class="card"><h3>Avoid Recreate for production web apps</h3><p><code>Recreate</code> intentionally causes downtime. Use <code>RollingUpdate</code> unless the application truly cannot run old and new versions together.</p></div>
+        <div class="card"><h3>Define readiness probes</h3><p>Readiness probes prevent traffic from being sent to Pods before they are ready.</p></div>
+        <div class="card"><h3>Set resource requests</h3><p>HPA CPU utilization requires CPU requests. Requests also help the scheduler place Pods correctly.</p></div>
+        <div class="card"><h3>Use labels consistently</h3><p>Services and controllers depend on selectors. Avoid accidental label overlap between workloads.</p></div>
+        <div class="card"><h3>Keep revision history reasonable</h3><p>Use <code>revisionHistoryLimit</code> to keep rollback history without accumulating unnecessary old ReplicaSets.</p></div>
+      </div>
+      <h3>9.1 Safe Deployment workflow</h3>
+      <div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash"># 1. Validate generated YAML client-side
+kubectl apply --dry-run=client -f rolling-deployment.yaml
+
+# 2. Apply declaratively
+kubectl apply -f rolling-deployment.yaml
+
+# 3. Wait for rollout
+kubectl rollout status deployment/rolling-web -n controllers-lab
+
+# 4. Verify Pods, Service, and events
+kubectl get deploy,rs,pod,svc -n controllers-lab
+kubectl get events -n controllers-lab --sort-by=.metadata.creationTimestamp
+
+# 5. Roll back if needed
+kubectl rollout undo deployment/rolling-web -n controllers-lab</code></pre></div>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>10. Troubleshooting Guide</h2>
+      <table>
+        <thead><tr><th>Symptom</th><th>Likely cause</th><th>Useful checks</th></tr></thead>
+        <tbody>
+          <tr><td>Pod stuck in <code>ImagePullBackOff</code></td><td>Image tag unavailable, registry blocked, network issue.</td><td><code>kubectl describe pod</code>, check image name/tag.</td></tr>
+          <tr><td>Deployment rollout stuck</td><td>Readiness probe failing, image pull issue, insufficient resources.</td><td><code>kubectl rollout status</code>, <code>kubectl describe deploy</code>, <code>kubectl get events</code>.</td></tr>
+          <tr><td>Service returns no response</td><td>Service selector does not match Pod labels.</td><td><code>kubectl get endpoints &lt;svc&gt;</code>, compare Service selector and Pod labels.</td></tr>
+          <tr><td>HPA shows <code>&lt;unknown&gt;</code></td><td>Metrics Server missing or resource requests not defined.</td><td><code>kubectl top pods</code>, <code>kubectl describe hpa</code>.</td></tr>
+          <tr><td>DaemonSet Pod count lower than node count</td><td>Node taints, node selectors, unschedulable nodes.</td><td><code>kubectl describe ds</code>, <code>kubectl describe node</code>.</td></tr>
+          <tr><td>CronJob does not create Jobs</td><td>Schedule not reached, suspended CronJob, controller delay.</td><td><code>kubectl describe cronjob</code>, check <code>spec.suspend</code> and events.</td></tr>
+        </tbody>
+      </table>
+      <h3>10.1 Universal debug commands</h3>
+      <div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl get all -n controllers-lab
+kubectl get events -n controllers-lab --sort-by=.metadata.creationTimestamp
+kubectl describe pod &lt;pod-name&gt; -n controllers-lab
+kubectl logs &lt;pod-name&gt; -n controllers-lab
+kubectl get pod &lt;pod-name&gt; -n controllers-lab -o yaml
+kubectl explain deployment.spec.strategy
+kubectl explain hpa.spec.metrics</code></pre></div>
+    </section>
+
+    <section id="cleanup">
+      <h2>11. Full Cleanup</h2>
+      <p>Use this when trainees finish all labs and want to remove everything created in this reference.</p>
+      <div class="codewrap"><button class="copy" aria-label="Copy code">Copy</button><pre><code class="language-bash">kubectl delete namespace controllers-lab
+
+# Verify namespace deletion
+kubectl get ns controllers-lab</code></pre></div>
+    </section>
+
+    <section id="assessment">
+      <h2>12. Quick Assessment Questions</h2>
+      <ol>
+        <li>What is the difference between desired state and current state?</li>
+        <li>Why should Deployments generally be preferred over directly creating ReplicaSets?</li>
+        <li>What happens when a Pod managed by a ReplicaSet is manually deleted?</li>
+        <li>Which Deployment strategy can cause downtime?</li>
+        <li>How does a Service switch traffic in a Blue-Green deployment?</li>
+        <li>Why is a DaemonSet useful for log agents?</li>
+        <li>What is the difference between Job and CronJob?</li>
+        <li>Why does HPA need resource requests for CPU utilization-based scaling?</li>
+        <li>When would StatefulSet be better than Deployment?</li>
+        <li>Why is declarative object management better for production workloads?</li>
+      </ol>
+    </section>
+
+    <section class="footer">
+      <h2>13. Official References</h2>
+      <ul>
+        <li><a href="https://kubernetes.io/docs/concepts/architecture/controller/">Kubernetes Controllers</a></li>
+        <li><a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/">kube-controller-manager</a></li>
+        <li><a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">Deployments</a></li>
+        <li><a href="https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/">ReplicaSet</a></li>
+        <li><a href="https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/">DaemonSet</a></li>
+        <li><a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/">StatefulSet</a></li>
+        <li><a href="https://kubernetes.io/docs/concepts/workloads/controllers/job/">Job</a></li>
+        <li><a href="https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/">Horizontal Pod Autoscaler walkthrough</a></li>
+        <li><a href="https://kubernetes.io/docs/concepts/workloads/autoscaling/vertical-pod-autoscale/">Vertical Pod Autoscaling</a></li>
+        <li><a href="https://kubernetes.io/docs/concepts/architecture/cloud-controller/">Cloud Controller Manager</a></li>
+      </ul>
+    </section>
+  </main>
+</div>
+<script>
+  document.querySelectorAll('.copy').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const code = btn.nextElementSibling.innerText;
+      try {
+        await navigator.clipboard.writeText(code);
+        btn.textContent = 'Copied';
+        btn.classList.add('done');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1200);
+      } catch (err) {
+        btn.textContent = 'Select';
+      }
+    });
+  });
+</script>
+</body>
+</html>
