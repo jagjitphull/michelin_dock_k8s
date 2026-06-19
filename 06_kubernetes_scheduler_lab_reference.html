@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Working with Kubernetes Scheduler - Trainee Reference and Labs</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1f2937;
+      --muted: #64748b;
+      --line: #dbe4f0;
+      --soft: #f8fafc;
+      --soft2: #eef6ff;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --orange: #f97316;
+      --red: #dc2626;
+      --purple: #7c3aed;
+      --dark: #111827;
+      --code-bg: #0f172a;
+      --code-text: #e5e7eb;
+      --shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      min-height: 100vh;
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 24px 20px;
+      border-right: 1px solid var(--line);
+      background: #fbfdff;
+    }
+
+    aside h1 {
+      font-size: 18px;
+      margin: 0 0 8px;
+      line-height: 1.25;
+    }
+    aside .tagline { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+    aside nav a {
+      display: block;
+      color: #334155;
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin: 2px 0;
+    }
+    aside nav a:hover { background: #eef6ff; color: var(--blue); }
+
+    main { padding: 36px 48px 80px; max-width: 1220px; width: 100%; }
+
+    .hero {
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: linear-gradient(135deg, #ffffff 0%, #f4f9ff 62%, #eef6ff 100%);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .hero:after {
+      content: "";
+      position: absolute;
+      right: -90px; top: -110px;
+      width: 260px; height: 260px;
+      background: radial-gradient(circle, rgba(37,99,235,0.15), transparent 65%);
+      border-radius: 50%;
+    }
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    h1.page-title {
+      margin: 16px 0 12px;
+      font-size: clamp(32px, 5vw, 52px);
+      line-height: 1.05;
+      color: #0f172a;
+      max-width: 900px;
+    }
+    .hero p { max-width: 850px; font-size: 17px; color: #475569; }
+
+    h2 {
+      margin-top: 50px;
+      padding-top: 8px;
+      font-size: 30px;
+      line-height: 1.2;
+      color: #0f172a;
+    }
+    h3 { margin-top: 28px; font-size: 22px; color: #111827; }
+    h4 { margin-top: 22px; font-size: 18px; color: #111827; }
+    p { margin: 10px 0; }
+    a { color: var(--blue); }
+
+    .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 18px 0; }
+    .card {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    }
+    .card h3, .card h4 { margin-top: 0; }
+    .card .num {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: inline-grid; place-items: center;
+      background: #eff6ff; color: #1d4ed8; font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+
+    .note, .warning, .success, .danger {
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin: 16px 0;
+      border: 1px solid;
+    }
+    .note { background: #f8fafc; border-color: #cbd5e1; }
+    .warning { background: #fff7ed; border-color: #fed7aa; }
+    .success { background: #f0fdf4; border-color: #bbf7d0; }
+    .danger { background: #fef2f2; border-color: #fecaca; }
+    .small { font-size: 14px; color: var(--muted); }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 16px; margin: 18px 0; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { background: #f8fafc; color: #0f172a; font-size: 14px; }
+    tr:last-child td { border-bottom: none; }
+
+    .codebox {
+      position: relative;
+      margin: 14px 0 22px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.12);
+      border: 1px solid #1e293b;
+    }
+    .code-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #111827;
+      color: #cbd5e1;
+      font-size: 13px;
+      padding: 8px 12px;
+      border-bottom: 1px solid #263244;
+    }
+    .copy-btn {
+      border: 1px solid #334155;
+      background: #1f2937;
+      color: #e5e7eb;
+      padding: 4px 9px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .copy-btn:hover { background: #334155; }
+    pre { margin: 0; overflow-x: auto; background: var(--code-bg); color: var(--code-text); padding: 16px; font-size: 13.5px; line-height: 1.55; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    :not(pre) > code { background: #eef2ff; color: #3730a3; padding: 2px 5px; border-radius: 6px; }
+
+    .lab {
+      border: 1px solid #bfdbfe;
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 24px;
+      margin: 26px 0;
+      box-shadow: var(--shadow);
+    }
+    .lab-title {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+    }
+    .lab-title h3 { margin: 0; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+      background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
+      white-space: nowrap;
+    }
+
+    /* Animated scheduler flow */
+    .animation-panel {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 24px;
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr 72px 1fr 72px 1fr 72px 1fr;
+      gap: 0;
+      align-items: center;
+      margin: 18px 0;
+    }
+    .flow-card {
+      min-height: 116px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: #f8fafc;
+      position: relative;
+      z-index: 1;
+    }
+    .flow-card strong { display: block; color: #0f172a; margin-bottom: 5px; }
+    .flow-card span { color: #64748b; font-size: 13px; }
+    .arrow {
+      height: 4px;
+      background: linear-gradient(90deg, transparent, var(--blue), transparent);
+      border-radius: 99px;
+      position: relative;
+      overflow: hidden;
+    }
+    .arrow:after {
+      content: "";
+      position: absolute;
+      width: 30px; height: 100%; left: -30px; top: 0;
+      background: #93c5fd;
+      animation: moveArrow 1.6s linear infinite;
+    }
+    .arrow:before {
+      content: "▶";
+      position: absolute;
+      right: -2px; top: -12px;
+      color: var(--blue);
+      font-size: 18px;
+    }
+    @keyframes moveArrow { to { left: 100%; } }
+
+    .scheduler-scene {
+      position: relative;
+      min-height: 300px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #f8fbff, #ffffff);
+      border: 1px solid var(--line);
+      overflow: hidden;
+      margin-top: 18px;
+    }
+    .scene-label { position: absolute; font-weight: 800; color: #0f172a; }
+    .pod-dot {
+      position: absolute;
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      display: grid; place-items: center;
+      background: #dbeafe;
+      border: 2px solid #2563eb;
+      color: #1e3a8a;
+      font-weight: 900;
+      box-shadow: 0 10px 20px rgba(37,99,235,0.25);
+      animation: podTravel 7s ease-in-out infinite;
+    }
+    @keyframes podTravel {
+      0% { left: 32px; top: 120px; transform: scale(1); }
+      24% { left: 265px; top: 120px; }
+      48% { left: 525px; top: 78px; }
+      73% { left: 765px; top: 184px; }
+      100% { left: calc(100% - 96px); top: 120px; transform: scale(1.05); }
+    }
+    .scene-box {
+      position: absolute;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 12px;
+      width: 160px;
+      min-height: 86px;
+      box-shadow: 0 10px 22px rgba(15,23,42,0.08);
+      text-align: center;
+    }
+    .scene-box strong { display: block; }
+    .scene-box small { color: var(--muted); }
+
+    /* node selector animation */
+    .selector-animation {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 18px 0;
+    }
+    .node-card {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+      background: #fff;
+      min-height: 160px;
+      overflow: hidden;
+    }
+    .node-card.match {
+      border-color: #86efac;
+      animation: matchPulse 2s ease-in-out infinite;
+    }
+    .node-card.no-match { opacity: .82; }
+    @keyframes matchPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.20); }
+      50% { box-shadow: 0 0 0 12px rgba(22,163,74,0.06); }
+    }
+    .label-chip {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      font-size: 12px;
+      margin: 4px 4px 0 0;
+    }
+    .label-chip.good { background: #ecfdf5; border-color: #86efac; color: #166534; }
+    .mini-pod {
+      position: absolute;
+      bottom: 14px; right: 14px;
+      width: 46px; height: 38px;
+      border-radius: 12px;
+      display: grid; place-items: center;
+      background: #dbeafe;
+      border: 2px solid #2563eb;
+      font-weight: 800;
+      animation: bouncePod 1.7s ease-in-out infinite;
+    }
+    @keyframes bouncePod { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+
+    /* taint animation */
+    .taint-scene {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0;
+    }
+    .taint-node {
+      position: relative;
+      min-height: 230px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 22px;
+      padding: 18px;
+      overflow: hidden;
+    }
+    .shield {
+      position: absolute;
+      right: 24px; top: 54px;
+      width: 82px; height: 96px;
+      background: linear-gradient(180deg, #fed7aa, #fb923c);
+      clip-path: polygon(50% 0%, 90% 17%, 82% 76%, 50% 100%, 18% 76%, 10% 17%);
+      opacity: .95;
+      animation: shieldGlow 1.8s ease-in-out infinite;
+    }
+    @keyframes shieldGlow { 50% { transform: scale(1.06); filter: drop-shadow(0 0 16px rgba(249,115,22,.45)); } }
+    .repelled-pod {
+      position: absolute; left: 32px; top: 118px;
+      width: 48px; height: 42px; border-radius: 12px;
+      display: grid; place-items: center;
+      background: #fee2e2; border: 2px solid #dc2626; font-weight: 900;
+      animation: repel 2.2s ease-in-out infinite;
+    }
+    @keyframes repel {
+      0% { transform: translateX(0); }
+      45% { transform: translateX(155px); }
+      60% { transform: translateX(110px); }
+      100% { transform: translateX(0); }
+    }
+    .allowed-pod {
+      position: absolute; left: 32px; top: 118px;
+      width: 48px; height: 42px; border-radius: 12px;
+      display: grid; place-items: center;
+      background: #dcfce7; border: 2px solid #16a34a; font-weight: 900;
+      animation: allow 2.2s ease-in-out infinite;
+    }
+    @keyframes allow {
+      0% { transform: translateX(0); }
+      65%,100% { transform: translateX(260px); }
+    }
+
+    .checklist li { margin: 8px 0; }
+    .footer {
+      margin-top: 54px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+      main { padding: 24px 18px 60px; }
+      .cards, .grid-2, .selector-animation, .taint-scene { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; gap: 10px; }
+      .arrow { height: 28px; width: 4px; margin: 0 auto; }
+      .arrow:before { content: "▼"; right: -9px; top: 8px; }
+      @keyframes podTravel {
+        0% { left: 24px; top: 34px; }
+        30% { left: 24px; top: 110px; }
+        60% { left: 24px; top: 190px; }
+        100% { left: calc(100% - 80px); top: 190px; }
+      }
+    }
+
+    @media print {
+      aside { display: none; }
+      .layout { display: block; }
+      main { padding: 0; max-width: none; }
+      .copy-btn { display: none; }
+      .animation-panel, .lab, .card { box-shadow: none; break-inside: avoid; }
+      pre { white-space: pre-wrap; }
+      body { color: #000; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <h1>Kubernetes Scheduler</h1>
+      <div class="tagline">Trainee reference + simple labs</div>
+      <nav>
+        <a href="#objectives">Learning objectives</a>
+        <a href="#overview">kube-scheduler overview</a>
+        <a href="#manual-vs-dynamic">Manual vs dynamic scheduling</a>
+        <a href="#nodename-nodeselector">nodeName vs nodeSelector</a>
+        <a href="#taints">Taints and tolerations</a>
+        <a href="#setup">Lab setup</a>
+        <a href="#lab1">Lab 1: Manual scheduling</a>
+        <a href="#lab2">Lab 2: Node selector and labels</a>
+        <a href="#lab3">Lab 3: Taints and tolerations</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a href="#assessment">Assessment questions</a>
+        <a href="#cleanup">Final cleanup</a>
+      </nav>
+    </aside>
+
+    <main>
+      <section class="hero">
+        <div class="kicker">Kubernetes Training Handout</div>
+        <h1 class="page-title">Working with Kubernetes Scheduler</h1>
+        <p>
+          This reference explains how Kubernetes decides where a Pod should run, then walks trainees through practical labs for manual scheduling, node labels with <code>nodeSelector</code>, and taints with tolerations.
+        </p>
+        <div class="note">
+          <strong>Recommended lab environment:</strong> a non-production Kubernetes cluster with at least two nodes. A single-node cluster can still run most commands, but placement behavior is easier to observe with two or more nodes.
+        </div>
+      </section>
+
+      <section id="objectives">
+        <h2>1. Learning objectives</h2>
+        <div class="cards">
+          <div class="card"><div class="num">1</div><h3>Understand scheduling</h3><p>Explain how kube-scheduler watches unscheduled Pods and selects a suitable Node.</p></div>
+          <div class="card"><div class="num">2</div><h3>Compare scheduling methods</h3><p>Differentiate between dynamic scheduling, direct Pod-to-Node binding using <code>nodeName</code>, and label-based scheduling using <code>nodeSelector</code>.</p></div>
+          <div class="card"><div class="num">3</div><h3>Control placement safely</h3><p>Use taints and tolerations to keep unsuitable Pods away from special-purpose Nodes.</p></div>
+        </div>
+      </section>
+
+      <section id="overview">
+        <h2>2. Understanding kube-scheduler and its features</h2>
+        <p>
+          The kube-scheduler is a control-plane component. It watches for newly created Pods that do not yet have a Node assigned, evaluates available Nodes, and then binds each schedulable Pod to a selected Node.
+        </p>
+
+        <div class="animation-panel">
+          <h3>Animated concept: scheduler decision flow</h3>
+          <div class="flow">
+            <div class="flow-card"><strong>1. Pod created</strong><span>Pod has no <code>spec.nodeName</code>.</span></div>
+            <div class="arrow"></div>
+            <div class="flow-card"><strong>2. Filter</strong><span>Remove Nodes that cannot run the Pod.</span></div>
+            <div class="arrow"></div>
+            <div class="flow-card"><strong>3. Score</strong><span>Rank feasible Nodes.</span></div>
+            <div class="arrow"></div>
+            <div class="flow-card"><strong>4. Bind</strong><span>Assign Pod to the chosen Node.</span></div>
+          </div>
+          <div class="scheduler-scene" aria-label="Animated scheduler scene">
+            <div class="scene-box" style="left:20px;top:26px"><strong>API Server</strong><small>Pod is stored</small></div>
+            <div class="scene-box" style="left:250px;top:26px"><strong>Scheduler</strong><small>Watches unscheduled Pods</small></div>
+            <div class="scene-box" style="left:510px;top:26px"><strong>Filter</strong><small>Resources, labels, taints</small></div>
+            <div class="scene-box" style="left:750px;top:154px"><strong>Score</strong><small>Best feasible Node</small></div>
+            <div class="scene-box" style="right:20px;top:26px"><strong>Kubelet</strong><small>Runs Pod on Node</small></div>
+            <div class="pod-dot">Pod</div>
+          </div>
+        </div>
+
+        <h3>Important kube-scheduler features</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Feature</th><th>Meaning</th><th>Simple example</th></tr></thead>
+            <tbody>
+              <tr><td>Scheduling queue</td><td>New Pods without an assigned Node wait for scheduling.</td><td>A Deployment creates three Pods; scheduler processes each Pod.</td></tr>
+              <tr><td>Filtering</td><td>Nodes that cannot satisfy the Pod requirements are removed from consideration.</td><td>A Pod needs a Node label <code>disktype=ssd</code>; Nodes without that label are filtered out.</td></tr>
+              <tr><td>Scoring</td><td>Feasible Nodes are ranked; the best ranked Node is selected.</td><td>If multiple Nodes match, the scheduler chooses the most suitable Node based on active scoring rules.</td></tr>
+              <tr><td>Binding</td><td>The selected Node is written back to the Pod as <code>spec.nodeName</code>.</td><td>After scheduling, <code>kubectl get pod -o wide</code> shows the Node name.</td></tr>
+              <tr><td>Constraints</td><td>Scheduling can consider resources, labels, affinity, taints/tolerations, topology, volumes, and policies.</td><td>A GPU workload can be restricted to GPU Nodes.</td></tr>
+              <tr><td>Extensibility</td><td>Kubernetes supports scheduler configuration and multiple schedulers for advanced cases.</td><td>A custom scheduler can be used for special workloads.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="success">
+          <strong>Trainer explanation:</strong> Think of kube-scheduler as a placement decision maker. It does not run containers. It only chooses a Node and records that decision. The kubelet on that Node then starts the containers.
+        </div>
+      </section>
+
+      <section id="manual-vs-dynamic">
+        <h2>3. Manual Scheduling vs Dynamic Scheduling</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Dynamic scheduling</h3>
+            <p>The normal Kubernetes behavior. You create a Pod without <code>spec.nodeName</code>. The scheduler filters, scores, and binds the Pod to a suitable Node.</p>
+            <ul>
+              <li>Recommended for normal workloads.</li>
+              <li>Honors scheduler rules and constraints.</li>
+              <li>Works well with Deployments, ReplicaSets, Jobs, and StatefulSets.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Manual scheduling</h3>
+            <p>You directly set <code>spec.nodeName</code> in the Pod manifest. This bypasses scheduler placement.</p>
+            <ul>
+              <li>Useful for demos, testing, and debugging.</li>
+              <li>Not recommended for regular application deployment.</li>
+              <li>If the selected Node is wrong or unavailable, the Pod can remain Pending.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="warning">
+          <strong>Production warning:</strong> Avoid hardcoding <code>nodeName</code> in production manifests. It removes scheduler flexibility and can break during node replacement, upgrades, or autoscaling.
+        </div>
+      </section>
+
+      <section id="nodename-nodeselector">
+        <h2>4. <code>nodeName</code> vs <code>nodeSelector</code></h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Point</th><th><code>nodeName</code></th><th><code>nodeSelector</code></th></tr></thead>
+            <tbody>
+              <tr><td>Purpose</td><td>Directly assigns Pod to a specific Node.</td><td>Asks scheduler to choose a Node with matching labels.</td></tr>
+              <tr><td>Scheduler involvement</td><td>Bypasses kube-scheduler placement.</td><td>Uses kube-scheduler.</td></tr>
+              <tr><td>Flexibility</td><td>Low. Tied to one Node name.</td><td>Better. Any matching Node can be used.</td></tr>
+              <tr><td>Common use</td><td>Testing, debugging, emergency manual placement.</td><td>Simple workload placement by hardware, environment, zone, or role.</td></tr>
+              <tr><td>Failure mode</td><td>Wrong Node name can leave the Pod stuck.</td><td>No matching labels can leave the Pod Pending.</td></tr>
+              <tr><td>Production suitability</td><td>Usually avoid.</td><td>Acceptable for simple constraints; use node affinity for richer logic.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="animation-panel">
+          <h3>Animated concept: nodeSelector chooses by labels</h3>
+          <p class="small">Pod requires <code>disktype=ssd</code>. Only Nodes with that label are valid placement candidates.</p>
+          <div class="selector-animation">
+            <div class="node-card no-match">
+              <h4>node-a</h4>
+              <span class="label-chip">disktype=hdd</span>
+              <span class="label-chip">zone=west</span>
+              <p class="small">Filtered out</p>
+            </div>
+            <div class="node-card match">
+              <h4>node-b</h4>
+              <span class="label-chip good">disktype=ssd</span>
+              <span class="label-chip">zone=east</span>
+              <p class="small">Matches Pod selector</p>
+              <div class="mini-pod">Pod</div>
+            </div>
+            <div class="node-card no-match">
+              <h4>node-c</h4>
+              <span class="label-chip">gpu=true</span>
+              <span class="label-chip">zone=east</span>
+              <p class="small">Filtered out</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="taints">
+        <h2>5. Taints and Tolerations</h2>
+        <p>
+          Node labels attract Pods when used with selectors or affinity. Taints do the opposite: they repel Pods from a Node unless the Pod has a matching toleration.
+        </p>
+
+        <div class="taint-scene">
+          <div class="taint-node">
+            <h3>Without toleration</h3>
+            <p class="small">Node has taint <code>dedicated=training:NoSchedule</code>. Pod has no matching toleration.</p>
+            <div class="shield"></div>
+            <div class="repelled-pod">Pod</div>
+          </div>
+          <div class="taint-node">
+            <h3>With toleration</h3>
+            <p class="small">Pod tolerates <code>dedicated=training:NoSchedule</code>, so the scheduler may place it there.</p>
+            <div class="shield"></div>
+            <div class="allowed-pod">Pod</div>
+          </div>
+        </div>
+
+        <h3>Taint effects</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Effect</th><th>Behavior</th><th>Training note</th></tr></thead>
+            <tbody>
+              <tr><td><code>NoSchedule</code></td><td>New Pods without a matching toleration are not scheduled onto the tainted Node.</td><td>Best effect for this lab.</td></tr>
+              <tr><td><code>PreferNoSchedule</code></td><td>Scheduler tries to avoid the Node, but it is not a strict rule.</td><td>Useful when avoidance is preferred but not mandatory.</td></tr>
+              <tr><td><code>NoExecute</code></td><td>New Pods without toleration are not scheduled, and existing Pods without toleration can be evicted.</td><td>Avoid in beginner/shared labs unless you intentionally test eviction.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          <strong>Important detail:</strong> A toleration allows scheduling onto a tainted Node, but it does not force scheduling there. To target a tainted Node in a lab, combine a toleration with a <code>nodeSelector</code> label.
+        </div>
+      </section>
+
+      <section id="setup">
+        <h2>6. Lab setup</h2>
+        <h3>Option A: Use an existing training cluster</h3>
+        <p>Use this option if your trainees already have a kubeadm, minikube, kind, OpenShift-compatible Kubernetes, or cloud Kubernetes cluster.</p>
+        <div class="codebox"><div class="code-title"><span>Check cluster access</span><button class="copy-btn">Copy</button></div><pre><code>kubectl cluster-info
+kubectl get nodes -o wide
+kubectl version --short 2>/dev/null || kubectl version</code></pre></div>
+
+        <h3>Option B: Create a local multi-node kind cluster</h3>
+        <p>Use this only on a local lab machine with Docker and kind installed.</p>
+        <div class="codebox"><div class="code-title"><span>Create local kind cluster</span><button class="copy-btn">Copy</button></div><pre><code>cat &lt;&lt;'EOF' &gt; kind-scheduler-lab.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+- role: worker
+- role: worker
+EOF
+
+kind create cluster --name scheduler-lab --config kind-scheduler-lab.yaml
+kubectl get nodes -o wide</code></pre></div>
+
+        <h3>Create namespace and select a lab node</h3>
+        <div class="codebox"><div class="code-title"><span>Namespace and helper variables</span><button class="copy-btn">Copy</button></div><pre><code>kubectl create namespace scheduler-lab --dry-run=client -o yaml | kubectl apply -f -
+
+# Prefer a worker node. If the cluster has no explicit worker label, fall back to the first available node.
+NODE1=$(kubectl get nodes --selector='!node-role.kubernetes.io/control-plane,!node-role.kubernetes.io/master' -o jsonpath='{.items[0].metadata.name}')
+if [ -z "$NODE1" ]; then
+  NODE1=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+fi
+
+echo "Selected lab node: $NODE1"
+kubectl get node "$NODE1" --show-labels</code></pre></div>
+
+        <div class="warning">
+          <strong>Do not use a production cluster for these labs.</strong> The taint lab modifies Node scheduling behavior. The cleanup commands are provided, but trainees should still work on a disposable training cluster.
+        </div>
+      </section>
+
+      <section id="lab1" class="lab">
+        <div class="lab-title"><h3>Lab 1: Manually scheduling Pod</h3><span class="pill">nodeName</span></div>
+        <h4>Goal</h4>
+        <p>Create one Pod that lets kube-scheduler choose the Node, then create another Pod that is manually assigned to a Node using <code>spec.nodeName</code>.</p>
+
+        <h4>Step 1: Create a dynamically scheduled Pod</h4>
+        <div class="codebox"><div class="code-title"><span>01-dynamic-pod.yaml</span><button class="copy-btn">Copy</button></div><pre><code>cat &lt;&lt;'EOF' &gt; 01-dynamic-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dynamic-pod
+  namespace: scheduler-lab
+  labels:
+    lab: scheduler
+    scheduling: dynamic
+spec:
+  containers:
+  - name: pause
+    image: registry.k8s.io/pause:3.10
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: "20m"
+        memory: "32Mi"
+      limits:
+        cpu: "100m"
+        memory: "64Mi"
+EOF
+
+kubectl apply -f 01-dynamic-pod.yaml
+kubectl get pod dynamic-pod -n scheduler-lab -o wide</code></pre></div>
+
+        <h4>Expected observation</h4>
+        <p>The <code>NODE</code> column should show the Node selected by kube-scheduler.</p>
+        <div class="codebox"><div class="code-title"><span>Validate scheduler assignment</span><button class="copy-btn">Copy</button></div><pre><code>kubectl get pod dynamic-pod -n scheduler-lab \
+  -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,NODE:.spec.nodeName
+
+kubectl describe pod dynamic-pod -n scheduler-lab | sed -n '/Events:/,$p'</code></pre></div>
+
+        <h4>Step 2: Create a manually scheduled Pod using nodeName</h4>
+        <div class="codebox"><div class="code-title"><span>01-manual-pod.yaml</span><button class="copy-btn">Copy</button></div><pre><code># Make sure NODE1 is set in your shell
+if [ -z "$NODE1" ]; then
+  NODE1=$(kubectl get nodes --selector='!node-role.kubernetes.io/control-plane,!node-role.kubernetes.io/master' -o jsonpath='{.items[0].metadata.name}')
+  [ -z "$NODE1" ] &amp;&amp; NODE1=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+fi
+
+cat &lt;&lt;EOF &gt; 01-manual-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: manual-pod
+  namespace: scheduler-lab
+  labels:
+    lab: scheduler
+    scheduling: manual
+spec:
+  nodeName: ${NODE1}
+  containers:
+  - name: pause
+    image: registry.k8s.io/pause:3.10
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: "20m"
+        memory: "32Mi"
+      limits:
+        cpu: "100m"
+        memory: "64Mi"
+EOF
+
+kubectl apply -f 01-manual-pod.yaml
+kubectl get pod manual-pod -n scheduler-lab -o wide</code></pre></div>
+
+        <h4>Step 3: Compare both Pods</h4>
+        <div class="codebox"><div class="code-title"><span>Compare placement</span><button class="copy-btn">Copy</button></div><pre><code>kubectl get pods -n scheduler-lab -o wide
+
+kubectl get pod dynamic-pod manual-pod -n scheduler-lab \
+  -o custom-columns=NAME:.metadata.name,SCHEDULER:.spec.schedulerName,NODE:.spec.nodeName,PHASE:.status.phase</code></pre></div>
+
+        <div class="success">
+          <strong>Learning point:</strong> The dynamic Pod is placed by the scheduler. The manual Pod already contains a Node assignment, so normal scheduler placement is bypassed.
+        </div>
+
+        <h4>Optional negative test: wrong nodeName</h4>
+        <p>This shows why hardcoding Node names is fragile.</p>
+        <div class="codebox"><div class="code-title"><span>Wrong nodeName test</span><button class="copy-btn">Copy</button></div><pre><code>cat &lt;&lt;'EOF' &gt; 01-wrong-node-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wrong-node-pod
+  namespace: scheduler-lab
+spec:
+  nodeName: node-does-not-exist
+  containers:
+  - name: pause
+    image: registry.k8s.io/pause:3.10
+EOF
+
+kubectl apply -f 01-wrong-node-pod.yaml
+sleep 5
+kubectl get pod wrong-node-pod -n scheduler-lab -o wide
+kubectl describe pod wrong-node-pod -n scheduler-lab | sed -n '/Events:/,$p'
+
+# Cleanup the negative test Pod
+kubectl delete pod wrong-node-pod -n scheduler-lab --ignore-not-found=true</code></pre></div>
+      </section>
+
+      <section id="lab2" class="lab">
+        <div class="lab-title"><h3>Lab 2: Scheduling Pod based on Node Selector and Labels</h3><span class="pill">nodeSelector</span></div>
+        <h4>Goal</h4>
+        <p>Label a Node and create a Pod that can run only on Nodes matching that label.</p>
+
+        <h4>Step 1: Label the selected Node</h4>
+        <div class="codebox"><div class="code-title"><span>Apply Node labels</span><button class="copy-btn">Copy</button></div><pre><code># Re-detect NODE1 if needed
+if [ -z "$NODE1" ]; then
+  NODE1=$(kubectl get nodes --selector='!node-role.kubernetes.io/control-plane,!node-role.kubernetes.io/master' -o jsonpath='{.items[0].metadata.name}')
+  [ -z "$NODE1" ] &amp;&amp; NODE1=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+fi
+
+kubectl label node "$NODE1" disktype=ssd scheduler-lab=enabled --overwrite
+kubectl get nodes -L disktype,scheduler-lab</code></pre></div>
+
+        <h4>Step 2: Create a Pod with nodeSelector</h4>
+        <div class="codebox"><div class="code-title"><span>02-selector-pod.yaml</span><button class="copy-btn">Copy</button></div><pre><code>cat &lt;&lt;'EOF' &gt; 02-selector-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: selector-pod
+  namespace: scheduler-lab
+  labels:
+    lab: scheduler
+    scheduling: nodeselector
+spec:
+  nodeSelector:
+    disktype: ssd
+  containers:
+  - name: pause
+    image: registry.k8s.io/pause:3.10
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: "20m"
+        memory: "32Mi"
+EOF
+
+kubectl apply -f 02-selector-pod.yaml
+kubectl get pod selector-pod -n scheduler-lab -o wide</code></pre></div>
+
+        <h4>Step 3: Verify that it ran on the labelled Node</h4>
+        <div class="codebox"><div class="code-title"><span>Validate nodeSelector placement</span><button class="copy-btn">Copy</button></div><pre><code>echo "Expected labelled node: $NODE1"
+
+kubectl get pod selector-pod -n scheduler-lab \
+  -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName,PHASE:.status.phase
+
+ACTUAL_NODE=$(kubectl get pod selector-pod -n scheduler-lab -o jsonpath='{.spec.nodeName}')
+echo "Actual node: $ACTUAL_NODE"
+kubectl get node "$ACTUAL_NODE" -L disktype,scheduler-lab</code></pre></div>
+
+        <h4>Step 4: Negative test with a missing label</h4>
+        <p>Create a Pod that requires <code>disktype=nvme</code>. Because no Node has that label, the Pod should remain Pending.</p>
+        <div class="codebox"><div class="code-title"><span>02-selector-mismatch-pod.yaml</span><button class="copy-btn">Copy</button></div><pre><code>cat &lt;&lt;'EOF' &gt; 02-selector-mismatch-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: selector-mismatch-pod
+  namespace: scheduler-lab
+spec:
+  nodeSelector:
+    disktype: nvme
+  containers:
+  - name: pause
+    image: registry.k8s.io/pause:3.10
+EOF
+
+kubectl apply -f 02-selector-mismatch-pod.yaml
+sleep 5
+kubectl get pod selector-mismatch-pod -n scheduler-lab -o wide
+kubectl describe pod selector-mismatch-pod -n scheduler-lab | sed -n '/Events:/,$p'</code></pre></div>
+
+        <h4>Expected observation</h4>
+        <ul>
+          <li><code>selector-pod</code> should be Running on a Node labelled <code>disktype=ssd</code>.</li>
+          <li><code>selector-mismatch-pod</code> should be Pending because no Node matches <code>disktype=nvme</code>.</li>
+        </ul>
+
+        <h4>Fix the Pending Pod</h4>
+        <div class="codebox"><div class="code-title"><span>Fix missing label or delete mismatch Pod</span><button class="copy-btn">Copy</button></div><pre><code># Option 1: Delete the mismatch Pod
+kubectl delete pod selector-mismatch-pod -n scheduler-lab --ignore-not-found=true
+
+# Option 2: Alternatively, label the node to satisfy the selector, then watch it schedule
+# kubectl label node "$NODE1" disktype=nvme --overwrite
+# kubectl get pod selector-mismatch-pod -n scheduler-lab -w</code></pre></div>
+      </section>
+
+      <section id="lab3" class="lab">
+        <div class="lab-title"><h3>Lab 3: Taints and Tolerations</h3><span class="pill">NoSchedule</span></div>
+        <h4>Goal</h4>
+        <p>Apply a taint to a Node, prove that a Pod without toleration cannot schedule there, then create a Pod with a matching toleration.</p>
+
+        <div class="danger">
+          <strong>Safety rule:</strong> This lab uses <code>NoSchedule</code>, not <code>NoExecute</code>. Do not use <code>NoExecute</code> on shared clusters unless you are intentionally testing eviction behavior.
+        </div>
+
+        <h4>Step 1: Label and taint one Node</h4>
+        <div class="codebox"><div class="code-title"><span>Apply lab label and taint</span><button class="copy-btn">Copy</button></div><pre><code># Re-detect NODE1 if needed
+if [ -z "$NODE1" ]; then
+  NODE1=$(kubectl get nodes --selector='!node-role.kubernetes.io/control-plane,!node-role.kubernetes.io/master' -o jsonpath='{.items[0].metadata.name}')
+  [ -z "$NODE1" ] &amp;&amp; NODE1=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+fi
+
+kubectl label node "$NODE1" taint-lab=yes --overwrite
+kubectl taint node "$NODE1" dedicated=training:NoSchedule --overwrite
+
+kubectl get node "$NODE1" -L taint-lab
+kubectl describe node "$NODE1" | grep -i "Taints:"</code></pre></div>
+
+        <h4>Step 2: Create a Pod without toleration</h4>
+        <p>This Pod targets the tainted Node using <code>nodeSelector</code>, but it does not tolerate the taint. It should remain Pending.</p>
+        <div class="codebox"><div class="code-title"><span>03-no-toleration-pod.yaml</span><button class="copy-btn">Copy</button></div><pre><code>cat &lt;&lt;'EOF' &gt; 03-no-toleration-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: no-toleration-pod
+  namespace: scheduler-lab
+spec:
+  nodeSelector:
+    taint-lab: "yes"
+  containers:
+  - name: pause
+    image: registry.k8s.io/pause:3.10
+EOF
+
+kubectl apply -f 03-no-toleration-pod.yaml
+sleep 5
+kubectl get pod no-toleration-pod -n scheduler-lab -o wide
+kubectl describe pod no-toleration-pod -n scheduler-lab | sed -n '/Events:/,$p'</code></pre></div>
+
+        <h4>Expected observation</h4>
+        <p>The Pod should stay Pending. The Events section should mention that the Node had an untolerated taint similar to <code>dedicated=training:NoSchedule</code>.</p>
+
+        <h4>Step 3: Create a Pod with matching toleration</h4>
+        <div class="codebox"><div class="code-title"><span>03-with-toleration-pod.yaml</span><button class="copy-btn">Copy</button></div><pre><code>cat &lt;&lt;'EOF' &gt; 03-with-toleration-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: with-toleration-pod
+  namespace: scheduler-lab
+spec:
+  nodeSelector:
+    taint-lab: "yes"
+  tolerations:
+  - key: "dedicated"
+    operator: "Equal"
+    value: "training"
+    effect: "NoSchedule"
+  containers:
+  - name: pause
+    image: registry.k8s.io/pause:3.10
+    imagePullPolicy: IfNotPresent
+EOF
+
+kubectl apply -f 03-with-toleration-pod.yaml
+kubectl get pod with-toleration-pod -n scheduler-lab -o wide</code></pre></div>
+
+        <h4>Step 4: Verify both results</h4>
+        <div class="codebox"><div class="code-title"><span>Verify taint behavior</span><button class="copy-btn">Copy</button></div><pre><code>kubectl get pods -n scheduler-lab -o wide
+
+kubectl get pod with-toleration-pod -n scheduler-lab \
+  -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName,PHASE:.status.phase
+
+kubectl describe pod with-toleration-pod -n scheduler-lab | sed -n '/Tolerations:/,/Events:/p'</code></pre></div>
+
+        <div class="success">
+          <strong>Learning point:</strong> The taint repels normal Pods. The toleration permits the scheduler to place the Pod on the tainted Node. The <code>nodeSelector</code> in this lab ensures the Pod tries to use that exact labelled Node.
+        </div>
+
+        <h4>Step 5: Cleanup this lab immediately</h4>
+        <div class="codebox"><div class="code-title"><span>Remove taint and lab objects</span><button class="copy-btn">Copy</button></div><pre><code>kubectl delete pod no-toleration-pod with-toleration-pod -n scheduler-lab --ignore-not-found=true
+kubectl taint node "$NODE1" dedicated=training:NoSchedule- || true
+kubectl label node "$NODE1" taint-lab- || true
+kubectl describe node "$NODE1" | grep -i "Taints:"</code></pre></div>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>7. Troubleshooting guide</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Symptom</th><th>Likely reason</th><th>Command to check</th><th>Fix</th></tr></thead>
+            <tbody>
+              <tr><td>Pod remains Pending</td><td>No Node satisfies selector, resources, taints, or other constraints.</td><td><code>kubectl describe pod POD -n scheduler-lab</code></td><td>Read Events. Remove bad selector, add label, add toleration, or free resources.</td></tr>
+              <tr><td><code>selector-pod</code> runs on unexpected Node</td><td>More than one Node has the same matching label.</td><td><code>kubectl get nodes -L disktype</code></td><td>Use a unique label for lab, for example <code>scheduler-lab=enabled</code>.</td></tr>
+              <tr><td>Manual Pod does not start</td><td>Wrong <code>nodeName</code>, Node not Ready, image pull issue, or kubelet problem.</td><td><code>kubectl get nodes</code><br><code>kubectl describe pod manual-pod -n scheduler-lab</code></td><td>Use a valid Ready Node and reachable image.</td></tr>
+              <tr><td>Toleration Pod is still Pending</td><td>Toleration does not exactly match taint key/value/effect, or another constraint is failing.</td><td><code>kubectl describe node NODE | grep Taints</code><br><code>kubectl describe pod POD</code></td><td>Match key, value, and effect. Check labels and resources.</td></tr>
+              <tr><td>All Pods avoid one Node</td><td>The Node may have an existing taint such as control-plane taint.</td><td><code>kubectl describe node NODE | grep Taints</code></td><td>Use a worker Node, or add correct toleration only in lab manifests.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Useful scheduler inspection commands</h3>
+        <div class="codebox"><div class="code-title"><span>Inspection commands</span><button class="copy-btn">Copy</button></div><pre><code># See Pod placement
+kubectl get pods -n scheduler-lab -o wide
+
+# See scheduling-related Pod events
+kubectl describe pod &lt;pod-name&gt; -n scheduler-lab | sed -n '/Events:/,$p'
+
+# See Node labels
+kubectl get nodes --show-labels
+kubectl get nodes -L disktype,scheduler-lab,taint-lab
+
+# See Node taints
+kubectl describe node &lt;node-name&gt; | grep -i "Taints:"
+
+# See scheduler component Pod in kubeadm-style clusters
+kubectl get pods -n kube-system -l component=kube-scheduler -o wide 2&gt;/dev/null || true</code></pre></div>
+      </section>
+
+      <section id="assessment">
+        <h2>8. Assessment questions</h2>
+        <ol class="checklist">
+          <li>What does kube-scheduler do when a new Pod has no <code>spec.nodeName</code>?</li>
+          <li>What are the two major stages of scheduler node selection?</li>
+          <li>Why is <code>nodeName</code> usually a bad choice for production manifests?</li>
+          <li>How is <code>nodeSelector</code> different from <code>nodeName</code>?</li>
+          <li>A Pod has <code>nodeSelector: disktype=ssd</code>, but no Node has that label. What phase will the Pod usually remain in?</li>
+          <li>What command adds a label to a Node?</li>
+          <li>What is the purpose of a Node taint?</li>
+          <li>What is the purpose of a Pod toleration?</li>
+          <li>Does a toleration force a Pod to run on a tainted Node?</li>
+          <li>Which taint effect can evict existing Pods that do not tolerate it?</li>
+        </ol>
+
+        <details>
+          <summary><strong>Suggested answers</strong></summary>
+          <ol>
+            <li>It watches the unscheduled Pod, finds a suitable Node, and binds the Pod to that Node.</li>
+            <li>Filtering and scoring.</li>
+            <li>It bypasses scheduler flexibility and breaks if the Node name changes or becomes unavailable.</li>
+            <li><code>nodeName</code> directly binds to one Node; <code>nodeSelector</code> lets the scheduler choose any Node with matching labels.</li>
+            <li>Pending.</li>
+            <li><code>kubectl label node NODE key=value --overwrite</code></li>
+            <li>To repel Pods from a Node unless they tolerate the taint.</li>
+            <li>To allow a Pod to be scheduled onto a Node with a matching taint.</li>
+            <li>No. It only permits scheduling; other scheduler rules still apply.</li>
+            <li><code>NoExecute</code>.</li>
+          </ol>
+        </details>
+      </section>
+
+      <section id="cleanup">
+        <h2>9. Final cleanup</h2>
+        <p>Run this after all labs to return the training cluster to a clean state.</p>
+        <div class="codebox"><div class="code-title"><span>Cleanup all scheduler labs</span><button class="copy-btn">Copy</button></div><pre><code># Re-detect NODE1 if variable is lost
+if [ -z "$NODE1" ]; then
+  NODE1=$(kubectl get nodes --selector='!node-role.kubernetes.io/control-plane,!node-role.kubernetes.io/master' -o jsonpath='{.items[0].metadata.name}')
+  [ -z "$NODE1" ] &amp;&amp; NODE1=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+fi
+
+kubectl delete namespace scheduler-lab --ignore-not-found=true
+
+# Remove lab taint and labels from selected node
+kubectl taint node "$NODE1" dedicated=training:NoSchedule- 2&gt;/dev/null || true
+kubectl label node "$NODE1" disktype- scheduler-lab- taint-lab- 2&gt;/dev/null || true
+
+kubectl get nodes -L disktype,scheduler-lab,taint-lab
+kubectl describe node "$NODE1" | grep -i "Taints:" || true</code></pre></div>
+
+        <h3>Delete local kind cluster if created</h3>
+        <div class="codebox"><div class="code-title"><span>Optional kind cleanup</span><button class="copy-btn">Copy</button></div><pre><code>kind delete cluster --name scheduler-lab
+rm -f kind-scheduler-lab.yaml 01-*.yaml 02-*.yaml 03-*.yaml</code></pre></div>
+      </section>
+
+      <section id="references">
+        <h2>10. References</h2>
+        <ul>
+          <li>Kubernetes Scheduler: <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/">https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/</a></li>
+          <li>Assigning Pods to Nodes: <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/</a></li>
+          <li>Taints and Tolerations: <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/">https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/</a></li>
+          <li>kubectl taint command: <a href="https://kubernetes.io/docs/reference/kubectl/generated/kubectl_taint/">https://kubernetes.io/docs/reference/kubectl/generated/kubectl_taint/</a></li>
+        </ul>
+      </section>
+
+      <div class="footer">
+        Prepared as a self-contained HTML reference for classroom/lab use. The diagrams and animations are implemented with inline HTML/CSS and do not require external images.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.querySelectorAll('.codebox').forEach(function(box) {
+      var btn = box.querySelector('.copy-btn');
+      var code = box.querySelector('code');
+      if (!btn || !code) return;
+      btn.addEventListener('click', async function() {
+        try {
+          await navigator.clipboard.writeText(code.innerText);
+          var old = btn.innerText;
+          btn.innerText = 'Copied';
+          setTimeout(function(){ btn.innerText = old; }, 1200);
+        } catch (e) {
+          btn.innerText = 'Select manually';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

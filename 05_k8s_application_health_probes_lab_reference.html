@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kubernetes Application Health: Liveness, Readiness and Startup Probes</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --ink: #17212b;
+      --muted: #596777;
+      --line: #d9e2ec;
+      --blue: #2f6fed;
+      --blue-2: #dce8ff;
+      --green: #21894a;
+      --green-2: #daf5e4;
+      --orange: #b65d00;
+      --orange-2: #fff1db;
+      --red: #c73535;
+      --red-2: #ffe3e3;
+      --purple: #6842c2;
+      --purple-2: #ece5ff;
+      --code-bg: #101820;
+      --code-ink: #f7fbff;
+      --shadow: 0 10px 28px rgba(23, 33, 43, 0.08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      line-height: 1.65;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .layout { display: grid; grid-template-columns: 300px 1fr; min-height: 100vh; }
+    aside {
+      border-right: 1px solid var(--line);
+      background: #fbfdff;
+      padding: 24px 20px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    aside h2 { margin: 0 0 8px; font-size: 1rem; }
+    aside p { margin: 0 0 18px; color: var(--muted); font-size: 0.9rem; }
+    .nav a {
+      display: block;
+      padding: 8px 10px;
+      border-radius: 10px;
+      color: #263545;
+      font-size: 0.94rem;
+    }
+    .nav a:hover { background: var(--blue-2); text-decoration: none; }
+    main { padding: 36px 44px 72px; max-width: 1180px; }
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      padding: 34px;
+      background: linear-gradient(135deg, #ffffff 0%, #f5f9ff 55%, #ffffff 100%);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .hero:after {
+      content: "";
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      border-radius: 999px;
+      right: -90px;
+      top: -100px;
+      background: radial-gradient(circle, rgba(47,111,237,.18), transparent 65%);
+    }
+    .hero h1 { margin: 0 0 10px; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.08; letter-spacing: -0.04em; }
+    .hero p { margin: 0; max-width: 850px; color: var(--muted); font-size: 1.08rem; }
+    .badge-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      padding: 7px 12px;
+      font-weight: 700;
+      font-size: 0.86rem;
+      color: #2b3b4c;
+    }
+    section { margin-top: 34px; }
+    h2 { margin: 0 0 14px; font-size: 1.9rem; letter-spacing: -0.025em; line-height: 1.2; }
+    h3 { margin: 26px 0 10px; font-size: 1.32rem; line-height: 1.25; }
+    h4 { margin: 18px 0 8px; font-size: 1.05rem; }
+    p { margin: 0 0 12px; }
+    .lead { color: var(--muted); font-size: 1.03rem; }
+    .card {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      margin: 16px 0;
+    }
+    .grid { display: grid; gap: 18px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .callout {
+      border-left: 6px solid var(--blue);
+      background: #f6f9ff;
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin: 18px 0;
+    }
+    .callout.green { border-left-color: var(--green); background: var(--green-2); }
+    .callout.orange { border-left-color: var(--orange); background: var(--orange-2); }
+    .callout.red { border-left-color: var(--red); background: var(--red-2); }
+    .pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+    }
+    .pill.blue { background: var(--blue-2); color: #194ca8; }
+    .pill.green { background: var(--green-2); color: #176738; }
+    .pill.orange { background: var(--orange-2); color: #884300; }
+    .pill.red { background: var(--red-2); color: #9e2323; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 16px; margin: 16px 0; }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; background: #fff; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+    th { background: #f5f8fb; font-size: .9rem; }
+    tr:last-child td { border-bottom: 0; }
+    code.inline { background: #eef4fb; color: #1b3554; padding: 2px 6px; border-radius: 7px; font-size: 0.92em; }
+    .codebox { position: relative; margin: 14px 0 22px; }
+    .code-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1d2a36;
+      color: #dbe8f7;
+      border-radius: 14px 14px 0 0;
+      padding: 9px 12px;
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+    pre {
+      margin: 0;
+      padding: 18px;
+      overflow-x: auto;
+      background: var(--code-bg);
+      color: var(--code-ink);
+      border-radius: 0 0 14px 14px;
+      font-size: 0.91rem;
+      line-height: 1.5;
+      tab-size: 2;
+    }
+    button.copy {
+      border: 1px solid #3a4a59;
+      background: #293847;
+      color: #f7fbff;
+      border-radius: 9px;
+      padding: 5px 9px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    button.copy:hover { background: #354759; }
+    .step {
+      counter-increment: step;
+      position: relative;
+      padding-left: 56px;
+      margin: 20px 0;
+    }
+    .steps { counter-reset: step; }
+    .step:before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+    }
+    .checklist { list-style: none; padding-left: 0; }
+    .checklist li { margin: 8px 0; padding-left: 30px; position: relative; }
+    .checklist li:before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 900; }
+    .mini { font-size: 0.92rem; color: var(--muted); }
+
+    /* Animation panels */
+    .animation-panel {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: #ffffff;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      min-height: 310px;
+      overflow: hidden;
+    }
+    .animation-panel h3 { margin-top: 0; }
+    .probe-stage {
+      position: relative;
+      height: 230px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #f8fbff, #ffffff);
+      border: 1px dashed #c7d5e5;
+      overflow: hidden;
+    }
+    .actor {
+      position: absolute;
+      border-radius: 16px;
+      border: 2px solid #d1dce8;
+      background: #fff;
+      padding: 12px;
+      min-width: 118px;
+      text-align: center;
+      font-weight: 900;
+      box-shadow: 0 8px 18px rgba(23,33,43,.08);
+    }
+    .actor small { display:block; color: var(--muted); font-weight: 700; }
+    .kubelet { left: 18px; top: 78px; border-color: #9fbaff; background: #f6f9ff; }
+    .pod { right: 18px; top: 72px; border-color: #aadfbd; background: #f5fff8; }
+    .pod.bad { border-color: #ffb3b3; background: #fff6f6; animation: podshake 4s infinite; }
+    .svc { left: 24px; top: 88px; border-color: #9fbaff; background: #f6f9ff; }
+    .ready-pod { right: 36px; top: 22px; border-color: #aadfbd; background: #f5fff8; }
+    .notready-pod { right: 36px; bottom: 22px; border-color: #ffb3b3; background: #fff6f6; opacity: .82; }
+    .packet, .packet2, .probe-pulse, .restart-pulse, .shield-pulse {
+      position: absolute;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 0 8px rgba(47,111,237,.12);
+    }
+    .probe-pulse { left: 145px; top: 108px; animation: moveRight 2.2s linear infinite; }
+    .restart-pulse { right: 156px; top: 106px; background: var(--red); box-shadow: 0 0 0 8px rgba(199,53,53,.12); animation: moveLeft 3.3s linear infinite; animation-delay: 1.2s; }
+    .packet { left: 146px; top: 68px; background: var(--green); box-shadow: 0 0 0 8px rgba(33,137,74,.12); animation: routeToReady 2.2s linear infinite; }
+    .packet2 { left: 148px; top: 152px; background: var(--orange); box-shadow: 0 0 0 8px rgba(182,93,0,.12); animation: bounceBlocked 2.8s ease-in-out infinite; }
+    .line {
+      position: absolute;
+      height: 3px;
+      background: #adc0d6;
+      transform-origin: left center;
+    }
+    .line.live { left: 135px; top: 116px; width: calc(100% - 290px); }
+    .line.ready1 { left: 130px; top: 80px; width: calc(100% - 270px); transform: rotate(-11deg); }
+    .line.ready2 { left: 130px; top: 158px; width: calc(100% - 270px); transform: rotate(11deg); background: repeating-linear-gradient(90deg, #e8a547 0, #e8a547 8px, transparent 8px, transparent 16px); }
+    .xmark { position:absolute; left: 49%; top: 145px; color: var(--red); font-size: 30px; font-weight: 1000; animation: blink 1.1s infinite; }
+    .statusbar {
+      position:absolute; left:18px; right:18px; bottom:16px;
+      height: 12px; border-radius:999px; background:#e7edf4; overflow:hidden;
+    }
+    .statusbar > span { display:block; height:100%; width:40%; border-radius:999px; background:var(--green); animation: boot 7s ease-in-out infinite; }
+    .shield {
+      position:absolute; left:50%; top:42px; transform:translateX(-50%);
+      width:92px; height:108px; background: var(--purple-2); border: 3px solid #b49df5;
+      clip-path: polygon(50% 0, 100% 18%, 88% 82%, 50% 100%, 12% 82%, 0 18%);
+      display:grid; place-items:center; color:var(--purple); font-size:2.4rem;
+      animation: glow 2s ease-in-out infinite;
+    }
+    .startup-app { right:20px; top:78px; border-color:#d4c5ff; background:#fbf8ff; }
+    .pending { left:18px; top:78px; border-color:#e1bf7c; background:#fff9ef; }
+    .shield-pulse { left:140px; top:106px; background:var(--purple); box-shadow:0 0 0 8px rgba(104,66,194,.13); animation: moveToShield 2.1s linear infinite; }
+    @keyframes moveRight { 0%{transform:translateX(0); opacity:0} 15%{opacity:1} 80%{opacity:1} 100%{transform:translateX(calc(100vw)); opacity:0} }
+    @keyframes moveLeft { 0%{transform:translateX(0); opacity:0} 18%{opacity:1} 80%{opacity:1} 100%{transform:translateX(-420px); opacity:0} }
+    @keyframes routeToReady { 0%{transform:translate(0,0); opacity:0} 15%{opacity:1} 100%{transform:translate(350px,-45px); opacity:0} }
+    @keyframes bounceBlocked { 0%{transform:translate(0,0); opacity:0} 25%{opacity:1} 55%{transform:translate(155px,8px)} 72%{transform:translate(120px,8px)} 100%{opacity:0} }
+    @keyframes blink { 0%,100%{opacity:.2; transform:scale(.92)} 50%{opacity:1; transform:scale(1.08)} }
+    @keyframes podshake { 0%,70%,100%{transform:translateX(0)} 74%{transform:translateX(-4px)} 78%{transform:translateX(4px)} 82%{transform:translateX(-2px)} }
+    @keyframes boot { 0%{width:10%; background:var(--orange)} 55%{width:68%; background:var(--orange)} 80%,100%{width:100%; background:var(--green)} }
+    @keyframes glow { 0%,100%{box-shadow:0 0 0 0 rgba(104,66,194,.08)} 50%{box-shadow:0 0 0 14px rgba(104,66,194,.12)} }
+    @keyframes moveToShield { 0%{transform:translateX(0); opacity:0} 15%{opacity:1} 100%{transform:translateX(170px); opacity:0} }
+    .legend { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .legend span { display:inline-flex; align-items:center; gap:7px; font-size:.86rem; color:var(--muted); }
+    .dot { width:10px; height:10px; border-radius:99px; display:inline-block; background:var(--blue); }
+    .dot.green { background:var(--green); }
+    .dot.orange { background:var(--orange); }
+    .dot.red { background:var(--red); }
+    .dot.purple { background:var(--purple); }
+    .flowchart {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      gap: 12px;
+      align-items: center;
+      margin: 18px 0;
+    }
+    .flowbox { border:1px solid var(--line); border-radius:14px; padding:14px; text-align:center; background:#fff; font-weight:800; min-height:72px; display:grid; place-items:center; }
+    .arrow { text-align:center; font-weight:900; color:var(--blue); font-size:1.7rem; }
+    .question { border:1px solid var(--line); border-radius:14px; padding:14px; margin:10px 0; background:#fff; }
+    details { border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin:10px 0; background:#fff; }
+    summary { cursor:pointer; font-weight:900; }
+    footer { margin-top: 42px; color: var(--muted); font-size: .92rem; border-top: 1px solid var(--line); padding-top: 20px; }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { position: relative; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      main { padding: 24px 18px 48px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .flowchart { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); }
+    }
+    @media print {
+      aside, button.copy { display: none !important; }
+      .layout { display:block; }
+      main { max-width: none; padding: 0; }
+      .card, .hero, .animation-panel { box-shadow: none; }
+      pre { white-space: pre-wrap; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside>
+    <h2>K8s App Health</h2>
+    <p>Liveness, Readiness and Startup probes with simple labs.</p>
+    <nav class="nav">
+      <a href="#objectives">Objectives</a>
+      <a href="#mental-model">Mental Model</a>
+      <a href="#liveness">LivenessProbe</a>
+      <a href="#readiness">ReadinessProbe</a>
+      <a href="#together">Using Probes Together</a>
+      <a href="#startup">StartupProbe</a>
+      <a href="#lab-ready-live">Lab: Readiness + Liveness</a>
+      <a href="#lab-startup">Lab: StartupProbe</a>
+      <a href="#troubleshooting">Troubleshooting</a>
+      <a href="#best-practices">Best Practices</a>
+      <a href="#assessment">Assessment</a>
+      <a href="#references">References</a>
+    </nav>
+  </aside>
+
+  <main>
+    <header class="hero">
+      <h1>Kubernetes Application Health</h1>
+      <p>Understand how Kubernetes checks whether an application is alive, ready for traffic, and safely started before aggressive health checks begin.</p>
+      <div class="badge-row">
+        <span class="badge">✅ LivenessProbe</span>
+        <span class="badge">✅ ReadinessProbe</span>
+        <span class="badge">✅ StartupProbe</span>
+        <span class="badge">✅ Hands-on Labs</span>
+        <span class="badge">✅ Animated Concepts</span>
+      </div>
+    </header>
+
+    <section id="objectives" class="card">
+      <h2>1. Learning Objectives</h2>
+      <p class="lead">By the end of this reference lab, trainees should be able to explain and implement application health checks in Kubernetes.</p>
+      <ul class="checklist">
+        <li>Explain why a running container is not always a healthy application.</li>
+        <li>Use <code class="inline">livenessProbe</code> to restart a stuck or broken container.</li>
+        <li>Use <code class="inline">readinessProbe</code> to stop sending traffic to an unready Pod.</li>
+        <li>Use <code class="inline">startupProbe</code> for slow-starting applications.</li>
+        <li>Verify probe behavior using <code class="inline">kubectl get</code>, <code class="inline">kubectl describe</code>, logs, events, Endpoints and EndpointSlices.</li>
+      </ul>
+      <div class="callout">
+        <strong>Lab use case:</strong> a small Python web application exposes <code class="inline">/live</code> and <code class="inline">/ready</code>. Trainees intentionally break readiness and liveness by deleting files inside the container, then observe how Kubernetes reacts.
+      </div>
+    </section>
+
+    <section id="mental-model">
+      <h2>2. Simple Mental Model</h2>
+      <div class="flowchart">
+        <div class="flowbox">Container starts</div>
+        <div class="arrow">→</div>
+        <div class="flowbox">Kubelet runs probes</div>
+        <div class="arrow">→</div>
+        <div class="flowbox">Kubernetes acts based on result</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Probe</th>
+              <th>Question it answers</th>
+              <th>When it fails</th>
+              <th>Simple example</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>LivenessProbe</strong></td>
+              <td>Is the app still alive, or is it stuck/deadlocked?</td>
+              <td>Kubelet restarts the container.</td>
+              <td>App process is running, but the application is frozen.</td>
+            </tr>
+            <tr>
+              <td><strong>ReadinessProbe</strong></td>
+              <td>Can the app accept user traffic now?</td>
+              <td>Pod remains running, but is removed from Service traffic.</td>
+              <td>App is starting, warming cache, connecting to DB, or temporarily overloaded.</td>
+            </tr>
+            <tr>
+              <td><strong>StartupProbe</strong></td>
+              <td>Has the slow-starting app finished booting?</td>
+              <td>Until startup succeeds, liveness/readiness checks are not used for the container.</td>
+              <td>Large Java app, ML model loader, legacy app, or migration-heavy startup.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout orange">
+        <strong>Important:</strong> Kubernetes does not automatically know whether your business application is healthy. You must expose a suitable endpoint or command that tells Kubernetes the truth.
+      </div>
+    </section>
+
+    <section id="animations" class="grid grid-3">
+      <div class="animation-panel">
+        <h3>Animated Concept: Liveness</h3>
+        <div class="probe-stage">
+          <div class="actor kubelet">Kubelet<small>asks: alive?</small></div>
+          <div class="line live"></div>
+          <div class="probe-pulse"></div>
+          <div class="actor pod bad">Pod<small>not alive</small></div>
+          <div class="restart-pulse"></div>
+        </div>
+        <div class="legend"><span><i class="dot"></i> Health check</span><span><i class="dot red"></i> Restart action</span></div>
+        <p class="mini">When liveness fails enough times, the kubelet restarts the container.</p>
+      </div>
+
+      <div class="animation-panel">
+        <h3>Animated Concept: Readiness</h3>
+        <div class="probe-stage">
+          <div class="actor svc">Service<small>routes traffic</small></div>
+          <div class="line ready1"></div>
+          <div class="line ready2"></div>
+          <div class="packet"></div>
+          <div class="packet2"></div>
+          <div class="xmark">×</div>
+          <div class="actor ready-pod">Ready Pod<small>gets traffic</small></div>
+          <div class="actor notready-pod">Not Ready<small>no traffic</small></div>
+        </div>
+        <div class="legend"><span><i class="dot green"></i> Routed</span><span><i class="dot orange"></i> Blocked</span></div>
+        <p class="mini">A not-ready Pod can still run, but Services should not send normal user traffic to it.</p>
+      </div>
+
+      <div class="animation-panel">
+        <h3>Animated Concept: Startup</h3>
+        <div class="probe-stage">
+          <div class="actor pending">Kubelet<small>waits safely</small></div>
+          <div class="shield">🛡</div>
+          <div class="shield-pulse"></div>
+          <div class="actor startup-app">Slow App<small>booting...</small></div>
+          <div class="statusbar"><span></span></div>
+        </div>
+        <div class="legend"><span><i class="dot purple"></i> Startup protection</span><span><i class="dot green"></i> App becomes ready</span></div>
+        <p class="mini">StartupProbe prevents liveness from killing an app that is still legitimately booting.</p>
+      </div>
+    </section>
+
+    <section id="liveness" class="card">
+      <h2>3. Application LivenessProbe</h2>
+      <h3>3.1 What is LivenessProbe and why do you need it?</h3>
+      <p>A <code class="inline">livenessProbe</code> tells Kubernetes whether the container should continue running. It is mainly used to recover from a broken internal state, such as a deadlock, frozen thread, or application that no longer responds correctly.</p>
+      <div class="callout green">
+        <strong>Use liveness when restart is the correct recovery action.</strong> If the app only needs time to warm up or temporarily cannot serve traffic, use readiness instead.
+      </div>
+      <h3>3.2 Implementing LivenessProbe</h3>
+      <p>Kubernetes supports different probe mechanisms. HTTP is common for web apps; <code class="inline">exec</code> is useful for simple command checks; TCP checks only verify whether a port accepts connections.</p>
+      <div class="grid grid-3">
+        <div>
+          <h4>HTTP liveness</h4>
+          <div class="codebox"><div class="code-title">YAML snippet <button class="copy">Copy</button></div><pre><code>livenessProbe:
+  httpGet:
+    path: /live
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 3</code></pre></div>
+        </div>
+        <div>
+          <h4>Exec liveness</h4>
+          <div class="codebox"><div class="code-title">YAML snippet <button class="copy">Copy</button></div><pre><code>livenessProbe:
+  exec:
+    command:
+      - cat
+      - /tmp/healthy
+  periodSeconds: 5
+  failureThreshold: 2</code></pre></div>
+        </div>
+        <div>
+          <h4>TCP liveness</h4>
+          <div class="codebox"><div class="code-title">YAML snippet <button class="copy">Copy</button></div><pre><code>livenessProbe:
+  tcpSocket:
+    port: 8080
+  periodSeconds: 10
+  failureThreshold: 3</code></pre></div>
+        </div>
+      </div>
+      <div class="callout red">
+        <strong>Common mistake:</strong> Do not make liveness depend on external systems like a database, payment gateway, or another microservice. If that external system has a short outage, you can accidentally restart all application Pods and make the outage worse.
+      </div>
+    </section>
+
+    <section id="readiness" class="card">
+      <h2>4. Application ReadinessProbe</h2>
+      <h3>4.1 Why do you need ReadinessProbe?</h3>
+      <p>A <code class="inline">readinessProbe</code> tells Kubernetes whether the Pod is ready to receive traffic. When readiness fails, the container is not restarted. Instead, the Pod is marked <code class="inline">NotReady</code> and removed from Service endpoints until the probe succeeds again.</p>
+      <h3>4.2 Implementing ReadinessProbe</h3>
+      <div class="codebox"><div class="code-title">Readiness probe example <button class="copy">Copy</button></div><pre><code>readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 2
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 2
+  successThreshold: 1</code></pre></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Scenario</th><th>Should readiness pass?</th><th>Reason</th></tr></thead>
+          <tbody>
+            <tr><td>App process is started but cache is still loading</td><td>No</td><td>It cannot safely serve users yet.</td></tr>
+            <tr><td>App is connected to required local dependencies and can serve requests</td><td>Yes</td><td>It is ready for Service traffic.</td></tr>
+            <tr><td>App is doing graceful shutdown</td><td>No</td><td>It should drain traffic before termination.</td></tr>
+            <tr><td>App is alive but temporarily overloaded</td><td>Usually No</td><td>Readiness can protect users from bad responses while the Pod recovers.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="together" class="card">
+      <h2>5. Using ReadinessProbe and LivenessProbe Together</h2>
+      <p>Use both when you need separate answers for two different questions:</p>
+      <ul>
+        <li><strong>Liveness:</strong> Should Kubernetes restart this container?</li>
+        <li><strong>Readiness:</strong> Should Kubernetes send traffic to this Pod?</li>
+      </ul>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Condition</th><th>Liveness</th><th>Readiness</th><th>Kubernetes behavior</th></tr></thead>
+          <tbody>
+            <tr><td>App is healthy</td><td>Pass</td><td>Pass</td><td>Pod receives traffic.</td></tr>
+            <tr><td>App is warming up</td><td>Pass</td><td>Fail</td><td>Pod runs but receives no Service traffic.</td></tr>
+            <tr><td>App is deadlocked</td><td>Fail</td><td>Usually Fail</td><td>Container is restarted after configured failure threshold.</td></tr>
+            <tr><td>External dependency is down</td><td>Usually Pass</td><td>Maybe Fail</td><td>Do not restart unless the app itself is broken.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <strong>Recommended pattern:</strong> make liveness less aggressive than readiness. Readiness should fail first to stop traffic. Liveness should restart only when the app cannot recover by itself.
+      </div>
+    </section>
+
+    <section id="startup" class="card">
+      <h2>6. Application StartupProbe</h2>
+      <p>A <code class="inline">startupProbe</code> is useful for applications that take a long time to start. While startup probe is running and has not yet succeeded, Kubernetes does not use liveness or readiness checks for that container.</p>
+      <div class="codebox"><div class="code-title">Startup probe example <button class="copy">Copy</button></div><pre><code>startupProbe:
+  httpGet:
+    path: /live
+    port: 8080
+  periodSeconds: 5
+  failureThreshold: 12</code></pre></div>
+      <p>In this example, Kubernetes allows up to about <strong>60 seconds</strong> for startup: <code class="inline">periodSeconds 5 × failureThreshold 12</code>. After startup succeeds, normal liveness and readiness probes take over.</p>
+      <div class="callout orange">
+        <strong>When to use StartupProbe:</strong> Java/Spring Boot apps, heavy initialization, ML model loading, legacy apps, apps that run migrations, or applications with unpredictable cold starts.
+      </div>
+    </section>
+
+    <section id="lab-ready-live" class="card">
+      <h2>7. Lab: Working with Readiness and Liveness Probes</h2>
+      <p class="lead">This lab deploys three replicas of a small web app. It becomes ready after 20 seconds. You will manually break readiness and liveness to observe Kubernetes behavior.</p>
+
+      <h3>7.1 Prerequisites</h3>
+      <ul>
+        <li>A working Kubernetes cluster: Minikube, Kind, kubeadm, Docker Desktop Kubernetes, OpenShift local, or a managed cluster.</li>
+        <li><code class="inline">kubectl</code> configured to access the cluster.</li>
+        <li>Internet access from nodes to pull <code class="inline">python:3.12-alpine</code> and <code class="inline">curlimages/curl</code>.</li>
+      </ul>
+
+      <div class="steps">
+        <div class="step">
+          <h3>Create a namespace</h3>
+          <div class="codebox"><div class="code-title">Command <button class="copy">Copy</button></div><pre><code>kubectl create namespace health-lab</code></pre></div>
+        </div>
+
+        <div class="step">
+          <h3>Create the application manifest</h3>
+          <p>Save the following as <code class="inline">health-demo.yaml</code>.</p>
+          <div class="codebox"><div class="code-title">health-demo.yaml <button class="copy">Copy</button></div><pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: health-demo
+  namespace: health-lab
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: health-demo
+  template:
+    metadata:
+      labels:
+        app: health-demo
+    spec:
+      containers:
+        - name: app
+          image: python:3.12-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              cat > /tmp/server.py <<'PY'
+              from http.server import BaseHTTPRequestHandler, HTTPServer
+              import os
+              import socket
+
+              class Handler(BaseHTTPRequestHandler):
+                  def log_message(self, fmt, *args):
+                      print("%s - %s" % (self.path, fmt % args), flush=True)
+
+                  def send_text(self, status, text):
+                      self.send_response(status)
+                      self.send_header("Content-Type", "text/plain")
+                      self.end_headers()
+                      self.wfile.write(text.encode())
+
+                  def do_GET(self):
+                      if self.path == "/live":
+                          if os.path.exists("/tmp/live"):
+                              self.send_text(200, "live\n")
+                          else:
+                              self.send_text(500, "not live\n")
+                      elif self.path == "/ready":
+                          if os.path.exists("/tmp/ready"):
+                              self.send_text(200, "ready\n")
+                          else:
+                              self.send_text(503, "not ready\n")
+                      else:
+                          self.send_text(200, "hello from %s\n" % socket.gethostname())
+
+              open("/tmp/live", "w").close()
+              os.system("(sleep 20; touch /tmp/ready) &")
+              HTTPServer(("0.0.0.0", 8080), Handler).serve_forever()
+              PY
+              python /tmp/server.py
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: health-demo-svc
+  namespace: health-lab
+spec:
+  type: ClusterIP
+  selector:
+    app: health-demo
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080</code></pre></div>
+        </div>
+
+        <div class="step">
+          <h3>Apply the manifest</h3>
+          <div class="codebox"><div class="code-title">Command <button class="copy">Copy</button></div><pre><code>kubectl apply -f health-demo.yaml</code></pre></div>
+          <p>Expected result:</p>
+          <div class="codebox"><div class="code-title">Expected output <button class="copy">Copy</button></div><pre><code>deployment.apps/health-demo created
+service/health-demo-svc created</code></pre></div>
+        </div>
+
+        <div class="step">
+          <h3>Watch Pod readiness</h3>
+          <p>The Pods may first show <code class="inline">0/1</code> because the app intentionally waits 20 seconds before creating <code class="inline">/tmp/ready</code>.</p>
+          <div class="codebox"><div class="code-title">Command <button class="copy">Copy</button></div><pre><code>kubectl get pods -n health-lab -l app=health-demo -w</code></pre></div>
+          <p>Expected progression:</p>
+          <div class="codebox"><div class="code-title">Expected output pattern <button class="copy">Copy</button></div><pre><code>NAME                           READY   STATUS    RESTARTS   AGE
+health-demo-xxxxxxxxxx-abcde   0/1     Running   0          10s
+health-demo-xxxxxxxxxx-abcde   1/1     Running   0          25s</code></pre></div>
+        </div>
+
+        <div class="step">
+          <h3>Verify Service traffic</h3>
+          <div class="codebox"><div class="code-title">Command <button class="copy">Copy</button></div><pre><code>kubectl run curl -n health-lab --rm -i --tty \
+  --image=curlimages/curl:8.10.1 \
+  --restart=Never -- \
+  curl -s http://health-demo-svc/</code></pre></div>
+          <p>Expected output will show one Pod name:</p>
+          <div class="codebox"><div class="code-title">Expected output <button class="copy">Copy</button></div><pre><code>hello from health-demo-xxxxxxxxxx-abcde</code></pre></div>
+        </div>
+
+        <div class="step">
+          <h3>Check Service endpoints</h3>
+          <p>Only ready Pods should appear as usable endpoints for the Service.</p>
+          <div class="codebox"><div class="code-title">Command <button class="copy">Copy</button></div><pre><code>kubectl get endpointslices -n health-lab \
+  -l kubernetes.io/service-name=health-demo-svc \
+  -o wide</code></pre></div>
+          <p>Alternative command for older clusters:</p>
+          <div class="codebox"><div class="code-title">Command <button class="copy">Copy</button></div><pre><code>kubectl get endpoints health-demo-svc -n health-lab -o wide</code></pre></div>
+        </div>
+
+        <div class="step">
+          <h3>Break readiness for one Pod</h3>
+          <p>This simulates a Pod that is alive but not ready for user traffic.</p>
+          <div class="codebox"><div class="code-title">Commands <button class="copy">Copy</button></div><pre><code>POD=$(kubectl get pod -n health-lab -l app=health-demo \
+  -o jsonpath='{.items[0].metadata.name}')
+
+echo "Testing Pod: $POD"
+
+kubectl exec -n health-lab "$POD" -- rm -f /tmp/ready</code></pre></div>
+          <p>Now check Pod status:</p>
+          <div class="codebox"><div class="code-title">Command <button class="copy">Copy</button></div><pre><code>kubectl get pod -n health-lab "$POD"</code></pre></div>
+          <p>Expected result after a few probe periods:</p>
+          <div class="codebox"><div class="code-title">Expected output pattern <button class="copy">Copy</button></div><pre><code>NAME                           READY   STATUS    RESTARTS   AGE
+health-demo-xxxxxxxxxx-abcde   0/1     Running   0          5m</code></pre></div>
+          <div class="callout green">
+            <strong>Observation:</strong> The Pod is still running. Kubernetes did not restart it. It simply marked it NotReady and stopped using it for normal Service traffic.
+          </div>
+        </div>
+
+        <div class="step">
+          <h3>Restore readiness</h3>
+          <div class="codebox"><div class="code-title">Command <button class="copy">Copy</button></div><pre><code>kubectl exec -n health-lab "$POD" -- touch /tmp/ready
+kubectl get pod -n health-lab "$POD" -w</code></pre></div>
+          <p>Expected result: the Pod returns from <code class="inline">0/1</code> to <code class="inline">1/1</code>.</p>
+        </div>
+
+        <div class="step">
+          <h3>Break liveness for one Pod</h3>
+          <p>This simulates an app that is no longer alive and needs restart.</p>
+          <div class="codebox"><div class="code-title">Commands <button class="copy">Copy</button></div><pre><code>POD=$(kubectl get pod -n health-lab -l app=health-demo \
+  -o jsonpath='{.items[0].metadata.name}')
+
+echo "Breaking liveness in Pod: $POD"
+
+kubectl exec -n health-lab "$POD" -- rm -f /tmp/live</code></pre></div>
+          <p>Watch restart count:</p>
+          <div class="codebox"><div class="code-title">Command <button class="copy">Copy</button></div><pre><code>kubectl get pod -n health-lab "$POD" -w</code></pre></div>
+          <p>Expected result after liveness failure threshold is reached:</p>
+          <div class="codebox"><div class="code-title">Expected output pattern <button class="copy">Copy</button></div><pre><code>NAME                           READY   STATUS    RESTARTS   AGE
+health-demo-xxxxxxxxxx-abcde   0/1     Running   1          8m
+health-demo-xxxxxxxxxx-abcde   1/1     Running   1          9m</code></pre></div>
+          <p>Check events:</p>
+          <div class="codebox"><div class="code-title">Command <button class="copy">Copy</button></div><pre><code>kubectl describe pod -n health-lab "$POD"</code></pre></div>
+          <p>Look for an event similar to:</p>
+          <div class="codebox"><div class="code-title">Expected event <button class="copy">Copy</button></div><pre><code>Warning  Unhealthy  kubelet  Liveness probe failed: HTTP probe failed with statuscode: 500
+Normal   Killing    kubelet  Container app failed liveness probe, will be restarted</code></pre></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="lab-startup" class="card">
+      <h2>8. Lab: Working with StartupProbe</h2>
+      <p class="lead">This lab simulates a slow-starting application that waits 35 seconds before opening its HTTP port. StartupProbe gives the app enough time to boot before liveness checks can kill it.</p>
+
+      <div class="steps">
+        <div class="step">
+          <h3>Create the startup probe manifest</h3>
+          <p>Save this as <code class="inline">startup-demo.yaml</code>.</p>
+          <div class="codebox"><div class="code-title">startup-demo.yaml <button class="copy">Copy</button></div><pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: startup-demo
+  namespace: health-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: startup-demo
+  template:
+    metadata:
+      labels:
+        app: startup-demo
+    spec:
+      containers:
+        - name: app
+          image: python:3.12-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              cat > /tmp/server.py <<'PY'
+              from http.server import BaseHTTPRequestHandler, HTTPServer
+              import os
+
+              class Handler(BaseHTTPRequestHandler):
+                  def send_text(self, status, text):
+                      self.send_response(status)
+                      self.send_header("Content-Type", "text/plain")
+                      self.end_headers()
+                      self.wfile.write(text.encode())
+
+                  def do_GET(self):
+                      if self.path in ["/live", "/ready"]:
+                          self.send_text(200, "ok\n")
+                      else:
+                          self.send_text(200, "slow app started\n")
+
+              HTTPServer(("0.0.0.0", 8080), Handler).serve_forever()
+              PY
+              echo "Simulating slow application startup for 35 seconds..."
+              sleep 35
+              python /tmp/server.py
+          startupProbe:
+            httpGet:
+              path: /live
+              port: 8080
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: 8080
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: startup-demo-svc
+  namespace: health-lab
+spec:
+  type: ClusterIP
+  selector:
+    app: startup-demo
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080</code></pre></div>
+        </div>
+
+        <div class="step">
+          <h3>Apply and observe startup events</h3>
+          <div class="codebox"><div class="code-title">Commands <button class="copy">Copy</button></div><pre><code>kubectl apply -f startup-demo.yaml
+kubectl get pods -n health-lab -l app=startup-demo -w</code></pre></div>
+          <p>During the first 35 seconds, the HTTP server is not listening. Startup probe failures are expected initially.</p>
+        </div>
+
+        <div class="step">
+          <h3>Describe the Pod</h3>
+          <div class="codebox"><div class="code-title">Commands <button class="copy">Copy</button></div><pre><code>STARTUP_POD=$(kubectl get pod -n health-lab -l app=startup-demo \
+  -o jsonpath='{.items[0].metadata.name}')
+
+kubectl describe pod -n health-lab "$STARTUP_POD"</code></pre></div>
+          <p>Expected event during boot:</p>
+          <div class="codebox"><div class="code-title">Expected event <button class="copy">Copy</button></div><pre><code>Warning  Unhealthy  kubelet  Startup probe failed: Get "http://...:8080/live": connect: connection refused</code></pre></div>
+          <p>Expected final state:</p>
+          <div class="codebox"><div class="code-title">Expected output pattern <button class="copy">Copy</button></div><pre><code>NAME                            READY   STATUS    RESTARTS   AGE
+startup-demo-xxxxxxxxxx-abcde   1/1     Running   0          60s</code></pre></div>
+        </div>
+
+        <div class="step">
+          <h3>Access the slow-started app</h3>
+          <div class="codebox"><div class="code-title">Command <button class="copy">Copy</button></div><pre><code>kubectl run curl -n health-lab --rm -i --tty \
+  --image=curlimages/curl:8.10.1 \
+  --restart=Never -- \
+  curl -s http://startup-demo-svc/</code></pre></div>
+          <p>Expected output:</p>
+          <div class="codebox"><div class="code-title">Expected output <button class="copy">Copy</button></div><pre><code>slow app started</code></pre></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="parameters" class="card">
+      <h2>9. Probe Parameters Explained</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Parameter</th><th>Meaning</th><th>Practical guidance</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">initialDelaySeconds</code></td><td>How long to wait after container start before probing.</td><td>Useful when not using StartupProbe, but StartupProbe is cleaner for slow-starting apps.</td></tr>
+            <tr><td><code class="inline">periodSeconds</code></td><td>How often to run the probe.</td><td>5–10 seconds is common for many labs and small apps.</td></tr>
+            <tr><td><code class="inline">timeoutSeconds</code></td><td>How long Kubernetes waits for a response.</td><td>Keep the health endpoint fast. A slow health endpoint causes false failures.</td></tr>
+            <tr><td><code class="inline">failureThreshold</code></td><td>Number of consecutive failures before Kubernetes acts.</td><td>Use a higher value for liveness than readiness to avoid unnecessary restarts.</td></tr>
+            <tr><td><code class="inline">successThreshold</code></td><td>Number of successes needed after failure.</td><td>For readiness, values greater than 1 can avoid flapping. For liveness and startup, it must be 1.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="troubleshooting" class="card">
+      <h2>10. Troubleshooting Commands</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Problem</th><th>Command</th><th>What to check</th></tr></thead>
+          <tbody>
+            <tr><td>Pod not becoming Ready</td><td><code class="inline">kubectl describe pod -n health-lab &lt;pod&gt;</code></td><td>Readiness probe failures and events.</td></tr>
+            <tr><td>Container keeps restarting</td><td><code class="inline">kubectl get pod -n health-lab &lt;pod&gt;</code></td><td>Restart count and CrashLoopBackOff state.</td></tr>
+            <tr><td>Probe endpoint returns wrong status</td><td><code class="inline">kubectl logs -n health-lab &lt;pod&gt;</code></td><td>Application logs and endpoint path.</td></tr>
+            <tr><td>Service does not route traffic</td><td><code class="inline">kubectl get endpointslices -n health-lab</code></td><td>Whether ready endpoints exist.</td></tr>
+            <tr><td>Image pull issue</td><td><code class="inline">kubectl describe pod -n health-lab &lt;pod&gt;</code></td><td>ImagePullBackOff, network, proxy, registry access.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Useful one-liners</h3>
+      <div class="codebox"><div class="code-title">Commands <button class="copy">Copy</button></div><pre><code>kubectl get all -n health-lab
+kubectl get events -n health-lab --sort-by=.lastTimestamp
+kubectl logs -n health-lab deploy/health-demo --all-containers=true --tail=50
+kubectl describe deploy -n health-lab health-demo
+kubectl get endpointslices -n health-lab -o yaml</code></pre></div>
+    </section>
+
+    <section id="best-practices" class="card">
+      <h2>11. Deployment Best Practices</h2>
+      <ul class="checklist">
+        <li>Use different endpoints for <code class="inline">/live</code> and <code class="inline">/ready</code> when the checks mean different things.</li>
+        <li>Keep probe endpoints lightweight. They should not perform heavy database queries.</li>
+        <li>Readiness may check essential dependencies; liveness should usually check only whether the app itself is recoverable.</li>
+        <li>Use StartupProbe for slow apps instead of making liveness delay very large.</li>
+        <li>Avoid aggressive liveness probes. Too many restarts can create cascading failures.</li>
+        <li>Use readiness during graceful shutdown so the Pod leaves Service traffic before it exits.</li>
+        <li>Document expected probe status codes with the application team.</li>
+        <li>In production, tune probe values based on real startup time, request latency, CPU throttling, and dependency behavior.</li>
+      </ul>
+    </section>
+
+    <section id="cleanup" class="card">
+      <h2>12. Cleanup</h2>
+      <div class="codebox"><div class="code-title">Command <button class="copy">Copy</button></div><pre><code>kubectl delete namespace health-lab</code></pre></div>
+    </section>
+
+    <section id="assessment" class="card">
+      <h2>13. Quick Assessment Questions</h2>
+      <div class="question"><strong>Q1.</strong> A Pod is running but should not receive traffic yet. Which probe should fail?</div>
+      <details><summary>Answer</summary><p>ReadinessProbe.</p></details>
+      <div class="question"><strong>Q2.</strong> A container is deadlocked and cannot recover. Which probe should trigger restart?</div>
+      <details><summary>Answer</summary><p>LivenessProbe.</p></details>
+      <div class="question"><strong>Q3.</strong> A Java app needs 90 seconds to boot. What probe should you add?</div>
+      <details><summary>Answer</summary><p>StartupProbe, with enough <code class="inline">periodSeconds × failureThreshold</code> budget.</p></details>
+      <div class="question"><strong>Q4.</strong> Should liveness fail just because the database is temporarily down?</div>
+      <details><summary>Answer</summary><p>Usually no. That can cause unnecessary restarts. Readiness may fail if the app cannot serve traffic without the database.</p></details>
+      <div class="question"><strong>Q5.</strong> What command helps you confirm whether a Service has ready backends?</div>
+      <details><summary>Answer</summary><p><code class="inline">kubectl get endpointslices -n &lt;namespace&gt; -l kubernetes.io/service-name=&lt;service-name&gt; -o wide</code>.</p></details>
+    </section>
+
+    <section id="references" class="card">
+      <h2>14. References</h2>
+      <ul>
+        <li><a href="https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/" target="_blank" rel="noopener">Kubernetes Docs: Liveness, Readiness, and Startup Probes</a></li>
+        <li><a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/" target="_blank" rel="noopener">Kubernetes Docs: Configure Liveness, Readiness and Startup Probes</a></li>
+        <li><a href="https://kubernetes.io/docs/concepts/services-networking/service/" target="_blank" rel="noopener">Kubernetes Docs: Services</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Prepared as a trainee-friendly HTML reference lab. All examples are namespace-scoped under <code class="inline">health-lab</code> and include cleanup commands.</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+  document.querySelectorAll('button.copy').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const code = btn.closest('.codebox').querySelector('code').innerText;
+      try {
+        await navigator.clipboard.writeText(code);
+        const old = btn.innerText;
+        btn.innerText = 'Copied';
+        setTimeout(() => btn.innerText = old, 1200);
+      } catch (e) {
+        btn.innerText = 'Select text';
+      }
+    });
+  });
+</script>
+</body>
+</html>
