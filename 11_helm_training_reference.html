@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Helm Training Reference Guide with Labs</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --panel: #f8fafc;
+      --panel-2: #eef6ff;
+      --ink: #172033;
+      --muted: #5b677a;
+      --brand: #2563eb;
+      --brand-2: #0ea5e9;
+      --ok: #15803d;
+      --warn: #b45309;
+      --danger: #b91c1c;
+      --line: #d8e1ee;
+      --code-bg: #101827;
+      --code-text: #e6edf7;
+      --shadow: 0 14px 40px rgba(15, 23, 42, .08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.62;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 26px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 42px;
+      background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 50%, #ffffff 100%);
+      box-shadow: var(--shadow);
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2.1rem, 4vw, 4rem);
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      max-width: 820px;
+      margin: 12px 0 0;
+      font-size: 1.09rem;
+      color: var(--muted);
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 22px 0 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid #c9ddff;
+      background: #ffffffbf;
+      border-radius: 999px;
+      font-size: .92rem;
+      color: #1e3a8a;
+      font-weight: 650;
+    }
+
+    .toc {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      margin: 18px 0 28px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .92);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 26px rgba(15, 23, 42, .05);
+    }
+
+    .toc-inner {
+      display: flex;
+      overflow-x: auto;
+      gap: 8px;
+      padding-bottom: 4px;
+    }
+
+    .toc a {
+      flex: 0 0 auto;
+      text-decoration: none;
+      color: #1d4ed8;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: .92rem;
+      font-weight: 650;
+    }
+
+    .toc a:hover { background: var(--panel-2); border-color: #c9ddff; }
+
+    section {
+      margin: 30px 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 28px;
+      background: #fff;
+      box-shadow: 0 8px 28px rgba(15, 23, 42, .045);
+    }
+
+    section h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1.5rem, 2vw, 2rem);
+      letter-spacing: -0.025em;
+    }
+
+    h3 { margin: 26px 0 10px; font-size: 1.25rem; }
+    h4 { margin: 22px 0 8px; font-size: 1.05rem; }
+    p { margin: 10px 0; }
+
+    .grid { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+      padding: 18px;
+    }
+
+    .card strong { color: #0f172a; }
+
+    .callout {
+      border-left: 5px solid var(--brand);
+      background: #eff6ff;
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 16px 0;
+    }
+
+    .warn { border-left-color: var(--warn); background: #fff7ed; }
+    .ok { border-left-color: var(--ok); background: #f0fdf4; }
+    .danger { border-left-color: var(--danger); background: #fef2f2; }
+
+    .codewrap {
+      position: relative;
+      margin: 14px 0 18px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #1f2a44;
+      background: var(--code-bg);
+    }
+
+    .code-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 12px;
+      color: #cbd5e1;
+      background: #0b1220;
+      font-size: .82rem;
+      letter-spacing: .02em;
+      border-bottom: 1px solid #1f2a44;
+    }
+
+    pre {
+      margin: 0;
+      padding: 16px;
+      overflow: auto;
+      color: var(--code-text);
+      font-size: .92rem;
+      line-height: 1.55;
+      tab-size: 2;
+    }
+
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    :not(pre) > code {
+      background: #eef2ff;
+      color: #1e3a8a;
+      padding: 2px 6px;
+      border-radius: 7px;
+      font-size: .94em;
+    }
+
+    .copy-btn {
+      border: 1px solid #334155;
+      background: #111827;
+      color: #f8fafc;
+      border-radius: 10px;
+      padding: 5px 9px;
+      cursor: pointer;
+      font-size: .78rem;
+    }
+    .copy-btn:hover { background: #1f2937; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      font-size: .95rem;
+    }
+    th, td { padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { background: #f1f5f9; text-align: left; color: #0f172a; }
+    tr:last-child td { border-bottom: none; }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      background: #fff;
+    }
+    summary { cursor: pointer; font-weight: 750; color: #1d4ed8; }
+
+    .lab-step {
+      counter-increment: step;
+      position: relative;
+      padding-left: 48px;
+      margin: 22px 0;
+    }
+    .lab-step::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 3px;
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-weight: 800;
+      border-radius: 50%;
+      border: 1px solid #bfdbfe;
+    }
+    .lab { counter-reset: step; }
+
+    .checklist li { margin: 7px 0; }
+    .checklist li::marker { color: var(--ok); }
+
+    .kbd {
+      display: inline-block;
+      border: 1px solid #cbd5e1;
+      border-bottom-width: 2px;
+      background: #f8fafc;
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-family: ui-monospace, monospace;
+      font-size: .86rem;
+    }
+
+    .animation-panel {
+      position: relative;
+      min-height: 260px;
+      border: 1px solid #c9ddff;
+      border-radius: 22px;
+      padding: 22px;
+      background: radial-gradient(circle at 10% 10%, #e0f2fe 0, transparent 28%), linear-gradient(135deg, #ffffff, #f0f7ff);
+      overflow: hidden;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 14px;
+      align-items: center;
+      min-height: 170px;
+    }
+
+    .flow-box {
+      position: relative;
+      z-index: 2;
+      min-height: 94px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 14px;
+      background: white;
+      border: 1px solid #bfdbfe;
+      border-radius: 18px;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, .08);
+      font-weight: 800;
+    }
+
+    .flow-box span { display: block; font-size: .82rem; color: var(--muted); font-weight: 650; margin-top: 4px; }
+
+    .flow-arrow {
+      position: absolute;
+      height: 5px;
+      background: linear-gradient(90deg, var(--brand), var(--brand-2));
+      top: 50%;
+      transform: translateY(-50%);
+      border-radius: 999px;
+      animation: pulseArrow 1.8s infinite ease-in-out;
+    }
+    .flow-arrow::after {
+      content: "";
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+      width: 14px;
+      height: 14px;
+      border-top: 5px solid var(--brand-2);
+      border-right: 5px solid var(--brand-2);
+    }
+    .a1 { left: 23%; width: 13%; }
+    .a2 { left: 47%; width: 13%; animation-delay: .4s; }
+    .a3 { left: 71%; width: 13%; animation-delay: .8s; }
+
+    @keyframes pulseArrow {
+      0%, 100% { opacity: .28; transform: translateY(-50%) scaleX(.86); }
+      50% { opacity: 1; transform: translateY(-50%) scaleX(1); }
+    }
+
+    .timeline {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 37px;
+      left: 6%;
+      right: 6%;
+      height: 5px;
+      background: #bfdbfe;
+      border-radius: 999px;
+    }
+    .titem {
+      position: relative;
+      text-align: center;
+      z-index: 2;
+      font-size: .86rem;
+      color: var(--muted);
+    }
+    .dot {
+      margin: 18px auto 9px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #93c5fd;
+      border: 4px solid white;
+      box-shadow: 0 0 0 1px #60a5fa;
+      animation: dotBlink 2.4s infinite ease-in-out;
+    }
+    .titem:nth-child(2) .dot { animation-delay: .25s; }
+    .titem:nth-child(3) .dot { animation-delay: .5s; }
+    .titem:nth-child(4) .dot { animation-delay: .75s; }
+    .titem:nth-child(5) .dot { animation-delay: 1s; }
+    .titem:nth-child(6) .dot { animation-delay: 1.25s; }
+    @keyframes dotBlink {
+      0%,100% { background: #93c5fd; transform: scale(1); }
+      50% { background: #2563eb; transform: scale(1.22); }
+    }
+
+    .repo-anim {
+      position: relative;
+      height: 270px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 22px;
+      align-items: center;
+    }
+    .repo-node {
+      height: 150px;
+      border-radius: 20px;
+      border: 1px solid #bfdbfe;
+      background: white;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, .08);
+      font-weight: 800;
+    }
+    .packet {
+      position: absolute;
+      top: 45%;
+      left: 16%;
+      width: 28px;
+      height: 22px;
+      background: #2563eb;
+      border-radius: 7px;
+      animation: movePacket 3.2s infinite cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes movePacket {
+      0% { left: 16%; opacity: 0; }
+      10% { opacity: 1; }
+      48% { left: 48%; opacity: 1; }
+      88% { left: 81%; opacity: 1; }
+      100% { left: 84%; opacity: 0; }
+    }
+
+    .mini-note { font-size: .92rem; color: var(--muted); }
+    .source-list a { color: #1d4ed8; }
+
+    @media (max-width: 880px) {
+      .page { padding: 14px; }
+      .hero { padding: 26px; }
+      .grid-2, .grid-3, .flow { grid-template-columns: 1fr; }
+      .flow-arrow { display: none; }
+      .timeline { grid-template-columns: 1fr 1fr; }
+      .timeline::before { display: none; }
+      .repo-anim { grid-template-columns: 1fr; height: auto; }
+      .packet { display: none; }
+      section { padding: 20px; }
+    }
+
+    @media print {
+      .toc, .copy-btn { display: none !important; }
+      body { color: #000; }
+      section, .hero, .card, details { box-shadow: none; page-break-inside: avoid; }
+      pre { white-space: pre-wrap; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <h1>Helm Reference Guide for Kubernetes Trainees</h1>
+      <p>This standalone guide explains Helm concepts with animated visual explanations and hands-on labs. It is designed for classroom delivery using a local Kubernetes cluster such as Kind, Minikube, Docker Desktop Kubernetes, or any disposable training cluster.</p>
+      <div class="badges">
+        <span class="badge">🎯 Beginner-friendly labs</span>
+        <span class="badge">⚙️ Helm 3/4 compatible workflow</span>
+        <span class="badge">🧪 Lint, template, dry-run, test</span>
+        <span class="badge">📦 Chart repository publishing</span>
+        <span class="badge">🔁 Hooks, upgrades, rollback</span>
+      </div>
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+      <div class="toc-inner">
+        <a href="#overview">Overview</a>
+        <a href="#installing">Installing Helm</a>
+        <a href="#using">Using Helm</a>
+        <a href="#charts">Charts</a>
+        <a href="#tips">Chart Tips</a>
+        <a href="#repositories">Chart Repositories</a>
+        <a href="#chart-releaser">Chart Releaser Action</a>
+        <a href="#hooks">Hooks</a>
+        <a href="#tests">Tests</a>
+        <a href="#lab1">Lab 1</a>
+        <a href="#lab2">Lab 2</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+      </div>
+    </nav>
+
+    <section id="overview">
+      <h2>1. What Helm Solves</h2>
+      <p><strong>Main idea:</strong> Helm is the package manager for Kubernetes. Instead of maintaining many raw YAML files for Deployment, Service, ConfigMap, Ingress, RBAC, and other objects separately, Helm packages them into a versioned chart and installs a running instance called a release.</p>
+
+      <div class="animation-panel" aria-label="Animated concept showing Helm rendering values into Kubernetes manifests">
+        <div class="flow">
+          <div class="flow-box">Chart<span>Templates + defaults</span></div>
+          <div class="flow-box">Values<span>Environment settings</span></div>
+          <div class="flow-box">Rendered YAML<span>Final manifests</span></div>
+          <div class="flow-box">Release<span>Objects in cluster</span></div>
+        </div>
+        <div class="flow-arrow a1"></div>
+        <div class="flow-arrow a2"></div>
+        <div class="flow-arrow a3"></div>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="card"><strong>Chart</strong><br/>A reusable package containing templates, default values, metadata, tests, hooks, and optional dependencies.</div>
+        <div class="card"><strong>Release</strong><br/>An installed instance of a chart. The same chart can be installed many times using different release names and values.</div>
+        <div class="card"><strong>Revision</strong><br/>Each upgrade creates a new revision. Helm can inspect history and roll back to older revisions.</div>
+      </div>
+
+      <h3>Helm object flow</h3>
+      <table>
+        <thead><tr><th>Stage</th><th>Command</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td>Validate chart</td><td><code>helm lint ./chart</code></td><td>Checks chart structure and common template problems.</td></tr>
+          <tr><td>Render locally</td><td><code>helm template app ./chart</code></td><td>Renders templates into plain Kubernetes YAML without installing.</td></tr>
+          <tr><td>Install</td><td><code>helm install app ./chart</code></td><td>Creates Kubernetes objects and stores release metadata.</td></tr>
+          <tr><td>Upgrade</td><td><code>helm upgrade app ./chart</code></td><td>Applies changed templates or values and creates a new revision.</td></tr>
+          <tr><td>Rollback</td><td><code>helm rollback app 1</code></td><td>Reverts to a previous revision.</td></tr>
+          <tr><td>Uninstall</td><td><code>helm uninstall app</code></td><td>Deletes release-managed resources unless a resource has keep policy.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="installing">
+      <h2>2. Installing Helm</h2>
+      <p>Use the official Helm binary or script for production-like training. Package-manager installs are convenient but may lag behind the latest release.</p>
+
+      <div class="callout warn">
+        <strong>Trainer note:</strong> Use a disposable lab cluster. Do not run these labs directly in a production namespace.
+      </div>
+
+      <h3>Prerequisites</h3>
+      <ul class="checklist">
+        <li><code>kubectl</code> installed and configured.</li>
+        <li>A Kubernetes cluster is reachable through the current kubeconfig context.</li>
+        <li>Linux/macOS shell or Windows PowerShell/Git Bash.</li>
+        <li>Internet access for pulling container images and public charts.</li>
+      </ul>
+
+      <h3>Check Kubernetes access first</h3>
+      <div class="codewrap"><div class="code-title">Check cluster context <button class="copy-btn">Copy</button></div><pre><code>kubectl config current-context
+kubectl get nodes
+kubectl cluster-info</code></pre></div>
+
+      <h3>Install Helm on Linux using the official script</h3>
+      <p>The current official Helm documentation provides a Helm 4 installer script. Many enterprises still standardize on Helm 3; both use the same core lab workflow below.</p>
+      <div class="codewrap"><div class="code-title">Linux/macOS official script for current Helm <button class="copy-btn">Copy</button></div><pre><code>curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
+chmod 700 get_helm.sh
+./get_helm.sh
+helm version</code></pre></div>
+
+      <details>
+        <summary>Legacy fallback: install Helm 3 where the client environment requires Helm 3</summary>
+        <div class="codewrap"><div class="code-title">Helm 3 legacy script <button class="copy-btn">Copy</button></div><pre><code>curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+helm version</code></pre></div>
+      </details>
+
+      <h3>Install through common package managers</h3>
+      <table>
+        <thead><tr><th>Platform</th><th>Command</th><th>Validation</th></tr></thead>
+        <tbody>
+          <tr><td>macOS Homebrew</td><td><code>brew install helm</code></td><td><code>helm version</code></td></tr>
+          <tr><td>Windows Chocolatey</td><td><code>choco install kubernetes-helm</code></td><td><code>helm version</code></td></tr>
+          <tr><td>Windows Scoop</td><td><code>scoop install helm</code></td><td><code>helm version</code></td></tr>
+          <tr><td>Ubuntu Snap</td><td><code>sudo snap install helm --classic</code></td><td><code>helm version</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Optional quick lab cluster using Kind</h3>
+      <p>Skip this if your trainees already have a cluster.</p>
+      <div class="codewrap"><div class="code-title">Create a disposable Kind cluster <button class="copy-btn">Copy</button></div><pre><code>kind create cluster --name helm-lab
+kubectl cluster-info --context kind-helm-lab
+kubectl get nodes</code></pre></div>
+
+      <div class="codewrap"><div class="code-title">Destroy cluster after class <button class="copy-btn">Copy</button></div><pre><code>kind delete cluster --name helm-lab</code></pre></div>
+    </section>
+
+    <section id="using">
+      <h2>3. Using Helm</h2>
+      <p>Helm is used in two broad modes: consuming existing charts and developing your own charts.</p>
+
+      <h3>Common commands</h3>
+      <table>
+        <thead><tr><th>Command</th><th>Purpose</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><code>helm repo add</code></td><td>Add a classic chart repository.</td><td><code>helm repo add bitnami https://charts.bitnami.com/bitnami</code></td></tr>
+          <tr><td><code>helm repo update</code></td><td>Refresh local chart repository index.</td><td><code>helm repo update</code></td></tr>
+          <tr><td><code>helm search repo</code></td><td>Search charts in added repositories.</td><td><code>helm search repo nginx</code></td></tr>
+          <tr><td><code>helm show values</code></td><td>View default configurable values.</td><td><code>helm show values bitnami/nginx</code></td></tr>
+          <tr><td><code>helm install</code></td><td>Install a new release.</td><td><code>helm install web bitnami/nginx -n web --create-namespace</code></td></tr>
+          <tr><td><code>helm upgrade --install</code></td><td>Install if missing, upgrade if present.</td><td><code>helm upgrade --install web ./chart -n web</code></td></tr>
+          <tr><td><code>helm list</code></td><td>List releases.</td><td><code>helm list -A</code></td></tr>
+          <tr><td><code>helm status</code></td><td>Inspect one release.</td><td><code>helm status web -n web</code></td></tr>
+          <tr><td><code>helm history</code></td><td>See release revisions.</td><td><code>helm history web -n web</code></td></tr>
+          <tr><td><code>helm rollback</code></td><td>Rollback to an older revision.</td><td><code>helm rollback web 1 -n web</code></td></tr>
+          <tr><td><code>helm uninstall</code></td><td>Delete a release.</td><td><code>helm uninstall web -n web</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Safe install pattern</h3>
+      <div class="codewrap"><div class="code-title">Render and dry-run before real install <button class="copy-btn">Copy</button></div><pre><code>helm lint ./mychart
+helm template myapp ./mychart --namespace demo --debug
+helm install myapp ./mychart --namespace demo --create-namespace --dry-run --debug
+helm install myapp ./mychart --namespace demo --create-namespace --wait</code></pre></div>
+
+      <div class="callout ok">
+        <strong>Best classroom habit:</strong> Make trainees run <code>helm lint</code>, <code>helm template</code>, and <code>helm install --dry-run --debug</code> before every real install or upgrade.
+      </div>
+    </section>
+
+    <section id="charts">
+      <h2>4. Charts</h2>
+      <p>A chart is a directory with metadata, templates, values, optional dependencies, optional CRDs, tests, and helpers.</p>
+
+      <h3>Typical chart structure</h3>
+      <div class="codewrap"><div class="code-title">Chart directory layout <button class="copy-btn">Copy</button></div><pre><code>mychart/
+  Chart.yaml             # Chart metadata: name, version, appVersion, type
+  values.yaml            # Default configuration values
+  values.schema.json     # Optional schema validation for values.yaml
+  charts/                # Optional packaged dependencies/subcharts
+  crds/                  # Optional CustomResourceDefinitions
+  templates/             # Kubernetes templates
+    _helpers.tpl         # Reusable helper templates; not rendered as a manifest
+    deployment.yaml
+    service.yaml
+    configmap.yaml
+    tests/
+      test-connection.yaml</code></pre></div>
+
+      <h3>Important files</h3>
+      <table>
+        <thead><tr><th>File/folder</th><th>Purpose</th><th>Common mistake</th></tr></thead>
+        <tbody>
+          <tr><td><code>Chart.yaml</code></td><td>Defines chart name and version.</td><td>Forgetting to bump <code>version</code> before packaging/releasing.</td></tr>
+          <tr><td><code>values.yaml</code></td><td>Stores default configuration.</td><td>Putting environment-specific secrets directly in defaults.</td></tr>
+          <tr><td><code>templates/</code></td><td>Stores Kubernetes YAML templates.</td><td>Broken indentation after Go template rendering.</td></tr>
+          <tr><td><code>_helpers.tpl</code></td><td>Stores reusable naming and label templates.</td><td>Hardcoding names instead of using helpers.</td></tr>
+          <tr><td><code>templates/tests/</code></td><td>Stores Helm test workloads.</td><td>Writing tests that never exit.</td></tr>
+          <tr><td><code>charts/</code></td><td>Stores dependencies.</td><td>Vendoring dependencies without version control.</td></tr>
+          <tr><td><code>crds/</code></td><td>Installs CRDs before templates.</td><td>Expecting Helm to upgrade/delete CRDs automatically like normal resources.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Values override order</h3>
+      <div class="animation-panel">
+        <div class="timeline">
+          <div class="titem"><div class="dot"></div>Chart defaults<br/><code>values.yaml</code></div>
+          <div class="titem"><div class="dot"></div>File override<br/><code>-f dev.yaml</code></div>
+          <div class="titem"><div class="dot"></div>More files<br/><code>-f prod.yaml</code></div>
+          <div class="titem"><div class="dot"></div>CLI override<br/><code>--set</code></div>
+          <div class="titem"><div class="dot"></div>Rendered YAML</div>
+          <div class="titem"><div class="dot"></div>Kubernetes API</div>
+        </div>
+      </div>
+
+      <div class="codewrap"><div class="code-title">Example values override <button class="copy-btn">Copy</button></div><pre><code>helm upgrade --install web ./hello-helm \
+  --namespace helm-lab \
+  --create-namespace \
+  -f values-dev.yaml \
+  --set replicaCount=2 \
+  --set message="Hello from CLI override" \
+  --wait</code></pre></div>
+    </section>
+
+    <section id="tips">
+      <h2>5. Chart Development Tips and Tricks</h2>
+      <div class="grid grid-2">
+        <div class="card"><strong>Use helper templates.</strong><br/>Put reusable names and labels in <code>templates/_helpers.tpl</code>. This keeps manifests consistent.</div>
+        <div class="card"><strong>Quote strings, not integers.</strong><br/>Use <code>| quote</code> for string values. Keep numeric fields such as ports and replica counts unquoted.</div>
+        <div class="card"><strong>Use <code>required</code> for mandatory values.</strong><br/>Fail template rendering early when a required value is missing.</div>
+        <div class="card"><strong>Use checksum annotations.</strong><br/>Trigger Deployment rollout when a ConfigMap or Secret template changes.</div>
+        <div class="card"><strong>Prefer <code>upgrade --install</code>.</strong><br/>It simplifies CI/CD because the same command works for first deployment and later deployment.</div>
+        <div class="card"><strong>Avoid random values during upgrades.</strong><br/>Randomly generated template values can cause unnecessary resource changes on every upgrade.</div>
+      </div>
+
+      <h3>Good template patterns</h3>
+      <div class="codewrap"><div class="code-title">Use required and quote correctly <button class="copy-btn">Copy</button></div><pre><code>env:
+  - name: APP_MODE
+    value: {{ required "appMode is required" .Values.appMode | quote }}
+ports:
+  - containerPort: {{ .Values.service.port }}</code></pre></div>
+
+      <div class="codewrap"><div class="code-title">Roll pods when ConfigMap changes <button class="copy-btn">Copy</button></div><pre><code>spec:
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}</code></pre></div>
+
+      <h3>Anti-patterns to avoid</h3>
+      <table>
+        <thead><tr><th>Anti-pattern</th><th>Why it hurts</th><th>Better approach</th></tr></thead>
+        <tbody>
+          <tr><td>Hardcoding namespace inside templates</td><td>Breaks installs into different namespaces.</td><td>Use <code>helm install -n namespace</code> and <code>.Release.Namespace</code> only when needed.</td></tr>
+          <tr><td>Hardcoding release names</td><td>Prevents multiple releases of the same chart.</td><td>Use helpers based on <code>.Release.Name</code>.</td></tr>
+          <tr><td>Using latest image tags in production</td><td>Upgrades become unpredictable.</td><td>Pin application image tags.</td></tr>
+          <tr><td>Skipping <code>helm template</code></td><td>YAML errors appear only during install.</td><td>Render locally first.</td></tr>
+          <tr><td>Storing real secrets in <code>values.yaml</code></td><td>Leaks secrets through Git.</td><td>Use external secret managers or sealed/encrypted secrets.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="repositories">
+      <h2>6. Syncing Your Chart Repository</h2>
+      <p>A classic Helm chart repository is a simple HTTP location that serves <code>index.yaml</code> and chart packages such as <code>hello-helm-0.1.0.tgz</code>. Helm clients download <code>index.yaml</code> to discover chart versions.</p>
+
+      <div class="animation-panel repo-anim">
+        <div class="repo-node">Package chart<br/><code>helm package</code></div>
+        <div class="repo-node">Generate index<br/><code>helm repo index</code></div>
+        <div class="repo-node">Publish HTTP/GitHub Pages/S3/GCS</div>
+        <div class="packet" aria-hidden="true"></div>
+      </div>
+
+      <h3>Local repository demo</h3>
+      <div class="codewrap"><div class="code-title">Create and serve a local chart repo <button class="copy-btn">Copy</button></div><pre><code>mkdir -p repo
+helm package ./hello-helm --destination repo
+helm repo index repo --url http://127.0.0.1:8879
+python3 -m http.server 8879 --directory repo</code></pre></div>
+
+      <p>Open a second terminal:</p>
+      <div class="codewrap"><div class="code-title">Consume local chart repo <button class="copy-btn">Copy</button></div><pre><code>helm repo add localrepo http://127.0.0.1:8879
+helm repo update
+helm search repo localrepo
+helm install local-demo localrepo/hello-helm \
+  --namespace helm-lab \
+  --create-namespace \
+  --wait</code></pre></div>
+
+      <h3>Repository sync patterns</h3>
+      <table>
+        <thead><tr><th>Target</th><th>Pattern</th><th>Typical command</th></tr></thead>
+        <tbody>
+          <tr><td>GitHub Pages</td><td>Commit chart source to <code>main</code>; publish packaged chart/index to <code>gh-pages</code>.</td><td>Automate using Chart Releaser Action.</td></tr>
+          <tr><td>GCS bucket</td><td>Generate index locally, then sync to bucket.</td><td><code>gsutil rsync -d local-dir gs://bucket-name</code></td></tr>
+          <tr><td>AWS S3</td><td>Generate index locally, then sync to S3 static website or CloudFront.</td><td><code>aws s3 sync repo/ s3://bucket-name/</code></td></tr>
+          <tr><td>OCI registry</td><td>Package chart and push to registry using <code>oci://</code>.</td><td><code>helm push chart.tgz oci://registry.example.com/charts</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Classic repo vs OCI:</strong> Classic repositories use <code>index.yaml</code>. OCI registries use registry APIs and <code>oci://</code> references. For modern private distribution, OCI is often cleaner; for GitHub Pages demos, classic repositories are easier to teach.
+      </div>
+    </section>
+
+    <section id="chart-releaser">
+      <h2>7. Chart Releaser Action to Automate GitHub Page Charts</h2>
+      <p>Chart Releaser Action turns a GitHub repository into a self-hosted Helm chart repository using GitHub Releases and GitHub Pages. Recommended repository layout:</p>
+
+      <div class="codewrap"><div class="code-title">GitHub chart repository layout <button class="copy-btn">Copy</button></div><pre><code>helm-charts/
+  charts/
+    hello-helm/
+      Chart.yaml
+      values.yaml
+      templates/
+  .github/
+    workflows/
+      release.yml</code></pre></div>
+
+      <h3>GitHub Actions workflow</h3>
+      <div class="codewrap"><div class="code-title">.github/workflows/release.yml <button class="copy-btn">Copy</button></div><pre><code>name: Release Charts
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.7.0
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"</code></pre></div>
+
+      <h3>Repository setup checklist</h3>
+      <ol class="checklist">
+        <li>Create a GitHub repository such as <code>helm-charts</code>.</li>
+        <li>Place all chart sources under <code>charts/</code>.</li>
+        <li>Enable GitHub Pages from the <code>gh-pages</code> branch after the first successful release.</li>
+        <li>Bump <code>Chart.yaml</code> <code>version</code> before each chart release.</li>
+        <li>Push to <code>main</code>. The workflow creates release assets and updates <code>index.yaml</code>.</li>
+        <li>Consumers install charts using <code>helm repo add &lt;alias&gt; https://&lt;org&gt;.github.io/helm-charts</code>.</li>
+      </ol>
+
+      <h3>Consumer commands after publishing</h3>
+      <div class="codewrap"><div class="code-title">Install from published GitHub Pages chart repo <button class="copy-btn">Copy</button></div><pre><code>helm repo add mycharts https://YOUR_ORG.github.io/helm-charts
+helm repo update
+helm search repo mycharts
+helm install demo mycharts/hello-helm --namespace helm-lab --create-namespace --wait</code></pre></div>
+
+      <div class="callout warn">
+        <strong>Common failure:</strong> Chart Releaser skips a chart if the chart version already exists as a GitHub release. Increment <code>version</code> in <code>Chart.yaml</code> for every new release.
+      </div>
+    </section>
+
+    <section id="hooks">
+      <h2>8. Chart Hooks</h2>
+      <p>Hooks let chart authors run Kubernetes resources at specific points of a release lifecycle, such as before install, after install, before upgrade, after rollback, or during <code>helm test</code>.</p>
+
+      <div class="animation-panel">
+        <div class="timeline">
+          <div class="titem"><div class="dot"></div>Render templates</div>
+          <div class="titem"><div class="dot"></div><code>pre-install</code> hook</div>
+          <div class="titem"><div class="dot"></div>Create resources</div>
+          <div class="titem"><div class="dot"></div><code>post-install</code> hook</div>
+          <div class="titem"><div class="dot"></div>Release ready</div>
+          <div class="titem"><div class="dot"></div><code>helm test</code></div>
+        </div>
+      </div>
+
+      <h3>Common hook annotations</h3>
+      <table>
+        <thead><tr><th>Annotation</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>helm.sh/hook: pre-install</code></td><td>Run after rendering but before normal resources are created.</td></tr>
+          <tr><td><code>helm.sh/hook: post-install</code></td><td>Run after normal resources are created.</td></tr>
+          <tr><td><code>helm.sh/hook: pre-upgrade</code></td><td>Run before upgrade changes are applied.</td></tr>
+          <tr><td><code>helm.sh/hook: post-upgrade</code></td><td>Run after upgrade changes are applied.</td></tr>
+          <tr><td><code>helm.sh/hook: pre-delete</code></td><td>Run before release resources are deleted.</td></tr>
+          <tr><td><code>helm.sh/hook: test</code></td><td>Run when <code>helm test RELEASE</code> is invoked.</td></tr>
+          <tr><td><code>helm.sh/hook-weight</code></td><td>Controls execution order. Lower weight runs first.</td></tr>
+          <tr><td><code>helm.sh/hook-delete-policy</code></td><td>Controls when hook resources are deleted.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Example pre-install hook Job</h3>
+      <div class="codewrap"><div class="code-title">templates/preinstall-job.yaml <button class="copy-btn">Copy</button></div><pre><code>apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "hello-helm.fullname" . }}-preinstall"
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: preinstall
+          image: busybox:1.36
+          command: ["sh", "-c", "echo pre-install hook running for {{ .Release.Name }}"]
+  backoffLimit: 1</code></pre></div>
+
+      <div class="callout warn">
+        <strong>Use hooks sparingly.</strong> Hooks are powerful, but they can make upgrades harder to reason about. For normal application resources, prefer regular templates.
+      </div>
+    </section>
+
+    <section id="tests">
+      <h2>9. Chart Tests</h2>
+      <p>A Helm chart test is a Kubernetes workload, commonly a Pod or Job, annotated with <code>helm.sh/hook: test</code>. Helm considers the test successful when the workload exits with status code 0.</p>
+
+      <h3>Example test Pod</h3>
+      <div class="codewrap"><div class="code-title">templates/tests/test-connection.yaml <button class="copy-btn">Copy</button></div><pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "hello-helm.fullname" . }}-test"
+  labels:
+    {{- include "hello-helm.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: wget
+      image: busybox:1.36
+      command: ["wget"]
+      args: ["-qO-", "http://{{ include "hello-helm.fullname" . }}:{{ .Values.service.port }}"]</code></pre></div>
+
+      <h3>Run tests</h3>
+      <div class="codewrap"><div class="code-title">Test an installed release <button class="copy-btn">Copy</button></div><pre><code>helm test demo --namespace helm-lab
+kubectl get pods --namespace helm-lab
+kubectl logs --namespace helm-lab pod/demo-hello-helm-test</code></pre></div>
+
+      <div class="callout ok">
+        <strong>Good tests for trainees:</strong> connection test, configuration injection test, service DNS test, and application health endpoint test.
+      </div>
+    </section>
+
+    <section id="lab1">
+      <h2>Lab 1: Installing Helm and Using Charts</h2>
+      <p><strong>Goal:</strong> Install Helm, add a chart repository, deploy an NGINX chart, inspect the release, upgrade it, roll it back, test access, and clean up.</p>
+
+      <div class="lab">
+        <div class="lab-step">
+          <h3>Install and verify Helm</h3>
+          <div class="codewrap"><div class="code-title">Install and verify <button class="copy-btn">Copy</button></div><pre><code>helm version
+kubectl get nodes</code></pre></div>
+          <p>Expected: Helm prints client version and <code>kubectl get nodes</code> returns at least one Ready node.</p>
+        </div>
+
+        <div class="lab-step">
+          <h3>Create a training namespace</h3>
+          <div class="codewrap"><div class="code-title">Namespace <button class="copy-btn">Copy</button></div><pre><code>kubectl create namespace helm-lab --dry-run=client -o yaml | kubectl apply -f -
+kubectl get namespace helm-lab</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Add a public chart repository</h3>
+          <div class="codewrap"><div class="code-title">Add Bitnami repo <button class="copy-btn">Copy</button></div><pre><code>helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+helm search repo bitnami/nginx</code></pre></div>
+          <p>If the public repository is unavailable in your environment, skip to Lab 2 and use a local chart.</p>
+        </div>
+
+        <div class="lab-step">
+          <h3>Inspect chart values before installing</h3>
+          <div class="codewrap"><div class="code-title">Inspect chart defaults <button class="copy-btn">Copy</button></div><pre><code>helm show chart bitnami/nginx
+helm show values bitnami/nginx &gt; nginx-values.yaml
+head -40 nginx-values.yaml</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Install the chart</h3>
+          <div class="codewrap"><div class="code-title">Install NGINX chart <button class="copy-btn">Copy</button></div><pre><code>helm install web bitnami/nginx \
+  --namespace helm-lab \
+  --create-namespace \
+  --wait</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Validate release and Kubernetes objects</h3>
+          <div class="codewrap"><div class="code-title">Validation commands <button class="copy-btn">Copy</button></div><pre><code>helm list --namespace helm-lab
+helm status web --namespace helm-lab
+kubectl get deploy,svc,pods --namespace helm-lab
+kubectl get events --namespace helm-lab --sort-by=.metadata.creationTimestamp | tail -20</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Access the application through port-forward</h3>
+          <p>First identify the service name. It is commonly based on the release/chart name.</p>
+          <div class="codewrap"><div class="code-title">Find service and port-forward <button class="copy-btn">Copy</button></div><pre><code>kubectl get svc --namespace helm-lab
+kubectl port-forward --namespace helm-lab svc/web-nginx 8080:80</code></pre></div>
+          <p>Open another terminal:</p>
+          <div class="codewrap"><div class="code-title">Test HTTP response <button class="copy-btn">Copy</button></div><pre><code>curl -I http://127.0.0.1:8080
+curl http://127.0.0.1:8080 | head</code></pre></div>
+          <div class="callout warn">If the service name differs, replace <code>svc/web-nginx</code> with the service name shown by <code>kubectl get svc -n helm-lab</code>.</div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Upgrade the release</h3>
+          <p>Scale the release to two replicas using a values override.</p>
+          <div class="codewrap"><div class="code-title">Upgrade with set override <button class="copy-btn">Copy</button></div><pre><code>helm upgrade web bitnami/nginx \
+  --namespace helm-lab \
+  --set replicaCount=2 \
+  --wait
+
+kubectl get pods --namespace helm-lab
+helm history web --namespace helm-lab</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Rollback the release</h3>
+          <div class="codewrap"><div class="code-title">Rollback <button class="copy-btn">Copy</button></div><pre><code>helm rollback web 1 --namespace helm-lab --wait
+helm history web --namespace helm-lab
+kubectl get pods --namespace helm-lab</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Cleanup</h3>
+          <div class="codewrap"><div class="code-title">Cleanup public chart lab <button class="copy-btn">Copy</button></div><pre><code>helm uninstall web --namespace helm-lab
+kubectl delete namespace helm-lab</code></pre></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="lab2">
+      <h2>Lab 2: Creating Helm Charts from Scratch to Deploy Application</h2>
+      <p><strong>Goal:</strong> Create a simple NGINX-based web application chart from scratch, render it, lint it, install it, test it, upgrade it, package it, publish it locally, and clean up.</p>
+
+      <div class="lab">
+        <div class="lab-step">
+          <h3>Create chart directories</h3>
+          <div class="codewrap"><div class="code-title">Directories <button class="copy-btn">Copy</button></div><pre><code>mkdir -p hello-helm/templates/tests
+cd hello-helm</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Create Chart.yaml</h3>
+          <div class="codewrap"><div class="code-title">Chart.yaml <button class="copy-btn">Copy</button></div><pre><code>cat &gt; Chart.yaml &lt;&lt;'EOF'
+apiVersion: v2
+name: hello-helm
+description: A simple NGINX application deployed with Helm
+type: application
+version: 0.1.0
+appVersion: "1.27"
+EOF</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Create values.yaml</h3>
+          <div class="codewrap"><div class="code-title">values.yaml <button class="copy-btn">Copy</button></div><pre><code>cat &gt; values.yaml &lt;&lt;'EOF'
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: "1.27-alpine"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+message: "Hello from Helm values.yaml"
+EOF</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Create helper templates</h3>
+          <div class="codewrap"><div class="code-title">templates/_helpers.tpl <button class="copy-btn">Copy</button></div><pre><code>cat &gt; templates/_helpers.tpl &lt;&lt'EOF'
+{{- define "hello-helm.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "hello-helm.fullname" -}}
+{{- if .Values.fullnameOverride -}}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "hello-helm.labels" -}}
+helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+app.kubernetes.io/name: {{ include "hello-helm.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
+{{- define "hello-helm.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "hello-helm.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+EOF</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Create ConfigMap for web content</h3>
+          <div class="codewrap"><div class="code-title">templates/configmap.yaml <button class="copy-btn">Copy</button></div><pre><code>cat &gt; templates/configmap.yaml &lt;&lt'EOF'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hello-helm.fullname" . }}-html
+  labels:
+    {{- include "hello-helm.labels" . | nindent 4 }}
+data:
+  index.html: |
+    &lt;!doctype html&gt;
+    &lt;html&gt;
+    &lt;head&gt;&lt;title&gt;Hello Helm&lt;/title&gt;&lt;/head&gt;
+    &lt;body style="font-family: Arial; padding: 40px;"&gt;
+      &lt;h1&gt;{{ required "values.message is required" .Values.message }}&lt;/h1&gt;
+      &lt;p&gt;Release: {{ .Release.Name }}&lt;/p&gt;
+      &lt;p&gt;Namespace: {{ .Release.Namespace }}&lt;/p&gt;
+      &lt;p&gt;Chart: {{ .Chart.Name }} {{ .Chart.Version }}&lt;/p&gt;
+    &lt;/body&gt;
+    &lt;/html&gt;
+EOF</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Create Deployment</h3>
+          <div class="codewrap"><div class="code-title">templates/deployment.yaml <button class="copy-btn">Copy</button></div><pre><code>cat &gt; templates/deployment.yaml &lt;&lt'EOF'
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hello-helm.fullname" . }}
+  labels:
+    {{- include "hello-helm.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "hello-helm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "hello-helm.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: nginx
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - name: web-content
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: web-content
+          configMap:
+            name: {{ include "hello-helm.fullname" . }}-html
+EOF</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Create Service</h3>
+          <div class="codewrap"><div class="code-title">templates/service.yaml <button class="copy-btn">Copy</button></div><pre><code>cat &gt; templates/service.yaml &lt;&lt'EOF'
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hello-helm.fullname" . }}
+  labels:
+    {{- include "hello-helm.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "hello-helm.selectorLabels" . | nindent 4 }}
+EOF</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Create pre-install hook Job</h3>
+          <div class="codewrap"><div class="code-title">templates/preinstall-job.yaml <button class="copy-btn">Copy</button></div><pre><code>cat &gt; templates/preinstall-job.yaml &lt;&lt'EOF'
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "hello-helm.fullname" . }}-preinstall"
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: preinstall
+          image: busybox:1.36
+          command: ["sh", "-c", "echo pre-install hook running for {{ .Release.Name }}"]
+  backoffLimit: 1
+EOF</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Create chart test</h3>
+          <div class="codewrap"><div class="code-title">templates/tests/test-connection.yaml <button class="copy-btn">Copy</button></div><pre><code>cat &gt; templates/tests/test-connection.yaml &lt;&lt'EOF'
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "hello-helm.fullname" . }}-test"
+  labels:
+    {{- include "hello-helm.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: wget
+      image: busybox:1.36
+      command: ["wget"]
+      args: ["-qO-", "http://{{ include "hello-helm.fullname" . }}:{{ .Values.service.port }}"]
+EOF</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Validate the chart before install</h3>
+          <div class="codewrap"><div class="code-title">Lint and render <button class="copy-btn">Copy</button></div><pre><code>cd ..
+helm lint ./hello-helm
+helm template demo ./hello-helm --namespace helm-lab --debug &gt; rendered.yaml
+head -80 rendered.yaml</code></pre></div>
+          <details>
+            <summary>Optional server-side dry run if your cluster supports it</summary>
+            <div class="codewrap"><div class="code-title">Server-side dry run <button class="copy-btn">Copy</button></div><pre><code>kubectl create namespace helm-lab --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply --dry-run=server -f rendered.yaml</code></pre></div>
+          </details>
+        </div>
+
+        <div class="lab-step">
+          <h3>Install the chart</h3>
+          <div class="codewrap"><div class="code-title">Install local chart <button class="copy-btn">Copy</button></div><pre><code>helm install demo ./hello-helm \
+  --namespace helm-lab \
+  --create-namespace \
+  --wait
+
+helm list --namespace helm-lab
+kubectl get deploy,svc,pods,job --namespace helm-lab</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Access the application</h3>
+          <div class="codewrap"><div class="code-title">Port forward <button class="copy-btn">Copy</button></div><pre><code>kubectl port-forward --namespace helm-lab svc/demo-hello-helm 8080:80</code></pre></div>
+          <p>Open another terminal:</p>
+          <div class="codewrap"><div class="code-title">Curl test <button class="copy-btn">Copy</button></div><pre><code>curl http://127.0.0.1:8080</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Run Helm test</h3>
+          <div class="codewrap"><div class="code-title">helm test <button class="copy-btn">Copy</button></div><pre><code>helm test demo --namespace helm-lab
+kubectl logs --namespace helm-lab pod/demo-hello-helm-test</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Upgrade with changed values</h3>
+          <div class="codewrap"><div class="code-title">Upgrade local chart <button class="copy-btn">Copy</button></div><pre><code>helm upgrade demo ./hello-helm \
+  --namespace helm-lab \
+  --set replicaCount=2 \
+  --set message="Hello after Helm upgrade" \
+  --wait
+
+helm history demo --namespace helm-lab
+kubectl get pods --namespace helm-lab
+curl http://127.0.0.1:8080</code></pre></div>
+          <p>If the earlier port-forward stopped, run it again.</p>
+        </div>
+
+        <div class="lab-step">
+          <h3>Rollback</h3>
+          <div class="codewrap"><div class="code-title">Rollback local chart <button class="copy-btn">Copy</button></div><pre><code>helm rollback demo 1 --namespace helm-lab --wait
+helm history demo --namespace helm-lab</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Package the chart and create local repository</h3>
+          <div class="codewrap"><div class="code-title">Package and index <button class="copy-btn">Copy</button></div><pre><code>mkdir -p repo
+helm package ./hello-helm --destination repo
+helm repo index repo --url http://127.0.0.1:8879
+ls -l repo
+cat repo/index.yaml</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Serve and install from the local repository</h3>
+          <p>Terminal 1:</p>
+          <div class="codewrap"><div class="code-title">Serve repository <button class="copy-btn">Copy</button></div><pre><code>python3 -m http.server 8879 --directory repo</code></pre></div>
+          <p>Terminal 2:</p>
+          <div class="codewrap"><div class="code-title">Install from local repo <button class="copy-btn">Copy</button></div><pre><code>helm repo add localrepo http://127.0.0.1:8879
+helm repo update
+helm search repo localrepo
+helm install repo-demo localrepo/hello-helm \
+  --namespace helm-lab \
+  --create-namespace \
+  --set message="Installed from local chart repo" \
+  --wait
+
+helm list --namespace helm-lab</code></pre></div>
+        </div>
+
+        <div class="lab-step">
+          <h3>Cleanup</h3>
+          <div class="codewrap"><div class="code-title">Cleanup local chart lab <button class="copy-btn">Copy</button></div><pre><code>helm uninstall demo --namespace helm-lab || true
+helm uninstall repo-demo --namespace helm-lab || true
+kubectl delete namespace helm-lab
+helm repo remove localrepo || true</code></pre></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>10. Troubleshooting Guide</h2>
+      <table>
+        <thead><tr><th>Problem</th><th>Likely cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td><code>Kubernetes cluster unreachable</code></td><td>Wrong kubeconfig context or cluster down.</td><td>Run <code>kubectl config current-context</code>, <code>kubectl get nodes</code>, and switch context if needed.</td></tr>
+          <tr><td><code>cannot re-use a name that is still in use</code></td><td>Release name already exists.</td><td>Use <code>helm upgrade --install</code>, choose another release name, or uninstall old release.</td></tr>
+          <tr><td><code>YAML parse error</code></td><td>Bad indentation after template rendering.</td><td>Run <code>helm template --debug</code> and inspect the rendered YAML around the reported line.</td></tr>
+          <tr><td>Pod stuck in <code>ImagePullBackOff</code></td><td>Wrong image tag, no internet, proxy issue, or private registry auth missing.</td><td>Run <code>kubectl describe pod</code>, check image name/tag, configure proxy or imagePullSecret.</td></tr>
+          <tr><td>Service not reachable</td><td>Service selector does not match pod labels or port-forward targets wrong service.</td><td>Compare <code>kubectl get svc -o yaml</code> selectors with pod labels.</td></tr>
+          <tr><td><code>helm test</code> fails</td><td>Test Pod cannot reach service or app returns non-200 response.</td><td>Check <code>kubectl logs pod/...-test</code> and DNS/service name.</td></tr>
+          <tr><td>Chart Releaser does not publish</td><td>Chart version already released, permissions missing, GitHub Pages not enabled.</td><td>Bump <code>Chart.yaml</code> version, ensure <code>contents: write</code>, and enable Pages from <code>gh-pages</code>.</td></tr>
+          <tr><td>Upgrade does not restart pods after ConfigMap change</td><td>Deployment Pod template did not change.</td><td>Add checksum annotation based on the ConfigMap template.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Debug command bundle</h3>
+      <div class="codewrap"><div class="code-title">Useful debug commands <button class="copy-btn">Copy</button></div><pre><code>helm list -A
+helm status RELEASE -n NAMESPACE
+helm history RELEASE -n NAMESPACE
+helm get values RELEASE -n NAMESPACE
+helm get manifest RELEASE -n NAMESPACE
+kubectl get all -n NAMESPACE
+kubectl describe pod POD_NAME -n NAMESPACE
+kubectl logs POD_NAME -n NAMESPACE
+kubectl get events -n NAMESPACE --sort-by=.metadata.creationTimestamp</code></pre></div>
+    </section>
+
+    <section id="assessment">
+      <h2>11. Assessment Questions</h2>
+      <ol>
+        <li>What is the difference between a Helm chart and a Helm release?</li>
+        <li>Why should you run <code>helm template</code> before installing a chart?</li>
+        <li>What happens when you run <code>helm upgrade --install</code>?</li>
+        <li>Why should string values generally be quoted in templates but integer fields not quoted?</li>
+        <li>What is the purpose of <code>templates/_helpers.tpl</code>?</li>
+        <li>How does a checksum annotation help a Deployment react to ConfigMap changes?</li>
+        <li>When should you use a chart hook?</li>
+        <li>What annotation is required for a Helm chart test?</li>
+        <li>What files are required in a classic Helm chart repository?</li>
+        <li>Why must the chart version be incremented before Chart Releaser publishes a new release?</li>
+      </ol>
+    </section>
+
+    <section id="references">
+      <h2>12. References</h2>
+      <ul class="source-list">
+        <li><a href="https://helm.sh/docs/intro/install/">Official Helm: Installing Helm</a></li>
+        <li><a href="https://helm.sh/docs/intro/using_helm/">Official Helm: Using Helm</a></li>
+        <li><a href="https://helm.sh/docs/topics/charts/">Official Helm: Charts</a></li>
+        <li><a href="https://helm.sh/docs/howto/charts_tips_and_tricks/">Official Helm: Chart Development Tips and Tricks</a></li>
+        <li><a href="https://helm.sh/docs/topics/chart_repository/">Official Helm: Chart Repository Guide</a></li>
+        <li><a href="https://helm.sh/docs/howto/chart_repository_sync_example/">Official Helm: Syncing Your Chart Repository</a></li>
+        <li><a href="https://helm.sh/docs/howto/chart_releaser_action/">Official Helm: Chart Releaser Action</a></li>
+        <li><a href="https://helm.sh/docs/topics/charts_hooks/">Official Helm: Chart Hooks</a></li>
+        <li><a href="https://helm.sh/docs/topics/chart_tests/">Official Helm: Chart Tests</a></li>
+        <li><a href="https://artifacthub.io/">Artifact Hub</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <script>
+    document.querySelectorAll('.copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const block = btn.closest('.codewrap').querySelector('code');
+        const text = block.innerText;
+        try {
+          await navigator.clipboard.writeText(text);
+          const old = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => btn.textContent = old, 1200);
+        } catch (e) {
+          const range = document.createRange();
+          range.selectNodeContents(block);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          btn.textContent = 'Selected';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

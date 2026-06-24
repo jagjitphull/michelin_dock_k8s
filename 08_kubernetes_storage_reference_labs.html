@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kubernetes Storage Reference and Labs</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #111827;
+    --muted: #4b5563;
+    --line: #d1d5db;
+    --soft: #f8fafc;
+    --soft2: #eef2ff;
+    --blue: #2563eb;
+    --green: #16a34a;
+    --orange: #ea580c;
+    --red: #dc2626;
+    --purple: #7c3aed;
+    --dark: #0f172a;
+    --code: #0b1020;
+    --codeText: #e5e7eb;
+    --shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); min-height: 100vh; }
+  nav {
+    border-right: 1px solid var(--line);
+    background: #fff;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: auto;
+    padding: 24px 18px;
+  }
+  nav h2 { margin: 0 0 14px; font-size: 1.05rem; }
+  nav a {
+    display: block;
+    padding: 7px 9px;
+    border-radius: 10px;
+    color: #1f2937;
+    font-size: .92rem;
+  }
+  nav a:hover { background: var(--soft2); text-decoration: none; }
+  main { padding: 34px 42px 70px; max-width: 1240px; }
+  .hero {
+    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 52%, #f5f3ff 100%);
+    border: 1px solid #dbeafe;
+    border-radius: 28px;
+    padding: 34px;
+    box-shadow: var(--shadow);
+    margin-bottom: 30px;
+  }
+  .hero h1 { font-size: clamp(2rem, 3.4vw, 3.7rem); line-height: 1.05; margin: 0 0 14px; }
+  .hero p { max-width: 920px; color: var(--muted); font-size: 1.05rem; }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--line);
+    font-weight: 650;
+    font-size: .88rem;
+  }
+  h2 { font-size: 1.75rem; margin-top: 44px; padding-top: 10px; border-top: 1px solid #eef2f7; }
+  h3 { font-size: 1.28rem; margin-top: 28px; }
+  h4 { font-size: 1.05rem; margin-bottom: 6px; }
+  .lead { color: var(--muted); font-size: 1.03rem; }
+  .grid { display: grid; gap: 18px; }
+  .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.04);
+  }
+  .card h3, .card h4 { margin-top: 0; }
+  .note, .warning, .success, .danger {
+    border-radius: 15px;
+    padding: 14px 16px;
+    margin: 16px 0;
+    border: 1px solid;
+  }
+  .note { background: #eff6ff; border-color: #bfdbfe; }
+  .warning { background: #fff7ed; border-color: #fed7aa; }
+  .success { background: #f0fdf4; border-color: #bbf7d0; }
+  .danger { background: #fef2f2; border-color: #fecaca; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; background: #fff; }
+  th, td { border: 1px solid #e5e7eb; padding: 11px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; }
+  tr:nth-child(even) td { background: #fcfcfd; }
+  .codebox { position: relative; margin: 14px 0 20px; }
+  pre {
+    margin: 0;
+    padding: 18px;
+    overflow: auto;
+    background: var(--code);
+    color: var(--codeText);
+    border-radius: 16px;
+    font-size: .92rem;
+    line-height: 1.48;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+  }
+  .terminal pre { background: #111827; }
+  code { font-family: "Cascadia Code", "SFMono-Regular", Consolas, Menlo, monospace; }
+  .copy-btn {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    border: 1px solid rgba(255,255,255,.2);
+    background: rgba(255,255,255,.1);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: .78rem;
+  }
+  details { border: 1px solid #e5e7eb; border-radius: 16px; margin: 16px 0; background: #fff; }
+  summary { cursor: pointer; padding: 15px 18px; font-weight: 800; }
+  details .inside { padding: 0 18px 18px; }
+  .toc-mini { display: flex; flex-wrap: wrap; gap: 10px; }
+  .toc-mini a { border: 1px solid #e5e7eb; border-radius: 999px; padding: 6px 11px; background: #fff; color: #1f2937; }
+  .diagram {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin: 18px 0;
+    overflow-x: auto;
+  }
+  svg text { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+  .flow-line { stroke-dasharray: 10 10; animation: dash 1.4s linear infinite; }
+  .pulse { animation: pulse 1.8s ease-in-out infinite; transform-origin: center; }
+  .float { animation: float 3s ease-in-out infinite; }
+  .spin-slow { animation: spin 7s linear infinite; transform-origin: center; }
+  .blink { animation: blink 1.4s ease-in-out infinite; }
+  @keyframes dash { to { stroke-dashoffset: -40; } }
+  @keyframes pulse { 0%,100% { opacity: .75; transform: scale(1); } 50% { opacity: 1; transform: scale(1.035); } }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .2; } }
+  .lab-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 34px;
+  }
+  .lab-no {
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    color: white;
+    background: var(--blue);
+    font-weight: 900;
+  }
+  .cmdlist li { margin: 6px 0; }
+  .checklist li::marker { color: var(--green); }
+  .small { font-size: .9rem; color: var(--muted); }
+  .pill { display: inline-block; background: #eef2ff; color: #3730a3; border-radius: 999px; padding: 3px 9px; font-weight: 750; font-size: .78rem; }
+  .kbd { border: 1px solid #cbd5e1; border-bottom-width: 3px; padding: 2px 7px; border-radius: 7px; background: #fff; font-family: monospace; }
+  .source-list li { margin: 7px 0; }
+  @media (max-width: 950px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+    main { padding: 24px 18px 52px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+  @media print {
+    nav, .copy-btn { display: none; }
+    .layout { display: block; }
+    main { max-width: none; padding: 0; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .hero, .diagram, .card { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <h2>Kubernetes Storage</h2>
+  <a href="#overview">1. Overview</a>
+  <a href="#animated-flow">2. Animated storage flow</a>
+  <a href="#volume-types">3. Types of volumes</a>
+  <a href="#static-dynamic">4. Static vs dynamic storage</a>
+  <a href="#storage-classes">5. StorageClasses</a>
+  <a href="#snapshots">6. Volume snapshots</a>
+  <a href="#modes">7. Volume and access modes</a>
+  <a href="#config-secret">8. ConfigMaps and Secrets</a>
+  <a href="#csi">9. CSI</a>
+  <a href="#labs">10. Labs</a>
+  <a href="#troubleshooting">11. Troubleshooting</a>
+  <a href="#assessment">12. Assessment</a>
+  <a href="#cleanup">13. Full cleanup</a>
+  <a href="#references">14. References</a>
+</nav>
+<main>
+<section class="hero">
+  <h1>Kubernetes Storage Reference Document with Hands-on Labs</h1>
+  <p>This trainee reference explains Kubernetes storage from Pod volume basics to PV/PVC, StorageClass, dynamic provisioning, snapshots, access modes, ConfigMaps, Secrets, and CSI. The examples are intentionally simple and designed for Minikube, kind, kubeadm, K3s, cloud Kubernetes, or classroom clusters.</p>
+  <div class="badge-row">
+    <span class="badge">White-background HTML</span>
+    <span class="badge">CSS/SVG animations included</span>
+    <span class="badge">No external images</span>
+    <span class="badge">YAML syntax validated</span>
+    <span class="badge">Beginner-friendly labs</span>
+  </div>
+</section>
+
+<section id="overview">
+<h2>1. Understanding Kubernetes Storage</h2>
+<p class="lead">Container filesystems are temporary. When a container restarts, files written inside the container layer can be lost. Kubernetes volumes solve this by mounting storage into containers. A volume can be temporary, configuration-backed, secret-backed, or persistent beyond the Pod lifecycle.</p>
+
+<div class="grid grid-3">
+  <div class="card"><h3>Volume</h3><p>A directory or block device made available inside one or more containers in a Pod.</p></div>
+  <div class="card"><h3>PersistentVolume</h3><p>Cluster-level storage resource provided statically by an admin or dynamically by a provisioner.</p></div>
+  <div class="card"><h3>PersistentVolumeClaim</h3><p>A namespace-level request for storage. Pods usually consume storage through a PVC.</p></div>
+</div>
+
+<div class="note"><strong>Key idea:</strong> Pods should not care whether the storage is NFS, cloud disk, Ceph, vSphere, local-path, or SAN. The PV/PVC/StorageClass model hides backend details from application YAML.</div>
+</section>
+
+<section id="animated-flow">
+<h2>2. Animated Concept: Pod → PVC → PV → CSI → Storage Backend</h2>
+<div class="diagram" aria-label="Animated storage flow diagram">
+<svg width="1120" height="360" viewBox="0 0 1120 360" role="img">
+  <defs>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb" /></marker>
+    <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#dbeafe"/><stop offset="1" stop-color="#eef2ff"/></linearGradient>
+  </defs>
+  <rect x="20" y="45" width="190" height="120" rx="18" fill="url(#g1)" stroke="#93c5fd"/>
+  <text x="115" y="82" text-anchor="middle" font-size="18" font-weight="800" fill="#1e3a8a">Pod</text>
+  <rect x="55" y="98" width="120" height="42" rx="12" fill="#fff" stroke="#bfdbfe"/>
+  <text x="115" y="124" text-anchor="middle" font-size="14" fill="#111827">/data mount</text>
+
+  <rect class="float" x="275" y="45" width="190" height="120" rx="18" fill="#ecfdf5" stroke="#86efac"/>
+  <text x="370" y="82" text-anchor="middle" font-size="18" font-weight="800" fill="#166534">PVC</text>
+  <text x="370" y="117" text-anchor="middle" font-size="14" fill="#111827">Request: 500Mi</text>
+  <text x="370" y="140" text-anchor="middle" font-size="13" fill="#4b5563">ReadWriteOnce</text>
+
+  <rect class="pulse" x="530" y="45" width="190" height="120" rx="18" fill="#fff7ed" stroke="#fdba74"/>
+  <text x="625" y="82" text-anchor="middle" font-size="18" font-weight="800" fill="#9a3412">PV</text>
+  <text x="625" y="117" text-anchor="middle" font-size="14" fill="#111827">Actual storage</text>
+  <text x="625" y="140" text-anchor="middle" font-size="13" fill="#4b5563">Bound to PVC</text>
+
+  <rect x="785" y="45" width="190" height="120" rx="18" fill="#faf5ff" stroke="#c4b5fd"/>
+  <text x="880" y="82" text-anchor="middle" font-size="18" font-weight="800" fill="#5b21b6">CSI Driver</text>
+  <circle class="spin-slow" cx="880" cy="123" r="22" fill="none" stroke="#7c3aed" stroke-width="6" stroke-dasharray="18 10"/>
+
+  <path class="flow-line" d="M210 105 H275" stroke="#2563eb" stroke-width="4" marker-end="url(#arrowBlue)" fill="none"/>
+  <path class="flow-line" d="M465 105 H530" stroke="#2563eb" stroke-width="4" marker-end="url(#arrowBlue)" fill="none"/>
+  <path class="flow-line" d="M720 105 H785" stroke="#2563eb" stroke-width="4" marker-end="url(#arrowBlue)" fill="none"/>
+
+  <ellipse cx="1030" cy="79" rx="62" ry="20" fill="#e0f2fe" stroke="#38bdf8"/>
+  <rect x="968" y="79" width="124" height="75" fill="#e0f2fe" stroke="#38bdf8"/>
+  <ellipse cx="1030" cy="154" rx="62" ry="20" fill="#cffafe" stroke="#38bdf8"/>
+  <text x="1030" y="121" text-anchor="middle" font-size="15" font-weight="800" fill="#075985">Storage</text>
+  <path class="flow-line" d="M975 105 H1020" stroke="#2563eb" stroke-width="4" marker-end="url(#arrowBlue)" fill="none"/>
+
+  <rect x="280" y="230" width="560" height="72" rx="18" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="560" y="260" text-anchor="middle" font-size="17" font-weight="800" fill="#111827">StorageClass controls dynamic provisioning</text>
+  <text x="560" y="286" text-anchor="middle" font-size="14" fill="#475569">Provisioner + parameters + reclaim policy + binding mode</text>
+  <path class="flow-line" d="M560 230 C560 190 620 185 625 165" stroke="#2563eb" stroke-width="3" fill="none" marker-end="url(#arrowBlue)"/>
+</svg>
+</div>
+</section>
+
+<section id="volume-types">
+<h2>3. Types of Volumes</h2>
+<table>
+  <thead><tr><th>Volume category</th><th>What it means</th><th>Examples</th><th>Typical use case</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Persistent Volumes</strong></td><td>Storage with a lifecycle independent of a Pod.</td><td>PV + PVC backed by CSI, NFS, cloud disk, local path, vSphere, Ceph.</td><td>Databases, uploads, message queues, application state.</td></tr>
+    <tr><td><strong>Projected Volumes</strong></td><td>Multiple existing sources mapped into one directory.</td><td>ConfigMap, Secret, downwardAPI, serviceAccountToken.</td><td>One mount point for application config, token, metadata, and credentials.</td></tr>
+    <tr><td><strong>Ephemeral Volumes</strong></td><td>Storage tied to Pod lifetime.</td><td>emptyDir, configMap, secret, downwardAPI, CSI ephemeral, generic ephemeral.</td><td>Cache, scratch space, config files, temporary processing.</td></tr>
+  </tbody>
+</table>
+
+<div class="diagram">
+<svg width="900" height="240" viewBox="0 0 900 240" role="img">
+  <defs><marker id="arrowG" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#16a34a" /></marker></defs>
+  <rect x="40" y="50" width="180" height="110" rx="18" fill="#f0fdf4" stroke="#86efac"/>
+  <text x="130" y="90" text-anchor="middle" font-weight="800" fill="#166534">Ephemeral</text>
+  <text x="130" y="122" text-anchor="middle" font-size="14">dies with Pod</text>
+  <circle class="blink" cx="130" cy="145" r="10" fill="#16a34a"/>
+  <rect x="360" y="50" width="180" height="110" rx="18" fill="#eff6ff" stroke="#93c5fd"/>
+  <text x="450" y="90" text-anchor="middle" font-weight="800" fill="#1e40af">Persistent</text>
+  <text x="450" y="122" text-anchor="middle" font-size="14">survives Pod</text>
+  <path class="flow-line" d="M450 138 h40 h-40" stroke="#2563eb" stroke-width="4"/>
+  <rect x="680" y="50" width="180" height="110" rx="18" fill="#faf5ff" stroke="#c4b5fd"/>
+  <text x="770" y="90" text-anchor="middle" font-weight="800" fill="#5b21b6">Projected</text>
+  <text x="770" y="122" text-anchor="middle" font-size="14">many sources, one path</text>
+  <path class="flow-line" d="M640 105 H680" stroke="#16a34a" stroke-width="4" marker-end="url(#arrowG)" fill="none"/>
+  <path class="flow-line" d="M220 105 H360" stroke="#16a34a" stroke-width="4" marker-end="url(#arrowG)" fill="none"/>
+</svg>
+</div>
+</section>
+
+<section id="static-dynamic">
+<h2>4. Static vs Dynamic Storage</h2>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Static provisioning</h3>
+    <p>Administrator creates a PV first. Users create PVCs. Kubernetes binds a matching PVC to an available PV.</p>
+    <ul>
+      <li>Good for pre-existing NFS/SAN/manual volumes.</li>
+      <li>Requires admin work before users request storage.</li>
+      <li>Useful for teaching PV/PVC binding clearly.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Dynamic provisioning</h3>
+    <p>User creates a PVC. StorageClass and its provisioner create the PV automatically.</p>
+    <ul>
+      <li>Preferred for cloud-native clusters.</li>
+      <li>Requires a working StorageClass and provisioner/CSI driver.</li>
+      <li>Often uses <code>WaitForFirstConsumer</code> for topology-aware placement.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="diagram">
+<svg width="1050" height="300" viewBox="0 0 1050 300" role="img">
+  <defs><marker id="arrowO" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ea580c" /></marker></defs>
+  <text x="185" y="35" text-anchor="middle" font-size="18" font-weight="800">Static</text>
+  <rect x="40" y="60" width="140" height="58" rx="14" fill="#fff7ed" stroke="#fdba74"/><text x="110" y="95" text-anchor="middle">Admin PV</text>
+  <rect x="240" y="60" width="140" height="58" rx="14" fill="#ecfdf5" stroke="#86efac"/><text x="310" y="95" text-anchor="middle">User PVC</text>
+  <rect x="440" y="60" width="140" height="58" rx="14" fill="#eff6ff" stroke="#93c5fd"/><text x="510" y="95" text-anchor="middle">Pod mounts</text>
+  <path class="flow-line" d="M180 89 H240" stroke="#ea580c" stroke-width="4" marker-end="url(#arrowO)" fill="none"/>
+  <path class="flow-line" d="M380 89 H440" stroke="#ea580c" stroke-width="4" marker-end="url(#arrowO)" fill="none"/>
+
+  <text x="185" y="170" text-anchor="middle" font-size="18" font-weight="800">Dynamic</text>
+  <rect x="40" y="195" width="140" height="58" rx="14" fill="#ecfdf5" stroke="#86efac"/><text x="110" y="230" text-anchor="middle">User PVC</text>
+  <rect x="240" y="195" width="140" height="58" rx="14" fill="#eef2ff" stroke="#a5b4fc"/><text x="310" y="230" text-anchor="middle">StorageClass</text>
+  <rect x="440" y="195" width="140" height="58" rx="14" fill="#faf5ff" stroke="#c4b5fd"/><text x="510" y="230" text-anchor="middle">Provisioner</text>
+  <rect x="640" y="195" width="140" height="58" rx="14" fill="#fff7ed" stroke="#fdba74"/><text x="710" y="230" text-anchor="middle">Auto PV</text>
+  <rect x="840" y="195" width="140" height="58" rx="14" fill="#eff6ff" stroke="#93c5fd"/><text x="910" y="230" text-anchor="middle">Pod mounts</text>
+  <path class="flow-line" d="M180 224 H240" stroke="#ea580c" stroke-width="4" marker-end="url(#arrowO)" fill="none"/>
+  <path class="flow-line" d="M380 224 H440" stroke="#ea580c" stroke-width="4" marker-end="url(#arrowO)" fill="none"/>
+  <path class="flow-line" d="M580 224 H640" stroke="#ea580c" stroke-width="4" marker-end="url(#arrowO)" fill="none"/>
+  <path class="flow-line" d="M780 224 H840" stroke="#ea580c" stroke-width="4" marker-end="url(#arrowO)" fill="none"/>
+</svg>
+</div>
+</section>
+
+<section id="storage-classes">
+<h2>5. Storage Classes and Dynamic Volume Provisioning</h2>
+<p>A StorageClass describes a class or profile of storage offered by the cluster. It names a provisioner and may include parameters such as disk type, filesystem type, reclaim policy, expansion support, and binding mode.</p>
+<table>
+  <thead><tr><th>Field</th><th>Meaning</th><th>Example</th></tr></thead>
+  <tbody>
+    <tr><td><code>provisioner</code></td><td>Plugin/CSI driver that creates the volume.</td><td><code>rancher.io/local-path</code>, <code>ebs.csi.aws.com</code>, <code>pd.csi.storage.gke.io</code></td></tr>
+    <tr><td><code>reclaimPolicy</code></td><td>What happens to the PV after PVC deletion.</td><td><code>Delete</code> or <code>Retain</code></td></tr>
+    <tr><td><code>volumeBindingMode</code></td><td>When binding/provisioning happens.</td><td><code>Immediate</code> or <code>WaitForFirstConsumer</code></td></tr>
+    <tr><td><code>allowVolumeExpansion</code></td><td>Whether PVC size can be expanded.</td><td><code>true</code></td></tr>
+  </tbody>
+</table>
+<div class="warning"><strong>Training note:</strong> local-path provisioning is convenient for labs and single-node/development clusters, but it is not a production-grade replicated storage solution. Production storage normally uses a cloud/block/file CSI driver, Ceph/Rook, Longhorn, Portworx, NetApp, vSphere CSI, EBS/EFS CSI, Azure Disk/File CSI, or GCE PD CSI.</div>
+</section>
+
+<section id="snapshots">
+<h2>6. Volume Snapshots</h2>
+<p>VolumeSnapshot is the Kubernetes API pattern for point-in-time copies of a PVC. Snapshot support is not automatic in every cluster. It requires snapshot CRDs, a snapshot controller, and a CSI driver that supports snapshots.</p>
+<div class="grid grid-3">
+  <div class="card"><h3>VolumeSnapshot</h3><p>Namespace object created by a user to request a snapshot of a PVC.</p></div>
+  <div class="card"><h3>VolumeSnapshotContent</h3><p>Cluster object representing the actual snapshot in the backend.</p></div>
+  <div class="card"><h3>VolumeSnapshotClass</h3><p>Snapshot profile, similar in spirit to a StorageClass.</p></div>
+</div>
+<div class="note"><strong>Practical rule:</strong> do not promise snapshot labs unless your training cluster has snapshot CRDs and a CSI driver that supports snapshots. The document includes an optional detection and sample manifest section.</div>
+</section>
+
+<section id="modes">
+<h2>7. Volume Modes and Access Modes</h2>
+<h3>Volume modes</h3>
+<table>
+  <thead><tr><th>Mode</th><th>Meaning</th><th>When to use</th></tr></thead>
+  <tbody>
+    <tr><td><code>Filesystem</code></td><td>The default. Kubernetes mounts the volume as a directory.</td><td>Most applications, logs, uploads, databases using filesystems.</td></tr>
+    <tr><td><code>Block</code></td><td>Kubernetes exposes the raw block device to the container.</td><td>Specialized databases or storage software that manage the block device themselves.</td></tr>
+  </tbody>
+</table>
+
+<h3>Access modes</h3>
+<table>
+  <thead><tr><th>Mode</th><th>Short name</th><th>Meaning</th><th>Important note</th></tr></thead>
+  <tbody>
+    <tr><td><code>ReadWriteOnce</code></td><td>RWO</td><td>Mounted read-write by a single node.</td><td>Multiple Pods can still use it if they run on the same node.</td></tr>
+    <tr><td><code>ReadOnlyMany</code></td><td>ROX</td><td>Mounted read-only by many nodes.</td><td>Backend must support it.</td></tr>
+    <tr><td><code>ReadWriteMany</code></td><td>RWX</td><td>Mounted read-write by many nodes.</td><td>Usually file storage such as NFS, EFS, Azure Files, CephFS.</td></tr>
+    <tr><td><code>ReadWriteOncePod</code></td><td>RWOP</td><td>Mounted read-write by only one Pod across the cluster.</td><td>Useful when exactly one writer must exist.</td></tr>
+  </tbody>
+</table>
+<div class="danger"><strong>Common misconception:</strong> access modes are mainly used for PV/PVC matching and mount constraints. They are not a substitute for application-level locking, database clustering, or filesystem permissions.</div>
+</section>
+
+<section id="config-secret">
+<h2>8. ConfigMaps and Secrets</h2>
+<p>ConfigMaps and Secrets are commonly consumed as environment variables or mounted files. ConfigMaps are for non-confidential configuration. Secrets are intended for sensitive data, but default Kubernetes Secrets still need proper RBAC and encryption-at-rest controls.</p>
+<div class="diagram">
+<svg width="980" height="250" viewBox="0 0 980 250" role="img">
+  <defs><marker id="arrowP" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#7c3aed" /></marker></defs>
+  <rect class="float" x="40" y="55" width="170" height="82" rx="18" fill="#eff6ff" stroke="#93c5fd"/><text x="125" y="92" text-anchor="middle" font-weight="800">ConfigMap</text><text x="125" y="118" text-anchor="middle" font-size="13">non-secret config</text>
+  <rect class="float" x="40" y="155" width="170" height="62" rx="18" fill="#fef2f2" stroke="#fca5a5"/><text x="125" y="193" text-anchor="middle" font-weight="800">Secret</text>
+  <rect x="365" y="88" width="210" height="92" rx="20" fill="#faf5ff" stroke="#c4b5fd"/><text x="470" y="124" text-anchor="middle" font-weight="800">Projected Volume</text><text x="470" y="151" text-anchor="middle" font-size="13">one mount path</text>
+  <rect x="740" y="88" width="190" height="92" rx="20" fill="#ecfdf5" stroke="#86efac"/><text x="835" y="124" text-anchor="middle" font-weight="800">Container</text><text x="835" y="151" text-anchor="middle" font-size="13">/projected</text>
+  <path class="flow-line" d="M210 96 C265 96 305 118 365 125" stroke="#7c3aed" stroke-width="4" marker-end="url(#arrowP)" fill="none"/>
+  <path class="flow-line" d="M210 186 C280 186 310 150 365 145" stroke="#7c3aed" stroke-width="4" marker-end="url(#arrowP)" fill="none"/>
+  <path class="flow-line" d="M575 134 H740" stroke="#7c3aed" stroke-width="4" marker-end="url(#arrowP)" fill="none"/>
+</svg>
+</div>
+</section>
+
+<section id="csi">
+<h2>9. Understanding CSI</h2>
+<p>CSI means Container Storage Interface. It is the standard plugin model that lets storage vendors integrate with Kubernetes without building storage logic into Kubernetes core. CSI drivers commonly handle provisioning, attaching, mounting, resizing, snapshotting, and deleting volumes.</p>
+<div class="grid grid-2">
+  <div class="card"><h3>What Kubernetes does</h3><ul><li>Watches PVC, Pod, PV, StorageClass objects.</li><li>Schedules Pods with volume requirements.</li><li>Calls CSI sidecars and kubelet volume logic.</li></ul></div>
+  <div class="card"><h3>What CSI driver does</h3><ul><li>Talks to actual storage backend.</li><li>Creates and deletes volumes.</li><li>Attaches/mounts volumes to nodes.</li><li>May support expansion, snapshots, health monitoring.</li></ul></div>
+</div>
+</section>
+
+<section id="labs">
+<h2>10. Hands-on Labs</h2>
+<p class="lead">Run the labs in order. They use the namespace <code>storage-lab</code>. Commands assume Linux/macOS shell or Git Bash. For PowerShell, replace shell heredocs with saved YAML files.</p>
+
+<div class="success"><strong>Validated examples:</strong> The YAML manifests in this document were parsed and checked for <code>apiVersion</code>, <code>kind</code>, and multi-document syntax. Runtime validation still depends on your cluster, image registry access, node labels, and storage provisioner.</div>
+
+<div class="lab-title"><span class="lab-no">0</span><h3>Lab 0: Create training namespace</h3></div>
+<div class="codebox"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: Namespace
+metadata:
+  name: storage-lab
+</code></pre></div>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl apply -f namespace.yaml
+kubectl get ns storage-lab</code></pre></div>
+<p>Or apply directly:</p>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl create namespace storage-lab --dry-run=client -o yaml | kubectl apply -f -</code></pre></div>
+
+<div class="lab-title"><span class="lab-no">1A</span><h3>Lab 1A: Working with Kubernetes Volume Service using <code>emptyDir</code></h3></div>
+<p>This lab shows two containers in the same Pod sharing files through an ephemeral <code>emptyDir</code> volume.</p>
+<div class="codebox"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: emptydir-demo
+  namespace: storage-lab
+spec:
+  restartPolicy: Never
+  containers:
+  - name: writer
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      i=1
+      while [ $i -le 5 ]; do
+        echo &quot;$(date) - writer message $i&quot; &gt;&gt; /shared/messages.txt
+        i=$((i+1))
+        sleep 2
+      done
+      sleep 3600
+    volumeMounts:
+    - name: shared-cache
+      mountPath: /shared
+  - name: reader
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      while true; do
+        echo &quot;---- reader view ----&quot;
+        cat /shared/messages.txt 2&gt;/dev/null || echo &quot;file not created yet&quot;
+        sleep 3
+      done
+    volumeMounts:
+    - name: shared-cache
+      mountPath: /shared
+  volumes:
+  - name: shared-cache
+    emptyDir: {}
+</code></pre></div>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>cat &gt; emptydir-demo.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: v1
+kind: Pod
+metadata:
+  name: emptydir-demo
+  namespace: storage-lab
+spec:
+  restartPolicy: Never
+  containers:
+  - name: writer
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      i=1
+      while [ $i -le 5 ]; do
+        echo &quot;$(date) - writer message $i&quot; &gt;&gt; /shared/messages.txt
+        i=$((i+1))
+        sleep 2
+      done
+      sleep 3600
+    volumeMounts:
+    - name: shared-cache
+      mountPath: /shared
+  - name: reader
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      while true; do
+        echo &quot;---- reader view ----&quot;
+        cat /shared/messages.txt 2&gt;/dev/null || echo &quot;file not created yet&quot;
+        sleep 3
+      done
+    volumeMounts:
+    - name: shared-cache
+      mountPath: /shared
+  volumes:
+  - name: shared-cache
+    emptyDir: {}
+EOF
+
+kubectl apply -f emptydir-demo.yaml
+kubectl wait --for=condition=Ready pod/emptydir-demo -n storage-lab --timeout=120s
+kubectl logs emptydir-demo -n storage-lab -c reader --tail=20</code></pre></div>
+<p><strong>Expected result:</strong> the reader container displays messages written by the writer container under <code>/shared/messages.txt</code>.</p>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl exec -n storage-lab emptydir-demo -c writer -- cat /shared/messages.txt
+kubectl delete pod emptydir-demo -n storage-lab</code></pre></div>
+<div class="note">After deleting the Pod, the <code>emptyDir</code> data is gone. That is expected because <code>emptyDir</code> follows the Pod lifetime.</div>
+
+<div class="lab-title"><span class="lab-no">1B</span><h3>Lab 1B: Static PV/PVC using hostPath for classroom demonstration</h3></div>
+<div class="warning"><strong>Do not use hostPath as a production storage design.</strong> This lab is for understanding PV/PVC binding. It pins the PV to one node using node affinity.</div>
+<p>Find one node hostname label and use it in the PV and Pod:</p>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>NODE_HOSTNAME=$(kubectl get nodes -o jsonpath=&#x27;{.items[0].metadata.labels.kubernetes\.io/hostname}&#x27;)
+echo &quot;$NODE_HOSTNAME&quot;</code></pre></div>
+<p>Create a static PV and matching PVC:</p>
+<div class="codebox"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: manual-pv-hostpath
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /tmp/k8s-static-pv
+    type: DirectoryOrCreate
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - &quot;${NODE_HOSTNAME}&quot;
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: manual-pvc
+  namespace: storage-lab
+spec:
+  storageClassName: manual
+  volumeName: manual-pv-hostpath
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 200Mi
+</code></pre></div>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>cat &gt; static-pv-pvc.yaml &lt;&lt;EOF
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: manual-pv-hostpath
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /tmp/k8s-static-pv
+    type: DirectoryOrCreate
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - &quot;${NODE_HOSTNAME}&quot;
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: manual-pvc
+  namespace: storage-lab
+spec:
+  storageClassName: manual
+  volumeName: manual-pv-hostpath
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 200Mi
+EOF
+
+kubectl apply -f static-pv-pvc.yaml
+kubectl get pv manual-pv-hostpath
+kubectl get pvc manual-pvc -n storage-lab</code></pre></div>
+<p>Create a Pod that writes data to the PVC:</p>
+<div class="codebox"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: static-pvc-demo
+  namespace: storage-lab
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: &quot;${NODE_HOSTNAME}&quot;
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      echo &quot;Static PV write at $(date)&quot; &gt; /data/message.txt
+      cat /data/message.txt
+      sleep 3600
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: manual-pvc
+</code></pre></div>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>cat &gt; static-pvc-demo.yaml &lt;&lt;EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: static-pvc-demo
+  namespace: storage-lab
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: &quot;${NODE_HOSTNAME}&quot;
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      echo &quot;Static PV write at $(date)&quot; &gt; /data/message.txt
+      cat /data/message.txt
+      sleep 3600
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: manual-pvc
+EOF
+
+kubectl apply -f static-pvc-demo.yaml
+kubectl wait --for=condition=Ready pod/static-pvc-demo -n storage-lab --timeout=120s
+kubectl logs static-pvc-demo -n storage-lab</code></pre></div>
+<p>Delete the writer Pod and create a reader Pod using the same PVC:</p>
+<div class="codebox"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: static-pvc-reader
+  namespace: storage-lab
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: &quot;${NODE_HOSTNAME}&quot;
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      echo &quot;Reading existing data from retained PV:&quot;
+      cat /data/message.txt
+      sleep 3600
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: manual-pvc
+</code></pre></div>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl delete pod static-pvc-demo -n storage-lab
+cat &gt; static-pvc-reader.yaml &lt;&lt;EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: static-pvc-reader
+  namespace: storage-lab
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: &quot;${NODE_HOSTNAME}&quot;
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      echo &quot;Reading existing data from retained PV:&quot;
+      cat /data/message.txt
+      sleep 3600
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: manual-pvc
+EOF
+
+kubectl apply -f static-pvc-reader.yaml
+kubectl wait --for=condition=Ready pod/static-pvc-reader -n storage-lab --timeout=120s
+kubectl logs static-pvc-reader -n storage-lab</code></pre></div>
+<p><strong>Expected result:</strong> the reader Pod prints the file created by the previous Pod. The data survived Pod deletion because the backing PV remained.</p>
+
+<div class="lab-title"><span class="lab-no">2</span><h3>Lab 2: Configuring Dynamic Volume Provisioning</h3></div>
+<p>First check whether your cluster already has a default StorageClass:</p>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl get storageclass
+kubectl get storageclass -o custom-columns=NAME:.metadata.name,PROVISIONER:.provisioner,DEFAULT:.metadata.annotations.storageclass\.kubernetes\.io/is-default-class,BINDING:.volumeBindingMode</code></pre></div>
+<p>If your cluster already has a suitable default StorageClass, set <code>STORAGE_CLASS</code> to that name. Example:</p>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>STORAGE_CLASS=$(kubectl get sc -o jsonpath=&#x27;{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class==&quot;true&quot;)].metadata.name}&#x27; | awk &#x27;{{print $1}}&#x27;)
+echo &quot;$STORAGE_CLASS&quot;</code></pre></div>
+<p>If there is no StorageClass in your lab cluster, install Rancher local-path provisioner for training:</p>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.36/deploy/local-path-storage.yaml
+kubectl -n local-path-storage rollout status deploy/local-path-provisioner --timeout=120s
+kubectl get storageclass local-path
+STORAGE_CLASS=local-path</code></pre></div>
+<p>Create a PVC that asks the StorageClass to provision storage automatically, then start a Pod that writes into it:</p>
+<div class="codebox"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dynamic-pvc
+  namespace: storage-lab
+spec:
+  storageClassName: &quot;${STORAGE_CLASS}&quot;
+  accessModes:
+  - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dynamic-pvc-demo
+  namespace: storage-lab
+spec:
+  restartPolicy: Never
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      echo &quot;dynamic volume created at $(date)&quot; &gt; /data/info.txt
+      cat /data/info.txt
+      sleep 3600
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: dynamic-pvc
+</code></pre></div>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>cat &gt; dynamic-pvc-pod.yaml &lt;&lt;EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dynamic-pvc
+  namespace: storage-lab
+spec:
+  storageClassName: &quot;${STORAGE_CLASS}&quot;
+  accessModes:
+  - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dynamic-pvc-demo
+  namespace: storage-lab
+spec:
+  restartPolicy: Never
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      echo &quot;dynamic volume created at $(date)&quot; &gt; /data/info.txt
+      cat /data/info.txt
+      sleep 3600
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: dynamic-pvc
+EOF
+
+kubectl apply -f dynamic-pvc-pod.yaml
+kubectl get pvc dynamic-pvc -n storage-lab -w</code></pre></div>
+<p>Open another terminal and verify the Pod and generated PV:</p>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl wait --for=condition=Ready pod/dynamic-pvc-demo -n storage-lab --timeout=180s
+kubectl logs dynamic-pvc-demo -n storage-lab
+kubectl get pvc,pv -n storage-lab
+kubectl describe pvc dynamic-pvc -n storage-lab</code></pre></div>
+<div class="note"><strong>Why PVC may stay Pending briefly:</strong> many StorageClasses use <code>WaitForFirstConsumer</code>. In that mode, the PVC binds after a Pod exists so Kubernetes can choose storage in the right node/zone.</div>
+
+<div class="lab-title"><span class="lab-no">3</span><h3>Lab 3: Working with ConfigMaps and Secrets</h3></div>
+<p>This lab injects non-secret values from a ConfigMap and sensitive values from a Secret as both environment variables and mounted files.</p>
+<div class="codebox"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-config
+  namespace: storage-lab
+data:
+  APP_MODE: &quot;training&quot;
+  WELCOME_MESSAGE: &quot;Hello from ConfigMap&quot;
+  nginx.conf: |
+    server {
+      listen 8080;
+      location / {
+        return 200 &quot;Kubernetes ConfigMap volume is working\n&quot;;
+      }
+    }
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+  namespace: storage-lab
+type: Opaque
+stringData:
+  DB_USER: &quot;student&quot;
+  DB_PASSWORD: &quot;student-password-change-me&quot;
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: config-secret-demo
+  namespace: storage-lab
+spec:
+  restartPolicy: Never
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      echo &quot;APP_MODE=$APP_MODE&quot;
+      echo &quot;WELCOME_MESSAGE=$WELCOME_MESSAGE&quot;
+      echo &quot;DB_USER=$DB_USER&quot;
+      echo &quot;Config file:&quot;
+      cat /config/nginx.conf
+      echo &quot;Secret file:&quot;
+      cat /secret/DB_PASSWORD
+      sleep 3600
+    env:
+    - name: APP_MODE
+      valueFrom:
+        configMapKeyRef:
+          name: web-config
+          key: APP_MODE
+    - name: WELCOME_MESSAGE
+      valueFrom:
+        configMapKeyRef:
+          name: web-config
+          key: WELCOME_MESSAGE
+    - name: DB_USER
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: DB_USER
+    volumeMounts:
+    - name: config-volume
+      mountPath: /config
+      readOnly: true
+    - name: secret-volume
+      mountPath: /secret
+      readOnly: true
+  volumes:
+  - name: config-volume
+    configMap:
+      name: web-config
+      items:
+      - key: nginx.conf
+        path: nginx.conf
+  - name: secret-volume
+    secret:
+      secretName: db-secret
+</code></pre></div>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>cat &gt; config-secret-demo.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-config
+  namespace: storage-lab
+data:
+  APP_MODE: &quot;training&quot;
+  WELCOME_MESSAGE: &quot;Hello from ConfigMap&quot;
+  nginx.conf: |
+    server {
+      listen 8080;
+      location / {
+        return 200 &quot;Kubernetes ConfigMap volume is working\n&quot;;
+      }
+    }
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+  namespace: storage-lab
+type: Opaque
+stringData:
+  DB_USER: &quot;student&quot;
+  DB_PASSWORD: &quot;student-password-change-me&quot;
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: config-secret-demo
+  namespace: storage-lab
+spec:
+  restartPolicy: Never
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      echo &quot;APP_MODE=$APP_MODE&quot;
+      echo &quot;WELCOME_MESSAGE=$WELCOME_MESSAGE&quot;
+      echo &quot;DB_USER=$DB_USER&quot;
+      echo &quot;Config file:&quot;
+      cat /config/nginx.conf
+      echo &quot;Secret file:&quot;
+      cat /secret/DB_PASSWORD
+      sleep 3600
+    env:
+    - name: APP_MODE
+      valueFrom:
+        configMapKeyRef:
+          name: web-config
+          key: APP_MODE
+    - name: WELCOME_MESSAGE
+      valueFrom:
+        configMapKeyRef:
+          name: web-config
+          key: WELCOME_MESSAGE
+    - name: DB_USER
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: DB_USER
+    volumeMounts:
+    - name: config-volume
+      mountPath: /config
+      readOnly: true
+    - name: secret-volume
+      mountPath: /secret
+      readOnly: true
+  volumes:
+  - name: config-volume
+    configMap:
+      name: web-config
+      items:
+      - key: nginx.conf
+        path: nginx.conf
+  - name: secret-volume
+    secret:
+      secretName: db-secret
+EOF
+
+kubectl apply -f config-secret-demo.yaml
+kubectl wait --for=condition=Ready pod/config-secret-demo -n storage-lab --timeout=120s
+kubectl logs config-secret-demo -n storage-lab</code></pre></div>
+<p>Useful verification commands:</p>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl get configmap,secret -n storage-lab
+kubectl describe configmap web-config -n storage-lab
+kubectl exec -n storage-lab config-secret-demo -- ls -l /config /secret
+kubectl exec -n storage-lab config-secret-demo -- cat /config/nginx.conf</code></pre></div>
+<div class="danger"><strong>Security note:</strong> Avoid printing real secrets in logs. This lab prints a dummy value only so trainees can see the mount behavior.</div>
+
+<div class="lab-title"><span class="lab-no">4</span><h3>Lab 4: Projected Volume using ConfigMap + Secret + Downward API</h3></div>
+<p>This lab maps multiple sources into one mount path called <code>/projected</code>.</p>
+<div class="codebox"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: projected-volume-demo
+  namespace: storage-lab
+spec:
+  restartPolicy: Never
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      echo &quot;Files in projected volume:&quot;
+      find /projected -maxdepth 3 -type f -print -exec sh -c &#x27;echo &quot;--- $1&quot;; cat &quot;$1&quot;&#x27; _ {} \;
+      sleep 3600
+    volumeMounts:
+    - name: all-in-one
+      mountPath: /projected
+      readOnly: true
+  volumes:
+  - name: all-in-one
+    projected:
+      sources:
+      - configMap:
+          name: web-config
+          items:
+          - key: APP_MODE
+            path: config/app-mode
+      - secret:
+          name: db-secret
+          items:
+          - key: DB_USER
+            path: secret/db-user
+      - downwardAPI:
+          items:
+          - path: pod/name
+            fieldRef:
+              fieldPath: metadata.name
+          - path: pod/namespace
+            fieldRef:
+              fieldPath: metadata.namespace
+</code></pre></div>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>cat &gt; projected-volume-demo.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: v1
+kind: Pod
+metadata:
+  name: projected-volume-demo
+  namespace: storage-lab
+spec:
+  restartPolicy: Never
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      echo &quot;Files in projected volume:&quot;
+      find /projected -maxdepth 3 -type f -print -exec sh -c &#x27;echo &quot;--- $1&quot;; cat &quot;$1&quot;&#x27; _ {} \;
+      sleep 3600
+    volumeMounts:
+    - name: all-in-one
+      mountPath: /projected
+      readOnly: true
+  volumes:
+  - name: all-in-one
+    projected:
+      sources:
+      - configMap:
+          name: web-config
+          items:
+          - key: APP_MODE
+            path: config/app-mode
+      - secret:
+          name: db-secret
+          items:
+          - key: DB_USER
+            path: secret/db-user
+      - downwardAPI:
+          items:
+          - path: pod/name
+            fieldRef:
+              fieldPath: metadata.name
+          - path: pod/namespace
+            fieldRef:
+              fieldPath: metadata.namespace
+EOF
+
+kubectl apply -f projected-volume-demo.yaml
+kubectl wait --for=condition=Ready pod/projected-volume-demo -n storage-lab --timeout=120s
+kubectl logs projected-volume-demo -n storage-lab</code></pre></div>
+<p><strong>Expected result:</strong> files under <code>/projected/config</code>, <code>/projected/secret</code>, and <code>/projected/pod</code> are visible from one volume mount.</p>
+
+<div class="lab-title"><span class="lab-no">5</span><h3>Optional Lab 5: Volume Snapshot readiness check</h3></div>
+<p>Run these checks before attempting snapshots:</p>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl api-resources | grep -i volumesnapshot || true
+kubectl get volumesnapshotclass || true
+kubectl get crd | grep snapshot.storage.k8s.io || true</code></pre></div>
+<p>Only if your cluster has snapshot CRDs, a snapshot controller, and a compatible CSI driver, create a snapshot like this after replacing the class name:</p>
+<div class="codebox"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: dynamic-pvc-snapshot
+  namespace: storage-lab
+spec:
+  volumeSnapshotClassName: YOUR_VOLUME_SNAPSHOT_CLASS
+  source:
+    persistentVolumeClaimName: dynamic-pvc
+</code></pre></div>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl apply -f volume-snapshot.yaml
+kubectl get volumesnapshot -n storage-lab
+kubectl describe volumesnapshot dynamic-pvc-snapshot -n storage-lab</code></pre></div>
+<div class="warning"><strong>Expected classroom outcome:</strong> in many local clusters this optional lab will not work unless snapshot components are installed. Treat it as a concept and readiness-check lab unless the environment is prepared.</div>
+</section>
+
+<section id="troubleshooting">
+<h2>11. Troubleshooting Guide</h2>
+<table>
+  <thead><tr><th>Symptom</th><th>Likely cause</th><th>Useful checks</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td>PVC remains <code>Pending</code></td><td>No matching PV, no StorageClass, missing provisioner, or <code>WaitForFirstConsumer</code>.</td><td><code>kubectl describe pvc NAME -n storage-lab</code><br><code>kubectl get sc</code><br><code>kubectl get events -n storage-lab --sort-by=.lastTimestamp</code></td><td>Create matching PV, set correct StorageClass, deploy provisioner, or create Pod for first consumer binding.</td></tr>
+    <tr><td>Pod remains <code>Pending</code></td><td>Volume node affinity conflict, no available node, or storage attach issue.</td><td><code>kubectl describe pod POD -n storage-lab</code><br><code>kubectl get pv -o wide</code></td><td>Check node labels, PV nodeAffinity, taints, and StorageClass topology.</td></tr>
+    <tr><td>Pod <code>ImagePullBackOff</code></td><td>Cluster cannot pull image.</td><td><code>kubectl describe pod POD -n storage-lab</code></td><td>Allow registry access, use a locally cached image, or mirror the image.</td></tr>
+    <tr><td>ConfigMap update not visible immediately</td><td>Mounted ConfigMap updates are eventually reflected; env vars do not update in a running container.</td><td><code>kubectl get cm web-config -n storage-lab -o yaml</code></td><td>For env var changes, restart Pod/Deployment. For mounted files, wait or restart for deterministic labs.</td></tr>
+    <tr><td>Secret value appears base64 encoded</td><td><code>data</code> field stores base64-encoded values.</td><td><code>kubectl get secret db-secret -n storage-lab -o yaml</code></td><td>Use <code>stringData</code> when creating Secrets manually; Kubernetes converts it to <code>data</code>.</td></tr>
+  </tbody>
+</table>
+
+<h3>Fast triage command set</h3>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl get pods,pvc,pv,sc -n storage-lab
+kubectl get events -n storage-lab --sort-by=.lastTimestamp
+kubectl describe pvc dynamic-pvc -n storage-lab
+kubectl describe pod dynamic-pvc-demo -n storage-lab
+kubectl get pods -A | grep -E &#x27;local-path|csi|storage&#x27; || true</code></pre></div>
+</section>
+
+<section id="assessment">
+<h2>12. Assessment Questions for Trainees</h2>
+<ol>
+  <li>What happens to <code>emptyDir</code> data when the Pod is deleted?</li>
+  <li>What is the difference between PV and PVC?</li>
+  <li>Why can a PVC stay Pending even after you create it?</li>
+  <li>What does <code>volumeBindingMode: WaitForFirstConsumer</code> solve?</li>
+  <li>Why is <code>hostPath</code> risky in production?</li>
+  <li>What is the difference between <code>ReadWriteOnce</code> and <code>ReadWriteOncePod</code>?</li>
+  <li>Why should real Secrets not be printed in Pod logs?</li>
+  <li>What components are needed for Kubernetes VolumeSnapshot support?</li>
+  <li>How does CSI help Kubernetes support many storage vendors?</li>
+  <li>Which storage type would you choose for a shared upload directory across many replicas: RWO block disk or RWX file storage? Explain.</li>
+</ol>
+</section>
+
+<section id="cleanup">
+<h2>13. Full Cleanup</h2>
+<p>Run this cleanup after all labs. Be careful: it deletes lab objects and the static PV.</p>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl delete pod emptydir-demo static-pvc-demo static-pvc-reader dynamic-pvc-demo config-secret-demo projected-volume-demo -n storage-lab --ignore-not-found
+kubectl delete pvc manual-pvc dynamic-pvc -n storage-lab --ignore-not-found
+kubectl delete pv manual-pv-hostpath --ignore-not-found
+kubectl delete configmap web-config -n storage-lab --ignore-not-found
+kubectl delete secret db-secret -n storage-lab --ignore-not-found
+kubectl delete namespace storage-lab --ignore-not-found</code></pre></div>
+<p>If you installed local-path provisioner only for this lab and no other workload needs it:</p>
+<div class="codebox terminal"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>kubectl delete -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.36/deploy/local-path-storage.yaml</code></pre></div>
+</section>
+
+<section id="references">
+<h2>14. Official and Technical References</h2>
+<ul class="source-list">
+  <li><a href="https://kubernetes.io/docs/concepts/storage/volumes/">Kubernetes Volumes</a></li>
+  <li><a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">Kubernetes Persistent Volumes</a></li>
+  <li><a href="https://kubernetes.io/docs/concepts/storage/storage-classes/">Kubernetes Storage Classes</a></li>
+  <li><a href="https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/">Kubernetes Dynamic Volume Provisioning</a></li>
+  <li><a href="https://kubernetes.io/docs/concepts/storage/volume-snapshots/">Kubernetes Volume Snapshots</a></li>
+  <li><a href="https://kubernetes.io/docs/concepts/storage/projected-volumes/">Kubernetes Projected Volumes</a></li>
+  <li><a href="https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/">Kubernetes Ephemeral Volumes</a></li>
+  <li><a href="https://kubernetes.io/docs/concepts/configuration/configmap/">Kubernetes ConfigMaps</a></li>
+  <li><a href="https://kubernetes.io/docs/concepts/configuration/secret/">Kubernetes Secrets</a></li>
+  <li><a href="https://github.com/rancher/local-path-provisioner">Rancher local-path-provisioner</a></li>
+</ul>
+
+<h3>Manifest validation report</h3>
+<table>
+  <thead><tr><th>Snippet</th><th>Status</th><th>YAML documents</th></tr></thead>
+  <tbody>
+    <tr><td><code>namespace_yaml</code></td><td>OK</td><td>1</td></tr><tr><td><code>emptydir_yaml</code></td><td>OK</td><td>1</td></tr><tr><td><code>static_pv_pvc_yaml</code></td><td>OK</td><td>2</td></tr><tr><td><code>static_pod_yaml</code></td><td>OK</td><td>1</td></tr><tr><td><code>static_reader_pod_yaml</code></td><td>OK</td><td>1</td></tr><tr><td><code>dynamic_yaml</code></td><td>OK</td><td>2</td></tr><tr><td><code>config_secret_yaml</code></td><td>OK</td><td>3</td></tr><tr><td><code>projected_yaml</code></td><td>OK</td><td>1</td></tr><tr><td><code>snapshot_yaml</code></td><td>OK</td><td>1</td></tr>
+  </tbody>
+</table>
+<p class="small">Generated for trainee classroom use. Runtime behavior should be tested once in the target cluster before delivery because provisioners, CSI features, default StorageClasses, and image pull policies vary by environment.</p>
+</section>
+
+</main>
+</div>
+<script>
+function copyCode(btn) {
+  const code = btn.parentElement.querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    const old = btn.innerText;
+    btn.innerText = 'Copied';
+    setTimeout(() => btn.innerText = old, 1200);
+  });
+}
+</script>
+</body>
+</html>
