@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kubernetes Cluster Management - Trainee Lab Reference</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --paper: #ffffff;
+  --ink: #172033;
+  --muted: #536078;
+  --line: #d9e2f2;
+  --blue: #326ce5;
+  --blue2: #6aa9ff;
+  --green: #18a058;
+  --orange: #f59e0b;
+  --red: #d93025;
+  --purple: #7c3aed;
+  --shadow: 0 8px 28px rgba(18, 36, 75, 0.10);
+  --radius: 18px;
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font-family: Inter, Segoe UI, Roboto, Arial, sans-serif; line-height:1.58; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+header.hero {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(50,108,229,.14), transparent 28%),
+    radial-gradient(circle at 85% 12%, rgba(24,160,88,.12), transparent 25%),
+    linear-gradient(135deg, #f8fbff 0%, #ffffff 70%);
+  border-bottom:1px solid var(--line);
+  padding: 44px 28px 28px;
+}
+.hero-inner { max-width:1180px; margin:0 auto; display:grid; grid-template-columns: 1.25fr .75fr; gap:30px; align-items:center; }
+h1 { font-size: clamp(2rem, 5vw, 4rem); line-height:1.05; margin:0 0 16px; letter-spacing:-.04em; }
+.subtitle { font-size:1.12rem; color:var(--muted); max-width:900px; }
+.badges { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+.badge { border:1px solid var(--line); border-radius:999px; padding:8px 12px; background:#fff; color:#27324a; font-size:.9rem; }
+main { max-width:1180px; margin:0 auto; padding:28px; }
+.card, section { background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); box-shadow: var(--shadow); margin:22px 0; padding:26px; }
+section.flat { box-shadow:none; }
+h2 { font-size:1.8rem; margin:0 0 14px; letter-spacing:-.02em; }
+h3 { font-size:1.25rem; margin:28px 0 10px; }
+h4 { margin:20px 0 8px; }
+.kicker { color:var(--blue); text-transform:uppercase; letter-spacing:.12em; font-size:.78rem; font-weight:800; }
+.grid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:18px; }
+.grid3 { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:18px; }
+.topic-card { border:1px solid var(--line); border-radius:16px; padding:18px; background:#fbfdff; }
+.topic-card h3 { margin-top:10px; }
+.topic-card p { margin-bottom:0; }
+.toc { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px 22px; padding:0; margin:16px 0 0; list-style:none; }
+.toc li { border-bottom:1px dashed #d8e0ee; padding:8px 0; }
+.note { border-left:5px solid var(--blue); background:#f6f9ff; padding:14px 16px; border-radius:12px; margin:16px 0; }
+.note.warn { border-left-color:var(--orange); background:#fff8eb; }
+.note.danger { border-left-color:var(--red); background:#fff2f0; }
+.note.ok { border-left-color:var(--green); background:#effaf4; }
+.note.law { border-left-color:var(--purple); background:#f6f1ff; }
+.step-list { counter-reset: step; padding-left:0; }
+.step-list li { list-style:none; margin:12px 0; padding:14px 14px 14px 54px; border:1px solid var(--line); border-radius:14px; position:relative; background:#fff; }
+.step-list li::before { counter-increment: step; content: counter(step); position:absolute; left:14px; top:14px; width:28px; height:28px; display:grid; place-items:center; background:var(--blue); color:#fff; border-radius:50%; font-weight:800; }
+.table-wrap { overflow:auto; border:1px solid var(--line); border-radius:14px; margin:16px 0; }
+table { width:100%; border-collapse:collapse; min-width:720px; }
+th, td { padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { background:#f3f7ff; text-align:left; }
+tr:last-child td { border-bottom:none; }
+.code-wrap { position:relative; margin:16px 0; border-radius:14px; overflow:hidden; border:1px solid #d7deea; background:#0f172a; }
+.code-title { background:#1e293b; color:#dbeafe; padding:10px 14px; font-size:.88rem; font-weight:700; border-bottom:1px solid #334155; }
+pre { margin:0; padding:18px; overflow:auto; color:#e2e8f0; font-family: Consolas, Menlo, Monaco, 'Courier New', monospace; font-size:.92rem; line-height:1.5; }
+.copy-btn { position:absolute; top:8px; right:8px; border:1px solid #64748b; color:#e2e8f0; background:#1e293b; border-radius:8px; padding:5px 10px; cursor:pointer; font-size:.78rem; }
+.copy-btn:hover { background:#334155; }
+.checklist { list-style:none; padding-left:0; }
+.checklist li { margin:8px 0; padding-left:30px; position:relative; }
+.checklist li::before { content:'✓'; position:absolute; left:0; top:0; color:var(--green); font-weight:900; }
+.small { color:var(--muted); font-size:.92rem; }
+.footer { margin:40px 0 10px; padding-top:20px; color:var(--muted); border-top:1px solid var(--line); }
+
+/* Shared animation canvas */
+.anim { position:relative; min-height:170px; border:1px solid #dce6f5; border-radius:16px; background:linear-gradient(180deg, #ffffff, #f7fbff); overflow:hidden; margin:10px 0 16px; }
+.anim svg { width:100%; height:170px; display:block; }
+.node { fill:#fff; stroke:#326ce5; stroke-width:2; }
+.node-fill { fill:#eaf2ff; stroke:#326ce5; stroke-width:2; }
+.ctrl { fill:#fff8e8; stroke:#f59e0b; stroke-width:2; }
+.etcd { fill:#f1f8f4; stroke:#18a058; stroke-width:2; }
+.pod { fill:#eef2ff; stroke:#7c3aed; stroke-width:2; }
+.label { font: 700 12px Inter, Arial; fill:#172033; }
+.muted-label { font: 600 11px Inter, Arial; fill:#536078; }
+.arrow { stroke:#326ce5; stroke-width:3; fill:none; stroke-linecap:round; marker-end:url(#arrowHead); stroke-dasharray:8 8; animation: dash 1.2s linear infinite; }
+.arrow-green { stroke:#18a058; }
+.arrow-orange { stroke:#f59e0b; }
+.pulse { animation:pulse 1.6s ease-in-out infinite; transform-origin:center; }
+.float { animation:float 2.2s ease-in-out infinite; }
+.blink { animation:blink 1.2s ease-in-out infinite; }
+.slide { animation:slide 2.8s ease-in-out infinite; }
+.scan { animation:scan 2.4s linear infinite; }
+.spin { animation:spin 5s linear infinite; transform-origin:center; transform-box:fill-box; }
+.grow { animation:grow 1.8s ease-in-out infinite alternate; transform-origin:center bottom; transform-box:fill-box; }
+@keyframes dash { to { stroke-dashoffset:-32; } }
+@keyframes pulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.08); opacity:.72; } }
+@keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+@keyframes blink { 0%,45%,100% { opacity:1; } 55%,75% { opacity:.25; } }
+@keyframes slide { 0%,100% { transform:translateX(0); } 50% { transform:translateX(34px); } }
+@keyframes scan { from { transform:translateX(-110px); } to { transform:translateX(340px); } }
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes grow { from { transform:scaleY(.6); } to { transform:scaleY(1.08); } }
+@media (max-width: 840px) {
+  .hero-inner, .grid, .grid3, .toc { grid-template-columns:1fr; }
+  main { padding:18px; }
+  header.hero { padding:32px 18px 22px; }
+}
+@media print {
+  body { font-size:12px; }
+  .copy-btn { display:none; }
+  .card, section { box-shadow:none; page-break-inside:avoid; }
+  header.hero { background:#fff; }
+}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="kicker">Kubernetes Administration Lab Reference</div>
+      <h1>Managing Kubernetes Cluster</h1>
+      <p class="subtitle">A trainee-friendly reference with animated conceptual diagrams, simple labs, YAML descriptors, Kustomize deployment, K9s navigation, and kubectl alternatives.</p>
+      <div class="badges">
+        <span class="badge">White-background classroom handout</span>
+        <span class="badge">Copy-paste labs</span>
+        <span class="badge">Validation + cleanup included</span>
+        <span class="badge">Official-doc aligned</span>
+      </div>
+    </div>
+    <div class="anim" aria-label="Animated Kubernetes cluster overview">
+      <svg viewBox="0 0 420 210" role="img">
+        <defs>
+          <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 z" fill="#326ce5"></path>
+          </marker>
+        </defs>
+        <rect x="138" y="28" width="144" height="54" rx="14" class="ctrl pulse"></rect>
+        <text x="210" y="55" text-anchor="middle" class="label">Control Plane</text>
+        <text x="210" y="72" text-anchor="middle" class="muted-label">API · Scheduler · Controllers</text>
+        <rect x="32" y="132" width="96" height="46" rx="12" class="node-fill float"></rect>
+        <rect x="162" y="132" width="96" height="46" rx="12" class="node-fill float" style="animation-delay:.2s"></rect>
+        <rect x="292" y="132" width="96" height="46" rx="12" class="node-fill float" style="animation-delay:.4s"></rect>
+        <text x="80" y="160" text-anchor="middle" class="label">Worker 1</text>
+        <text x="210" y="160" text-anchor="middle" class="label">Worker 2</text>
+        <text x="340" y="160" text-anchor="middle" class="label">Worker 3</text>
+        <path d="M90 132 C120 105, 150 95, 178 82" class="arrow"></path>
+        <path d="M210 132 L210 86" class="arrow arrow-green"></path>
+        <path d="M330 132 C300 105, 270 95, 242 82" class="arrow"></path>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<main>
+<section id="how-to-use">
+  <h2>How to use this document</h2>
+  <ul class="checklist">
+    <li>Use the <strong>concept sections</strong> before labs so trainees understand the control-plane behavior.</li>
+    <li>Use <strong>kind</strong> for the safe Node Maintenance lab.</li>
+    <li>Use a <strong>disposable kubeadm VM cluster</strong> for upgrade and etcd backup/restore labs. Do not run those labs on a production cluster.</li>
+    <li>Use K9s only as an optional visual tool. Every K9s task has a kubectl alternative.</li>
+  </ul>
+  <div class="note danger"><strong>Production warning:</strong> Kubernetes upgrade and etcd restore are destructive administrative operations if performed incorrectly. The commands here are for controlled training clusters. Always take backups, confirm version skew, CNI compatibility, and maintenance windows before production work.</div>
+  <h3>Table of contents</h3>
+  <ul class="toc">
+    <li><a href="#environment">1. Lab environment</a></li>
+    <li><a href="#cluster-management">2. Cluster management</a></li>
+    <li><a href="#node-status">3. Node status</a></li>
+    <li><a href="#heartbeats">4. Node heartbeats</a></li>
+    <li><a href="#node-controller">5. Node controller</a></li>
+    <li><a href="#node-maintenance">6. Node maintenance</a></li>
+    <li><a href="#upgrade">7. Upgrading the Kubernetes cluster</a></li>
+    <li><a href="#backup-restore">8. Backup and restore</a></li>
+    <li><a href="#etcd">9. Working with ETCD datastore</a></li>
+    <li><a href="#yaml-component">10. Create K8s components using YAML descriptors</a></li>
+    <li><a href="#kustomize">11. Kustomize deployment</a></li>
+    <li><a href="#k9s">12. K9s usage and kubectl alternative</a></li>
+    <li><a href="#assessment">13. Assessment questions</a></li>
+  </ul>
+</section>
+
+<section id="environment">
+  <div class="kicker">Lab Setup</div>
+  <h2>1. Lab environment</h2>
+  <div class="grid">
+    <div class="topic-card">
+      <h3>Track A: Safe local lab with kind</h3>
+      <p>Use this for node status, scheduling, drain, uncordon, YAML descriptors, Kustomize, and K9s practice.</p>
+      <div class="code-wrap"><div class="code-title">Pre-check</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash"># Required tools
+docker --version
+kind version
+kubectl version --client</code></pre></div>
+    </div>
+    <div class="topic-card">
+      <h3>Track B: Disposable kubeadm VMs</h3>
+      <p>Use this for kubeadm upgrade and etcd backup/restore. Recommended: 1 control-plane VM + 2 worker VMs, Ubuntu 22.04/24.04 or equivalent.</p>
+      <div class="code-wrap"><div class="code-title">Pre-check on kubeadm control-plane</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl get nodes -o wide
+kubectl -n kube-system get pods
+sudo crictl ps | grep etcd    # run on control-plane node</code></pre></div>
+    </div>
+  </div>
+  <h3>Create the kind cluster for safe labs</h3>
+  <div class="code-wrap"><div class="code-title">kind-config.yaml</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: k8s-mgmt-lab
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker</code></pre></div>
+  <div class="code-wrap"><div class="code-title">Create and validate a 3-node kind cluster</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kind create cluster --config kind-config.yaml
+kubectl cluster-info --context kind-k8s-mgmt-lab
+kubectl get nodes -o wide</code></pre></div>
+  <h3>Expected output pattern</h3>
+  <div class="code-wrap"><div class="code-title">Expected nodes</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-text">NAME                          STATUS   ROLES           AGE   VERSION
+k8s-mgmt-lab-control-plane    Ready    control-plane   ...   v1.xx.x
+k8s-mgmt-lab-worker           Ready    &lt;none&gt;          ...   v1.xx.x
+k8s-mgmt-lab-worker2          Ready    &lt;none&gt;          ...   v1.xx.x</code></pre></div>
+</section>
+
+<section id="cluster-management">
+  <div class="kicker">Concept</div>
+  <h2>2. Cluster Management</h2>
+  <div class="grid">
+    <div>
+      <p>Kubernetes cluster management means continuously checking whether the cluster is healthy, whether nodes are available, whether workloads are running as desired, and whether cluster state is safely stored in etcd.</p>
+      <p>The control plane does not manually “push” every container. It stores desired state in the API server, controllers compare desired state with actual state, and node agents report health and run containers.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Area</th><th>What admin checks</th><th>Typical command</th></tr></thead>
+          <tbody>
+            <tr><td>Cluster health</td><td>Nodes Ready, control plane pods running</td><td><code>kubectl get nodes</code>, <code>kubectl -n kube-system get pods</code></td></tr>
+            <tr><td>Workload health</td><td>Deployments available, pods not crashing</td><td><code>kubectl get deploy,pods -A</code></td></tr>
+            <tr><td>Scheduling</td><td>Pods have nodes assigned, no unschedulable nodes</td><td><code>kubectl describe pod</code></td></tr>
+            <tr><td>Cluster state</td><td>etcd healthy and backed up</td><td><code>etcdctl endpoint health</code>, <code>etcdctl snapshot save</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="anim" aria-label="Cluster management animation">
+      <svg viewBox="0 0 420 210">
+        <defs><marker id="arrowHead2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#326ce5"></path></marker></defs>
+        <rect x="38" y="32" width="110" height="50" rx="12" class="pod"></rect>
+        <text x="93" y="61" text-anchor="middle" class="label">Desired State</text>
+        <rect x="160" y="32" width="110" height="50" rx="12" class="ctrl pulse"></rect>
+        <text x="215" y="61" text-anchor="middle" class="label">API Server</text>
+        <rect x="282" y="32" width="96" height="50" rx="12" class="etcd"></rect>
+        <text x="330" y="61" text-anchor="middle" class="label">etcd</text>
+        <rect x="90" y="132" width="100" height="46" rx="12" class="node-fill float"></rect>
+        <text x="140" y="160" text-anchor="middle" class="label">Node</text>
+        <rect x="234" y="132" width="100" height="46" rx="12" class="node-fill float" style="animation-delay:.3s"></rect>
+        <text x="284" y="160" text-anchor="middle" class="label">Node</text>
+        <path d="M148 57 L160 57" class="arrow" style="marker-end:url(#arrowHead2)"></path>
+        <path d="M270 57 L282 57" class="arrow arrow-green" style="marker-end:url(#arrowHead2)"></path>
+        <path d="M210 82 C195 105,170 113,150 132" class="arrow" style="marker-end:url(#arrowHead2)"></path>
+        <path d="M220 82 C240 108,260 112,280 132" class="arrow" style="marker-end:url(#arrowHead2)"></path>
+      </svg>
+    </div>
+  </div>
+  <div class="code-wrap"><div class="code-title">Daily cluster management checks</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl cluster-info
+kubectl get nodes -o wide
+kubectl get componentstatuses 2&gt;/dev/null || true   # deprecated on many clusters; use pod checks below
+kubectl -n kube-system get pods -o wide
+kubectl get events -A --sort-by=.lastTimestamp | tail -30</code></pre></div>
+</section>
+
+<section id="node-status">
+  <div class="kicker">Concept</div>
+  <h2>3. Node Status</h2>
+  <div class="grid">
+    <div class="anim" aria-label="Node status animation">
+      <svg viewBox="0 0 420 210">
+        <rect x="34" y="30" width="352" height="150" rx="18" class="node-fill"></rect>
+        <text x="210" y="58" text-anchor="middle" class="label">Node object status</text>
+        <circle cx="80" cy="96" r="14" fill="#18a058" class="pulse"></circle><text x="112" y="101" class="label">Ready</text>
+        <circle cx="80" cy="132" r="14" fill="#f59e0b" class="blink"></circle><text x="112" y="137" class="label">Pressure checks</text>
+        <rect x="250" y="88" width="80" height="18" rx="9" fill="#dbeafe"></rect><rect x="250" y="88" width="54" height="18" rx="9" fill="#326ce5" class="grow"></rect><text x="290" y="126" text-anchor="middle" class="muted-label">Capacity</text>
+        <rect x="250" y="136" width="80" height="18" rx="9" fill="#dcfce7"></rect><rect x="250" y="136" width="64" height="18" rx="9" fill="#18a058" class="grow"></rect><text x="290" y="174" text-anchor="middle" class="muted-label">Allocatable</text>
+      </svg>
+    </div>
+    <div>
+      <p>A Node is a Kubernetes API object representing a worker or control-plane machine. Its status includes addresses, capacity, allocatable resources, node conditions, and system information.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Condition</th><th>Meaning</th><th>Admin action</th></tr></thead>
+          <tbody>
+            <tr><td><code>Ready</code></td><td>Kubelet is healthy and posting status.</td><td>Check <code>Ready=True</code>.</td></tr>
+            <tr><td><code>MemoryPressure</code></td><td>Node memory is low.</td><td>Check pod requests/limits, evictions.</td></tr>
+            <tr><td><code>DiskPressure</code></td><td>Node disk is low.</td><td>Clean images/logs, expand disk.</td></tr>
+            <tr><td><code>PIDPressure</code></td><td>Too many processes.</td><td>Investigate runaway pods/processes.</td></tr>
+            <tr><td><code>NetworkUnavailable</code></td><td>Network route/plugin problem.</td><td>Check CNI pods and routes.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="code-wrap"><div class="code-title">Node status inspection</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">  kubectl get nodes
+  kubectl describe node &lt;node-name&gt;
+  kubectl get node &lt;node-name&gt; -o jsonpath=&#x27;{.status.conditions[*].type}&#x27; ; echo
+  kubectl get node &lt;node-name&gt; -o jsonpath=&#x27;{range .status.conditions[*]}{.type}{&quot;=&quot;}{.status}{&quot;
+&quot;}{end}&#x27;
+  kubectl top nodes   # requires Metrics Server</code></pre></div>
+</section>
+
+<section id="heartbeats">
+  <div class="kicker">Concept</div>
+  <h2>4. Node Heartbeats</h2>
+  <div class="grid">
+    <div>
+      <p>Heartbeats are how nodes tell the control plane that they are alive. Kubernetes uses two heartbeat forms: updates to the Node <code>.status</code> and lightweight Lease objects in the <code>kube-node-lease</code> namespace.</p>
+      <p>The kubelet creates and updates Node status and the related Lease object. Lease-based heartbeats reduce API-server load in large clusters.</p>
+      <div class="code-wrap"><div class="code-title">Inspect node lease heartbeats</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl get leases -n kube-node-lease
+kubectl get lease &lt;node-name&gt; -n kube-node-lease -o yaml
+kubectl get node &lt;node-name&gt; -o yaml | less</code></pre></div>
+    </div>
+    <div class="anim" aria-label="Heartbeat animation">
+      <svg viewBox="0 0 420 210">
+        <defs><marker id="arrowHead3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#326ce5"></path></marker></defs>
+        <rect x="42" y="78" width="115" height="58" rx="16" class="node-fill"></rect>
+        <text x="100" y="112" text-anchor="middle" class="label">Kubelet</text>
+        <rect x="263" y="38" width="112" height="48" rx="14" class="ctrl pulse"></rect>
+        <text x="319" y="67" text-anchor="middle" class="label">API Server</text>
+        <rect x="263" y="124" width="112" height="48" rx="14" class="etcd"></rect>
+        <text x="319" y="153" text-anchor="middle" class="label">Lease object</text>
+        <circle cx="175" cy="107" r="10" fill="#326ce5" class="slide"></circle>
+        <path d="M157 100 C195 58,222 55,263 62" class="arrow" style="marker-end:url(#arrowHead3)"></path>
+        <path d="M157 116 C202 148,222 148,263 148" class="arrow arrow-green" style="marker-end:url(#arrowHead3)"></path>
+        <text x="210" y="96" text-anchor="middle" class="muted-label">status update</text>
+        <text x="210" y="142" text-anchor="middle" class="muted-label">lease renewal</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="node-controller">
+  <div class="kicker">Concept</div>
+  <h2>5. Node Controller</h2>
+  <div class="grid">
+    <div class="anim" aria-label="Node controller animation">
+      <svg viewBox="0 0 420 210">
+        <defs><marker id="arrowHead4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#326ce5"></path></marker></defs>
+        <rect x="136" y="24" width="148" height="52" rx="14" class="ctrl pulse"></rect>
+        <text x="210" y="55" text-anchor="middle" class="label">Node Controller</text>
+        <rect x="42" y="132" width="92" height="44" rx="12" class="node-fill"></rect>
+        <circle cx="114" cy="144" r="8" fill="#18a058" class="pulse"></circle>
+        <text x="88" y="160" text-anchor="middle" class="label">Ready</text>
+        <rect x="164" y="132" width="92" height="44" rx="12" class="node-fill"></rect>
+        <circle cx="236" cy="144" r="8" fill="#f59e0b" class="blink"></circle>
+        <text x="210" y="160" text-anchor="middle" class="label">Unknown</text>
+        <rect x="286" y="132" width="92" height="44" rx="12" class="node-fill"></rect>
+        <circle cx="358" cy="144" r="8" fill="#d93025" class="blink"></circle>
+        <text x="332" y="160" text-anchor="middle" class="label">NotReady</text>
+        <path d="M205 76 C145 95,100 106,88 132" class="arrow" style="marker-end:url(#arrowHead4)"></path>
+        <path d="M210 76 L210 132" class="arrow arrow-orange" style="marker-end:url(#arrowHead4)"></path>
+        <path d="M215 76 C275 95,320 106,332 132" class="arrow arrow-orange" style="marker-end:url(#arrowHead4)"></path>
+      </svg>
+    </div>
+    <div>
+      <p>The Node Controller is part of the controller-manager. It watches node heartbeats and node status. If heartbeats stop, Kubernetes can mark the node condition as <code>Unknown</code> or <code>NotReady</code>, stop scheduling new pods there, and eventually trigger pod eviction behavior depending on configuration and workload rules.</p>
+      <div class="note warn"><strong>Important:</strong> Existing containers may keep running on an unreachable node, but the control plane cannot reliably manage them until node communication returns.</div>
+      <div class="code-wrap"><div class="code-title">Check node-controller symptoms</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl get nodes
+kubectl describe node &lt;node-name&gt; | sed -n &#x27;/Conditions:/,/Addresses:/p&#x27;
+kubectl get events -A --field-selector involvedObject.kind=Node --sort-by=.lastTimestamp</code></pre></div>
+    </div>
+  </div>
+</section>
+
+<section id="node-maintenance">
+  <div class="kicker">Lab</div>
+  <h2>6. Node Maintenance</h2>
+  <div class="grid">
+    <div>
+      <p>Node maintenance is the controlled process of removing a node from scheduling, evicting movable workloads, performing maintenance, and returning the node to service.</p>
+      <ol class="step-list">
+        <li><strong>Cordon</strong>: mark node unschedulable for new pods.</li>
+        <li><strong>Drain</strong>: evict application pods safely.</li>
+        <li><strong>Maintain</strong>: patch OS, reboot, fix hardware, or upgrade kubelet.</li>
+        <li><strong>Uncordon</strong>: allow scheduling again.</li>
+      </ol>
+    </div>
+    <div class="anim" aria-label="Node maintenance animation">
+      <svg viewBox="0 0 420 210">
+        <defs><marker id="arrowHead5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#326ce5"></path></marker></defs>
+        <rect x="40" y="48" width="90" height="52" rx="14" class="node-fill"></rect><text x="85" y="80" text-anchor="middle" class="label">Cordon</text>
+        <rect x="166" y="48" width="90" height="52" rx="14" class="node-fill"></rect><text x="211" y="80" text-anchor="middle" class="label">Drain</text>
+        <rect x="292" y="48" width="90" height="52" rx="14" class="node-fill"></rect><text x="337" y="80" text-anchor="middle" class="label">Repair</text>
+        <rect x="166" y="132" width="90" height="52" rx="14" class="node-fill pulse"></rect><text x="211" y="164" text-anchor="middle" class="label">Uncordon</text>
+        <path d="M130 74 L166 74" class="arrow" style="marker-end:url(#arrowHead5)"></path>
+        <path d="M256 74 L292 74" class="arrow" style="marker-end:url(#arrowHead5)"></path>
+        <path d="M337 100 C330 140,290 158,256 158" class="arrow arrow-green" style="marker-end:url(#arrowHead5)"></path>
+        <circle cx="178" cy="122" r="8" fill="#7c3aed" class="slide"></circle>
+      </svg>
+    </div>
+  </div>
+
+  <h3>Lab: Node Maintenance using kind</h3>
+  <h4>Step 1: Create sample workload</h4>
+  <div class="code-wrap"><div class="code-title">Create workload</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl create namespace k8s-mgmt
+kubectl -n k8s-mgmt create deployment web-demo --image=nginx:1.27-alpine --replicas=6
+kubectl -n k8s-mgmt expose deployment web-demo --port=80 --target-port=80
+kubectl -n k8s-mgmt rollout status deployment/web-demo
+kubectl -n k8s-mgmt get pods -o wide</code></pre></div>
+  <h4>Step 2: Select a worker node</h4>
+  <div class="code-wrap"><div class="code-title">Choose node</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl get nodes
+export NODE_TO_MAINTAIN=k8s-mgmt-lab-worker
+kubectl describe node $NODE_TO_MAINTAIN | grep -i &quot;Unschedulable&quot; || true</code></pre></div>
+  <h4>Step 3: Cordon the node</h4>
+  <div class="code-wrap"><div class="code-title">Cordon</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl cordon $NODE_TO_MAINTAIN
+kubectl get nodes
+kubectl describe node $NODE_TO_MAINTAIN | grep -i &quot;Unschedulable&quot;</code></pre></div>
+  <p><strong>Expected:</strong> the node status may show <code>Ready,SchedulingDisabled</code>.</p>
+  <h4>Step 4: Drain the node</h4>
+  <div class="code-wrap"><div class="code-title">Drain</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl drain $NODE_TO_MAINTAIN --ignore-daemonsets --delete-emptydir-data
+kubectl -n k8s-mgmt get pods -o wide</code></pre></div>
+  <div class="note warn"><code>--ignore-daemonsets</code> is normally required because DaemonSet-managed pods are not drained like ordinary workload pods. <code>--delete-emptydir-data</code> allows deletion of pods using temporary emptyDir data; do not use it blindly for important data.</div>
+  <h4>Step 5: Simulate maintenance</h4>
+  <div class="code-wrap"><div class="code-title">Simulate node restart</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash"># With kind, the node is a Docker container. This simulates node maintenance/restart.
+docker restart $NODE_TO_MAINTAIN
+
+# Wait and verify the node returns Ready
+kubectl get nodes -w</code></pre></div>
+  <h4>Step 6: Uncordon the node</h4>
+  <div class="code-wrap"><div class="code-title">Return node to service</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl uncordon $NODE_TO_MAINTAIN
+kubectl get nodes
+kubectl -n k8s-mgmt scale deployment web-demo --replicas=8
+kubectl -n k8s-mgmt get pods -o wide</code></pre></div>
+  <h4>Cleanup</h4>
+  <div class="code-wrap"><div class="code-title">Cleanup</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl delete namespace k8s-mgmt
+# Optional: delete the complete kind lab cluster
+# kind delete cluster --name k8s-mgmt-lab</code></pre></div>
+</section>
+
+<section id="upgrade">
+  <div class="kicker">Lab</div>
+  <h2>7. Upgrading the Kubernetes Cluster</h2>
+  <div class="grid">
+    <div class="anim" aria-label="Rolling upgrade animation">
+      <svg viewBox="0 0 420 210">
+        <defs><marker id="arrowHead6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#326ce5"></path></marker></defs>
+        <rect x="36" y="36" width="100" height="50" rx="12" class="ctrl pulse"></rect><text x="86" y="66" text-anchor="middle" class="label">CP Node</text>
+        <rect x="160" y="36" width="100" height="50" rx="12" class="node-fill"></rect><text x="210" y="66" text-anchor="middle" class="label">Worker 1</text>
+        <rect x="284" y="36" width="100" height="50" rx="12" class="node-fill"></rect><text x="334" y="66" text-anchor="middle" class="label">Worker 2</text>
+        <path d="M136 61 L160 61" class="arrow" style="marker-end:url(#arrowHead6)"></path>
+        <path d="M260 61 L284 61" class="arrow" style="marker-end:url(#arrowHead6)"></path>
+        <rect x="68" y="130" width="284" height="22" rx="11" fill="#dbeafe"></rect>
+        <rect x="68" y="130" width="120" height="22" rx="11" fill="#326ce5" class="scan"></rect>
+        <text x="210" y="174" text-anchor="middle" class="muted-label">Upgrade one node at a time; keep capacity available</text>
+      </svg>
+    </div>
+    <div>
+      <p>Kubernetes cluster upgrades depend on how the cluster was built. For kubeadm clusters, the safe sequence is: upgrade the primary control-plane node, upgrade additional control-plane nodes, then upgrade worker nodes.</p>
+      <p>Do not skip minor versions. Upgrade from <code>1.N</code> to <code>1.N+1</code>, then continue if another minor upgrade is required.</p>
+      <div class="note danger"><strong>Disposable lab only:</strong> Upgrade commands below are for kubeadm-managed clusters, not kind/minikube managed clusters. Use a test cluster that you can rebuild.</div>
+    </div>
+  </div>
+
+  <h3>Pre-upgrade checklist</h3>
+  <ul class="checklist">
+    <li>Read release notes for the target version.</li>
+    <li>Confirm current version: <code>kubectl get nodes</code>.</li>
+    <li>Confirm all nodes are <code>Ready</code>.</li>
+    <li>Back up etcd before upgrade.</li>
+    <li>Check CNI plugin upgrade notes: Calico, Cilium, Flannel, etc.</li>
+    <li>Check deprecated/removed API usage.</li>
+  </ul>
+  <div class="code-wrap"><div class="code-title">Pre-upgrade health checks</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl get nodes -o wide
+kubectl -n kube-system get pods -o wide
+kubectl get --raw=&#x27;/readyz?verbose&#x27;
+kubectl get apiservices | grep False || true
+kubectl get events -A --sort-by=.lastTimestamp | tail -30</code></pre></div>
+
+  <h3>Lab: Upgrade a kubeadm cluster on Ubuntu/Debian</h3>
+  <div class="note warn">Replace <code>1.36.x-*</code> and <code>v1.36.x</code> with the exact patch version shown by your package manager and supported by your current cluster path. Example only: do not copy blindly.</div>
+  <h4>Step 1: On the first control-plane node, find target version</h4>
+  <div class="code-wrap"><div class="code-title">Select target patch version</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">sudo apt update
+sudo apt-cache madison kubeadm
+
+# Example variable. Replace x with the patch version selected from apt-cache output.
+export TARGET_DEB_VERSION=&#x27;1.36.x-*&#x27;
+export TARGET_K8S_VERSION=&#x27;v1.36.x&#x27;</code></pre></div>
+  <h4>Step 2: Upgrade kubeadm and run upgrade plan</h4>
+  <div class="code-wrap"><div class="code-title">Upgrade kubeadm and plan</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">sudo apt-mark unhold kubeadm
+sudo apt-get update
+sudo apt-get install -y kubeadm=&quot;$TARGET_DEB_VERSION&quot;
+sudo apt-mark hold kubeadm
+
+kubeadm version
+sudo kubeadm upgrade plan</code></pre></div>
+  <h4>Step 3: Apply control-plane upgrade</h4>
+  <div class="code-wrap"><div class="code-title">Upgrade first control-plane node</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">sudo kubeadm upgrade apply &quot;$TARGET_K8S_VERSION&quot;</code></pre></div>
+  <h4>Step 4: Drain the control-plane node and upgrade kubelet/kubectl</h4>
+  <div class="code-wrap"><div class="code-title">Upgrade kubelet/kubectl on control-plane</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl get nodes -o wide
+export NODE_TO_UPGRADE=&lt;control-plane-node-name&gt;
+kubectl drain &quot;$NODE_TO_UPGRADE&quot; --ignore-daemonsets
+
+sudo apt-mark unhold kubelet kubectl
+sudo apt-get update
+sudo apt-get install -y kubelet=&quot;$TARGET_DEB_VERSION&quot; kubectl=&quot;$TARGET_DEB_VERSION&quot;
+sudo apt-mark hold kubelet kubectl
+
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+kubectl uncordon &quot;$NODE_TO_UPGRADE&quot;</code></pre></div>
+  <h4>Step 5: Upgrade additional control-plane nodes</h4>
+  <div class="code-wrap"><div class="code-title">Additional control-plane node</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash"># Run on each additional control-plane node, one at a time.
+sudo apt-mark unhold kubeadm
+sudo apt-get update
+sudo apt-get install -y kubeadm=&quot;$TARGET_DEB_VERSION&quot;
+sudo apt-mark hold kubeadm
+
+sudo kubeadm upgrade node
+
+kubectl get nodes -o wide
+export NODE_TO_UPGRADE=&lt;control-plane-node-name&gt;
+kubectl drain &quot;$NODE_TO_UPGRADE&quot; --ignore-daemonsets
+sudo apt-mark unhold kubelet kubectl
+sudo apt-get install -y kubelet=&quot;$TARGET_DEB_VERSION&quot; kubectl=&quot;$TARGET_DEB_VERSION&quot;
+sudo apt-mark hold kubelet kubectl
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+kubectl uncordon &quot;$NODE_TO_UPGRADE&quot;</code></pre></div>
+  <h4>Step 6: Upgrade worker nodes</h4>
+  <div class="code-wrap"><div class="code-title">Worker node upgrade</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash"># Run on each worker node. Drain from an admin terminal before package changes.
+kubectl drain &lt;worker-node-name&gt; --ignore-daemonsets --delete-emptydir-data
+
+# On the worker node:
+sudo apt-mark unhold kubeadm
+sudo apt-get update
+sudo apt-get install -y kubeadm=&quot;$TARGET_DEB_VERSION&quot;
+sudo apt-mark hold kubeadm
+sudo kubeadm upgrade node
+
+sudo apt-mark unhold kubelet kubectl
+sudo apt-get install -y kubelet=&quot;$TARGET_DEB_VERSION&quot; kubectl=&quot;$TARGET_DEB_VERSION&quot;
+sudo apt-mark hold kubelet kubectl
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+
+# From admin terminal:
+kubectl uncordon &lt;worker-node-name&gt;</code></pre></div>
+  <h4>Step 7: Validate upgrade</h4>
+  <div class="code-wrap"><div class="code-title">Post-upgrade validation</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl get nodes -o wide
+kubectl -n kube-system get pods -o wide
+kubectl get --raw=&#x27;/readyz?verbose&#x27;
+kubectl version</code></pre></div>
+</section>
+
+<section id="backup-restore">
+  <div class="kicker">Lab</div>
+  <h2>8. Kubernetes Cluster Backup and Restore</h2>
+  <div class="grid">
+    <div>
+      <p>For a kubeadm cluster using stacked etcd, the most important cluster-level backup is the etcd snapshot. It contains Kubernetes API state: namespaces, deployments, services, secrets, configmaps, RBAC, and other objects.</p>
+      <p>It does <strong>not</strong> back up application data stored inside external databases, PersistentVolumes, object storage, or cloud disks. Those need separate backup processes.</p>
+    </div>
+    <div class="anim" aria-label="Backup restore animation">
+      <svg viewBox="0 0 420 210">
+        <defs><marker id="arrowHead7" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#326ce5"></path></marker></defs>
+        <rect x="48" y="62" width="112" height="72" rx="16" class="etcd pulse"></rect>
+        <text x="104" y="103" text-anchor="middle" class="label">etcd</text>
+        <rect x="258" y="42" width="112" height="48" rx="12" fill="#eef2ff" stroke="#7c3aed" stroke-width="2"></rect>
+        <text x="314" y="71" text-anchor="middle" class="label">snapshot.db</text>
+        <rect x="258" y="120" width="112" height="48" rx="12" fill="#effaf4" stroke="#18a058" stroke-width="2"></rect>
+        <text x="314" y="149" text-anchor="middle" class="label">restore</text>
+        <path d="M160 84 C190 62,222 60,258 66" class="arrow" style="marker-end:url(#arrowHead7)"></path>
+        <path d="M258 144 C218 150,188 136,160 116" class="arrow arrow-green" style="marker-end:url(#arrowHead7)"></path>
+      </svg>
+    </div>
+  </div>
+
+  <h3>Lab: Backup and restore ETCD on a disposable kubeadm cluster</h3>
+  <div class="note danger"><strong>Do not perform the restore section on a production cluster.</strong> Restoring etcd rolls the cluster state back to the snapshot. This can delete later API objects and confuse controllers if not handled correctly.</div>
+  <h4>Step 1: Create a test object before backup</h4>
+  <div class="code-wrap"><div class="code-title">Create object to prove restore</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl create namespace restore-test
+kubectl -n restore-test create configmap important-config --from-literal=state=before-backup
+kubectl -n restore-test get configmap important-config -o yaml</code></pre></div>
+  <h4>Step 2: Confirm etcd pod and certificates on control-plane node</h4>
+  <div class="code-wrap"><div class="code-title">Inspect etcd static pod</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">sudo crictl ps | grep etcd
+sudo ls -l /etc/kubernetes/pki/etcd/
+sudo grep -n &quot;data-dir\|listen-client-urls\|advertise-client-urls&quot; /etc/kubernetes/manifests/etcd.yaml</code></pre></div>
+  <h4>Step 3: Take etcd snapshot</h4>
+  <div class="code-wrap"><div class="code-title">Backup etcd</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">export SNAPSHOT=/root/etcd-snapshot-$(date +%F-%H%M).db
+
+sudo env ETCDCTL_API=3 etcdctl     --endpoints=https://127.0.0.1:2379     --cacert=/etc/kubernetes/pki/etcd/ca.crt     --cert=/etc/kubernetes/pki/etcd/server.crt     --key=/etc/kubernetes/pki/etcd/server.key     snapshot save &quot;$SNAPSHOT&quot;
+
+sudo etcdutl snapshot status &quot;$SNAPSHOT&quot; -w table</code></pre></div>
+  <h4>Step 4: Simulate accidental deletion</h4>
+  <div class="code-wrap"><div class="code-title">Delete test object</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl delete namespace restore-test
+kubectl get namespace restore-test || true</code></pre></div>
+  <h4>Step 5: Restore from snapshot on single-node kubeadm control plane</h4>
+  <div class="note warn">This simplified restore lab assumes a single stacked-etcd control-plane. For multi-control-plane etcd, restore all etcd members consistently and stop all API servers first.</div>
+  <div class="code-wrap"><div class="code-title">Restore etcd snapshot</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash"># 1) Stop API server and etcd static pods by moving their manifests away.
+sudo mkdir -p /root/k8s-static-pod-manifests-backup
+sudo mv /etc/kubernetes/manifests/kube-apiserver.yaml /root/k8s-static-pod-manifests-backup/
+sudo mv /etc/kubernetes/manifests/etcd.yaml /root/k8s-static-pod-manifests-backup/
+
+# 2) Wait until both containers disappear.
+watch -n 2 &#x27;sudo crictl ps | egrep &quot;kube-apiserver|etcd&quot; || true&#x27;
+# Press Ctrl+C after both kube-apiserver and etcd containers have disappeared.
+
+# 3) Move old etcd data aside and restore snapshot to /var/lib/etcd.
+sudo mv /var/lib/etcd /var/lib/etcd.bak-$(date +%F-%H%M)
+sudo etcdutl snapshot restore &quot;$SNAPSHOT&quot; --data-dir /var/lib/etcd
+sudo chown -R root:root /var/lib/etcd
+
+# 4) Bring etcd back, then API server.
+sudo mv /root/k8s-static-pod-manifests-backup/etcd.yaml /etc/kubernetes/manifests/
+sleep 30
+sudo mv /root/k8s-static-pod-manifests-backup/kube-apiserver.yaml /etc/kubernetes/manifests/</code></pre></div>
+  <h4>Step 6: Validate restore</h4>
+  <div class="code-wrap"><div class="code-title">Verify restored object</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash"># Wait for API server to return
+kubectl get nodes
+kubectl get namespace restore-test
+kubectl -n restore-test get configmap important-config -o yaml
+kubectl -n kube-system get pods</code></pre></div>
+</section>
+
+<section id="etcd">
+  <div class="kicker">Concept + Commands</div>
+  <h2>9. Working with ETCD datastore</h2>
+  <div class="grid">
+    <div class="anim" aria-label="ETCD datastore animation">
+      <svg viewBox="0 0 420 210">
+        <defs><marker id="arrowHead8" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#326ce5"></path></marker></defs>
+        <rect x="34" y="48" width="112" height="52" rx="14" class="pod"></rect><text x="90" y="80" text-anchor="middle" class="label">kubectl</text>
+        <rect x="158" y="48" width="112" height="52" rx="14" class="ctrl pulse"></rect><text x="214" y="80" text-anchor="middle" class="label">API Server</text>
+        <rect x="282" y="48" width="104" height="52" rx="14" class="etcd"></rect><text x="334" y="80" text-anchor="middle" class="label">etcd</text>
+        <path d="M146 74 L158 74" class="arrow" style="marker-end:url(#arrowHead8)"></path>
+        <path d="M270 74 L282 74" class="arrow arrow-green" style="marker-end:url(#arrowHead8)"></path>
+        <rect x="90" y="134" width="240" height="34" rx="10" fill="#f8fafc" stroke="#d9e2f2"></rect>
+        <text x="210" y="155" text-anchor="middle" class="muted-label">/registry/deployments/... /registry/secrets/...</text>
+      </svg>
+    </div>
+    <div>
+      <p>etcd is the consistent key-value store used as Kubernetes backing storage. Admins normally interact through the Kubernetes API, not by editing etcd keys directly.</p>
+      <div class="note danger"><strong>Never manually edit etcd keys in a live cluster</strong> unless you are performing a documented disaster-recovery operation and fully understand the consequences.</div>
+    </div>
+  </div>
+  <h3>Useful etcd read-only commands</h3>
+  <div class="code-wrap"><div class="code-title">etcd health and key inspection</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash"># Run on kubeadm control-plane node.
+sudo env ETCDCTL_API=3 etcdctl     --endpoints=https://127.0.0.1:2379     --cacert=/etc/kubernetes/pki/etcd/ca.crt     --cert=/etc/kubernetes/pki/etcd/server.crt     --key=/etc/kubernetes/pki/etcd/server.key     endpoint health -w table
+
+sudo env ETCDCTL_API=3 etcdctl     --endpoints=https://127.0.0.1:2379     --cacert=/etc/kubernetes/pki/etcd/ca.crt     --cert=/etc/kubernetes/pki/etcd/server.crt     --key=/etc/kubernetes/pki/etcd/server.key     endpoint status -w table
+
+sudo env ETCDCTL_API=3 etcdctl     --endpoints=https://127.0.0.1:2379     --cacert=/etc/kubernetes/pki/etcd/ca.crt     --cert=/etc/kubernetes/pki/etcd/server.crt     --key=/etc/kubernetes/pki/etcd/server.key     get /registry/namespaces --prefix --keys-only | head</code></pre></div>
+</section>
+
+<section id="yaml-component">
+  <div class="kicker">Lab</div>
+  <h2>10. Create a K8S component through a YAML descriptor file</h2>
+  <div class="grid">
+    <div>
+      <p>Declarative YAML descriptors define the desired state of Kubernetes objects. The recommended trainee workflow is: write YAML, validate with dry-run, apply, verify, update, and clean up.</p>
+    </div>
+    <div class="anim" aria-label="YAML apply animation">
+      <svg viewBox="0 0 420 210">
+        <defs><marker id="arrowHead9" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#326ce5"></path></marker></defs>
+        <rect x="38" y="50" width="96" height="112" rx="12" fill="#fff" stroke="#7c3aed" stroke-width="2"></rect>
+        <text x="86" y="82" text-anchor="middle" class="label">YAML</text>
+        <line x1="58" y1="104" x2="116" y2="104" stroke="#c4b5fd" stroke-width="4"></line>
+        <line x1="58" y1="124" x2="106" y2="124" stroke="#c4b5fd" stroke-width="4"></line>
+        <rect x="170" y="70" width="100" height="72" rx="14" class="ctrl pulse"></rect><text x="220" y="111" text-anchor="middle" class="label">API</text>
+        <rect x="306" y="70" width="80" height="72" rx="14" class="pod float"></rect><text x="346" y="111" text-anchor="middle" class="label">Object</text>
+        <path d="M134 106 L170 106" class="arrow" style="marker-end:url(#arrowHead9)"></path>
+        <path d="M270 106 L306 106" class="arrow arrow-green" style="marker-end:url(#arrowHead9)"></path>
+      </svg>
+    </div>
+  </div>
+  <h3>Descriptor files</h3>
+  <div class="code-wrap"><div class="code-title">namespace.yaml</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-mgmt</code></pre></div>
+  <div class="code-wrap"><div class="code-title">deployment.yaml</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-demo
+  namespace: k8s-mgmt
+  labels:
+    app: web-demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-demo
+  template:
+    metadata:
+      labels:
+        app: web-demo
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi</code></pre></div>
+  <div class="code-wrap"><div class="code-title">service.yaml</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata:
+  name: web-demo-svc
+  namespace: k8s-mgmt
+spec:
+  type: ClusterIP
+  selector:
+    app: web-demo
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80</code></pre></div>
+  <div class="code-wrap"><div class="code-title">configmap.yaml</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+  namespace: k8s-mgmt
+data:
+  APP_MODE: training
+  LOG_LEVEL: info</code></pre></div>
+  <div class="code-wrap"><div class="code-title">pdb.yaml</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: web-demo-pdb
+  namespace: k8s-mgmt
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: web-demo</code></pre></div>
+  <h3>Apply and verify</h3>
+  <div class="code-wrap"><div class="code-title">Apply YAML descriptors</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl apply --dry-run=server -f namespace.yaml
+kubectl apply -f namespace.yaml
+kubectl apply --dry-run=server -f deployment.yaml
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+kubectl apply -f configmap.yaml
+kubectl apply -f pdb.yaml
+
+kubectl -n k8s-mgmt get deploy,rs,pods,svc,cm,pdb -o wide
+kubectl -n k8s-mgmt rollout status deployment/web-demo
+kubectl -n k8s-mgmt describe deployment web-demo</code></pre></div>
+  <h3>Access the application</h3>
+  <div class="code-wrap"><div class="code-title">Port-forward test</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl -n k8s-mgmt port-forward service/web-demo-svc 8080:80
+# Open another terminal:
+curl http://127.0.0.1:8080</code></pre></div>
+  <h3>Cleanup</h3>
+  <div class="code-wrap"><div class="code-title">Cleanup descriptors</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl delete -f pdb.yaml
+kubectl delete -f configmap.yaml
+kubectl delete -f service.yaml
+kubectl delete -f deployment.yaml
+kubectl delete -f namespace.yaml</code></pre></div>
+</section>
+
+<section id="kustomize">
+  <div class="kicker">Lab</div>
+  <h2>11. Kustomize deployment</h2>
+  <div class="grid">
+    <div class="anim" aria-label="Kustomize animation">
+      <svg viewBox="0 0 420 210">
+        <defs><marker id="arrowHead10" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#326ce5"></path></marker></defs>
+        <rect x="34" y="50" width="92" height="56" rx="12" fill="#eaf2ff" stroke="#326ce5" stroke-width="2"></rect><text x="80" y="83" text-anchor="middle" class="label">Base</text>
+        <rect x="34" y="124" width="92" height="56" rx="12" fill="#f6f1ff" stroke="#7c3aed" stroke-width="2"></rect><text x="80" y="157" text-anchor="middle" class="label">Overlay</text>
+        <rect x="176" y="82" width="100" height="66" rx="14" class="ctrl pulse"></rect><text x="226" y="120" text-anchor="middle" class="label">Kustomize</text>
+        <rect x="326" y="82" width="62" height="66" rx="12" class="pod float"></rect><text x="357" y="120" text-anchor="middle" class="label">YAML</text>
+        <path d="M126 78 L176 102" class="arrow" style="marker-end:url(#arrowHead10)"></path>
+        <path d="M126 152 L176 128" class="arrow arrow-orange" style="marker-end:url(#arrowHead10)"></path>
+        <path d="M276 115 L326 115" class="arrow arrow-green" style="marker-end:url(#arrowHead10)"></path>
+      </svg>
+    </div>
+    <div>
+      <p>Kustomize lets trainees keep reusable base manifests and apply environment-specific overlays without template syntax. <code>kubectl</code> includes Kustomize support through <code>kubectl kustomize</code> and <code>kubectl apply -k</code>.</p>
+    </div>
+  </div>
+  <h3>Directory structure</h3>
+  <div class="code-wrap"><div class="code-title">Kustomize layout</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-text">kustomize-web-demo/
+├── base/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── kustomization.yaml
+└── overlays/
+    └── dev/
+        ├── namespace.yaml
+        └── kustomization.yaml</code></pre></div>
+  <h3>Create files</h3>
+  <div class="code-wrap"><div class="code-title">Create folders</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">mkdir -p kustomize-web-demo/base kustomize-web-demo/overlays/dev
+cd kustomize-web-demo</code></pre></div>
+  <div class="code-wrap"><div class="code-title">base/deployment.yaml</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-demo
+  labels:
+    app: web-demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-demo
+  template:
+    metadata:
+      labels:
+        app: web-demo
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi</code></pre></div>
+  <div class="code-wrap"><div class="code-title">base/service.yaml</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata:
+  name: web-demo-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: web-demo
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80</code></pre></div>
+  <div class="code-wrap"><div class="code-title">base/kustomization.yaml</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - deployment.yaml
+  - service.yaml
+commonLabels:
+  training: cluster-management</code></pre></div>
+  <div class="code-wrap"><div class="code-title">overlays/dev/namespace.yaml</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-mgmt-dev</code></pre></div>
+  <div class="code-wrap"><div class="code-title">overlays/dev/kustomization.yaml</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-yaml">apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: k8s-mgmt-dev
+resources:
+  - namespace.yaml
+  - ../../base
+patches:
+  - target:
+      kind: Deployment
+      name: web-demo
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: nginx:1.27-alpine</code></pre></div>
+  <h3>Build, apply, verify</h3>
+  <div class="code-wrap"><div class="code-title">Deploy with Kustomize</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl kustomize overlays/dev
+kubectl apply --dry-run=client -k overlays/dev
+kubectl apply -k overlays/dev
+
+kubectl -n k8s-mgmt-dev get deploy,rs,pods,svc -o wide
+kubectl -n k8s-mgmt-dev rollout status deployment/web-demo</code></pre></div>
+  <h3>Cleanup</h3>
+  <div class="code-wrap"><div class="code-title">Cleanup Kustomize lab</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl delete -k overlays/dev
+cd ..
+rm -rf kustomize-web-demo</code></pre></div>
+</section>
+
+<section id="deployment-concept">
+  <div class="kicker">Concept</div>
+  <h2>Deployment: desired state, ReplicaSet, Pods</h2>
+  <div class="grid">
+    <div>
+      <p>A Deployment manages ReplicaSets and Pods for stateless applications. You declare replicas, image, labels, probes, and resource requests. The Deployment controller moves the actual state toward the desired state and supports rollout and rollback.</p>
+      <div class="code-wrap"><div class="code-title">Deployment rollout commands</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash">kubectl -n k8s-mgmt rollout history deployment/web-demo
+kubectl -n k8s-mgmt set image deployment/web-demo nginx=nginx:1.27-alpine
+kubectl -n k8s-mgmt rollout status deployment/web-demo
+kubectl -n k8s-mgmt rollout undo deployment/web-demo</code></pre></div>
+    </div>
+    <div class="anim" aria-label="Deployment controller animation">
+      <svg viewBox="0 0 420 210">
+        <defs><marker id="arrowHead11" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#326ce5"></path></marker></defs>
+        <rect x="32" y="78" width="106" height="54" rx="14" class="ctrl pulse"></rect><text x="85" y="110" text-anchor="middle" class="label">Deployment</text>
+        <rect x="166" y="78" width="94" height="54" rx="14" class="pod"></rect><text x="213" y="110" text-anchor="middle" class="label">ReplicaSet</text>
+        <circle cx="320" cy="68" r="22" class="node-fill float"></circle>
+        <circle cx="350" cy="105" r="22" class="node-fill float" style="animation-delay:.2s"></circle>
+        <circle cx="320" cy="142" r="22" class="node-fill float" style="animation-delay:.4s"></circle>
+        <text x="320" y="73" text-anchor="middle" class="muted-label">Pod</text><text x="350" y="110" text-anchor="middle" class="muted-label">Pod</text><text x="320" y="147" text-anchor="middle" class="muted-label">Pod</text>
+        <path d="M138 105 L166 105" class="arrow" style="marker-end:url(#arrowHead11)"></path>
+        <path d="M260 105 C285 75,294 70,304 68" class="arrow arrow-green" style="marker-end:url(#arrowHead11)"></path>
+        <path d="M260 105 L328 105" class="arrow arrow-green" style="marker-end:url(#arrowHead11)"></path>
+        <path d="M260 105 C285 135,294 140,304 142" class="arrow arrow-green" style="marker-end:url(#arrowHead11)"></path>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="k9s">
+  <div class="kicker">Tooling</div>
+  <h2>12. K9s usage or alternative kubectl</h2>
+  <div class="grid">
+    <div class="anim" aria-label="K9s terminal animation">
+      <svg viewBox="0 0 420 210">
+        <rect x="36" y="34" width="348" height="142" rx="16" fill="#0f172a"></rect>
+        <rect x="36" y="34" width="348" height="28" rx="16" fill="#1e293b"></rect>
+        <circle cx="58" cy="48" r="5" fill="#ef4444"></circle><circle cx="76" cy="48" r="5" fill="#f59e0b"></circle><circle cx="94" cy="48" r="5" fill="#22c55e"></circle>
+        <text x="58" y="88" fill="#dbeafe" class="label">:pods</text>
+        <rect x="58" y="104" width="280" height="14" fill="#334155" class="blink"></rect>
+        <rect x="58" y="128" width="220" height="14" fill="#334155"></rect>
+        <rect x="58" y="152" width="250" height="14" fill="#334155"></rect>
+        <text x="306" y="88" fill="#93c5fd" class="muted-label">logs · describe · shell</text>
+      </svg>
+    </div>
+    <div>
+      <p>K9s is an optional terminal UI for observing and operating Kubernetes resources. Use it for faster navigation during demonstrations, but teach kubectl because it is universal, scriptable, and exam-friendly.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Task</th><th>K9s</th><th>kubectl alternative</th></tr></thead>
+          <tbody>
+            <tr><td>Open namespace</td><td><code>k9s -n k8s-mgmt</code></td><td><code>kubectl -n k8s-mgmt get all</code></td></tr>
+            <tr><td>View pods</td><td><code>:pods</code></td><td><code>kubectl get pods -A -o wide</code></td></tr>
+            <tr><td>View deployments</td><td><code>:deploy</code></td><td><code>kubectl get deploy -A</code></td></tr>
+            <tr><td>View services</td><td><code>:svc</code></td><td><code>kubectl get svc -A</code></td></tr>
+            <tr><td>View nodes</td><td><code>:nodes</code></td><td><code>kubectl get nodes -o wide</code></td></tr>
+            <tr><td>Logs</td><td>Select pod → <code>l</code></td><td><code>kubectl logs pod/&lt;pod&gt; -n &lt;ns&gt;</code></td></tr>
+            <tr><td>Describe</td><td>Select resource → <code>d</code></td><td><code>kubectl describe pod &lt;pod&gt; -n &lt;ns&gt;</code></td></tr>
+            <tr><td>Shell</td><td>Select pod → <code>s</code></td><td><code>kubectl exec -it pod/&lt;pod&gt; -n &lt;ns&gt; -- sh</code></td></tr>
+            <tr><td>Filter</td><td><code>/text</code></td><td><code>kubectl get pods -A | grep text</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="code-wrap"><div class="code-title">K9s quick usage</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-bash"># Start K9s for a namespace
+k9s -n k8s-mgmt
+
+# Useful K9s commands inside UI
+:pods
+:deploy
+:svc
+:nodes
+/web-demo
+0        # all namespaces
+q        # back/quit</code></pre></div>
+</section>
+
+<section id="troubleshooting">
+  <div class="kicker">Troubleshooting</div>
+  <h2>Common issues trainees may face</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Issue</th><th>Likely reason</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td><code>kubectl drain</code> stuck</td><td>PodDisruptionBudget, unmanaged pod, local storage, DaemonSet</td><td>Read drain error carefully; use PDB-aware capacity; avoid force unless lab-only.</td></tr>
+        <tr><td>Node stays <code>SchedulingDisabled</code></td><td>Forgot <code>kubectl uncordon</code></td><td><code>kubectl uncordon &lt;node&gt;</code></td></tr>
+        <tr><td><code>kubectl top</code> not working</td><td>Metrics Server missing</td><td>Install Metrics Server or skip top commands.</td></tr>
+        <tr><td>Upgrade package not found</td><td>Wrong Kubernetes minor package repository</td><td>Enable target minor repository from <code>pkgs.k8s.io</code>.</td></tr>
+        <tr><td>etcdctl cannot connect</td><td>Wrong cert/key/endpoint or not on control-plane</td><td>Use endpoint <code>https://127.0.0.1:2379</code> and kubeadm etcd certs on control-plane.</td></tr>
+        <tr><td>Kustomize namespace error</td><td>Overlay namespace was not created or current context uses another namespace</td><td>Ensure <code>overlays/dev/namespace.yaml</code> is included and verify with <code>kubectl get ns k8s-mgmt-dev</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="assessment">
+  <div class="kicker">Assessment</div>
+  <h2>13. Assessment questions</h2>
+  <ol>
+    <li>What is the difference between cordon and drain?</li>
+    <li>Why does <code>kubectl drain</code> need <code>--ignore-daemonsets</code>?</li>
+    <li>What are Kubernetes Node Lease objects used for?</li>
+    <li>What can happen if etcd loses quorum?</li>
+    <li>Why should you not skip Kubernetes minor versions during upgrade?</li>
+    <li>What is backed up by an etcd snapshot, and what is not backed up?</li>
+    <li>Why is <code>etcdutl</code> preferred for snapshot restore in newer etcd versions?</li>
+    <li>What is the difference between <code>kubectl apply -f</code> and <code>kubectl apply -k</code>?</li>
+    <li>How does a Deployment use ReplicaSets?</li>
+    <li>When would you use K9s, and when would you prefer plain kubectl?</li>
+  </ol>
+</section>
+
+<section id="validation">
+  <div class="kicker">Validation performed while generating this document</div>
+  <h2>Manifest validation notes</h2>
+  <p>The YAML examples embedded in this document were syntax-checked during document creation. Operational commands are aligned to official Kubernetes/etcd documentation, but upgrade and restore labs must still be tested in your exact disposable lab environment because package repositories, CNI versions, OS packages, and cluster versions vary.</p>
+  <div class="code-wrap"><div class="code-title">YAML syntax validation summary</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-text">namespace.yaml: YAML syntax OK
+deployment.yaml: YAML syntax OK
+service.yaml: YAML syntax OK
+pdb.yaml: YAML syntax OK
+kind-config.yaml: YAML syntax OK
+base/deployment.yaml: YAML syntax OK
+base/service.yaml: YAML syntax OK
+base/kustomization.yaml: YAML syntax OK
+overlays/dev/kustomization.yaml: YAML syntax OK
+configmap.yaml: YAML syntax OK</code></pre></div>
+</section>
+
+<section id="references">
+  <div class="kicker">References</div>
+  <h2>Official references used</h2>
+  <ul>
+    <li>Kubernetes Node Status and heartbeats: https://kubernetes.io/docs/reference/node/node-status/</li>
+    <li>Kubernetes Nodes concept: https://kubernetes.io/docs/concepts/architecture/nodes/</li>
+    <li>Safely Drain a Node: https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/</li>
+    <li>Upgrade a Cluster: https://kubernetes.io/docs/tasks/administer-cluster/cluster-upgrade/</li>
+    <li>Upgrading kubeadm clusters: https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/</li>
+    <li>Operating etcd clusters for Kubernetes: https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/</li>
+    <li>etcd disaster recovery: https://etcd.io/docs/v3.5/op-guide/recovery/</li>
+    <li>kubectl kustomize: https://kubernetes.io/docs/reference/kubectl/generated/kubectl_kustomize/</li>
+    <li>Kubernetes Deployments: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/</li>
+    <li>K9s: https://k9scli.io/</li>
+  </ul>
+</section>
+
+<div class="footer">
+  <p>Prepared as a self-contained HTML trainee reference. Recommended delivery: open in browser, print to PDF if needed, and execute labs only in disposable clusters.</p>
+</div>
+</main>
+
+<script>
+function copyCode(btn) {
+  const code = btn.parentElement.querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    const old = btn.innerText;
+    btn.innerText = 'Copied';
+    setTimeout(() => btn.innerText = old, 1200);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kubernetes Troubleshooting Reference and Labs</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --ink:#1f2937;
+      --muted:#64748b;
+      --line:#d9e2ec;
+      --blue:#2563eb;
+      --blue2:#0ea5e9;
+      --green:#16a34a;
+      --orange:#f97316;
+      --red:#dc2626;
+      --purple:#7c3aed;
+      --soft:#f8fafc;
+      --soft-blue:#eff6ff;
+      --soft-green:#ecfdf5;
+      --soft-red:#fef2f2;
+      --soft-orange:#fff7ed;
+      --code:#0f172a;
+      --code-ink:#e5e7eb;
+      --shadow:0 12px 30px rgba(15,23,42,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      line-height:1.6;
+    }
+    a{color:var(--blue);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .topbar{
+      position:sticky;top:0;z-index:40;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;padding:10px 22px;
+    }
+    .brand{font-weight:800;letter-spacing:.2px;color:#0f172a;display:flex;gap:10px;align-items:center}
+    .brand .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--purple));display:inline-grid;place-items:center;color:white;font-weight:900}
+    .topbar nav{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+    .topbar nav a{color:#334155}
+    .hero{
+      padding:56px 24px 34px;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(37,99,235,.11), transparent 30%),
+        radial-gradient(circle at 90% 20%, rgba(124,58,237,.10), transparent 35%),
+        linear-gradient(180deg,#fff,#f8fafc);
+      border-bottom:1px solid var(--line);
+    }
+    .wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+    .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center}
+    h1{font-size:44px;line-height:1.08;margin:0 0 18px;color:#0f172a;letter-spacing:-1px}
+    .subtitle{font-size:19px;color:#475569;margin:0 0 24px;max-width:760px}
+    .pill-row{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}
+    .pill{background:white;border:1px solid var(--line);box-shadow:var(--shadow);border-radius:999px;padding:8px 13px;font-size:14px;color:#334155;font-weight:650}
+    .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px;max-width:750px}
+    .meta-card{background:white;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .meta-card strong{display:block;color:#0f172a;font-size:15px}.meta-card span{font-size:13px;color:var(--muted)}
+    section{padding:38px 0;border-bottom:1px solid #eef2f7}
+    h2{font-size:31px;line-height:1.18;margin:0 0 16px;color:#0f172a;letter-spacing:-.3px}
+    h3{font-size:23px;margin:30px 0 10px;color:#111827}
+    h4{font-size:18px;margin:24px 0 8px;color:#111827}
+    p{margin:9px 0 14px}.lead{font-size:17px;color:#475569}.muted{color:var(--muted)}
+    .grid{display:grid;gap:18px}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .card{background:white;border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+    .card.soft{background:var(--soft);box-shadow:none}.card.blue{background:var(--soft-blue)}.card.green{background:var(--soft-green)}.card.red{background:var(--soft-red)}.card.orange{background:var(--soft-orange)}
+    .callout{border-left:5px solid var(--blue);background:var(--soft-blue);padding:15px 18px;border-radius:12px;margin:16px 0}
+    .callout.warn{border-color:var(--orange);background:var(--soft-orange)}
+    .callout.danger{border-color:var(--red);background:var(--soft-red)}
+    .callout.ok{border-color:var(--green);background:var(--soft-green)}
+    .tag{display:inline-block;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:800;margin-right:6px;color:white;background:var(--blue);vertical-align:middle}.tag.red{background:var(--red)}.tag.green{background:var(--green)}.tag.orange{background:var(--orange)}.tag.purple{background:var(--purple)}
+    table{width:100%;border-collapse:collapse;margin:16px 0;background:white;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+    th,td{padding:12px 13px;border-bottom:1px solid #e5edf5;text-align:left;vertical-align:top;font-size:14px}th{background:#f1f5f9;color:#0f172a;font-weight:800}tr:last-child td{border-bottom:0}
+    .toc{columns:2;column-gap:38px;margin:18px 0}.toc a{display:block;padding:6px 0;color:#334155;break-inside:avoid}
+    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:6px;padding:1px 6px;font-size:13px}
+    .code-wrap{position:relative;margin:14px 0 22px;border-radius:16px;overflow:hidden;box-shadow:var(--shadow);border:1px solid #1e293b;background:var(--code)}
+    .code-title{display:flex;justify-content:space-between;align-items:center;background:#111827;color:#cbd5e1;padding:8px 12px;font-size:13px;border-bottom:1px solid #334155}
+    pre{margin:0;overflow:auto;padding:17px 18px;background:var(--code);color:var(--code-ink);font-size:13.5px;line-height:1.55}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
+    button.copy{border:1px solid #475569;background:#1f2937;color:white;border-radius:9px;padding:5px 9px;font-size:12px;cursor:pointer}button.copy:hover{background:#334155}
+    .step{display:grid;grid-template-columns:42px 1fr;gap:14px;margin:14px 0}.step-num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--blue);color:white;font-weight:900;box-shadow:0 8px 18px rgba(37,99,235,.2)}
+    .checklist li{margin:7px 0}.checklist li::marker{color:var(--green)}
+    .svg-card{background:white;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:18px;overflow:hidden}.diagram-title{font-weight:850;color:#0f172a;margin-bottom:8px}
+    .pulse{animation:pulse 1.8s infinite ease-in-out;transform-origin:center}.pulse2{animation:pulse 1.8s infinite ease-in-out .5s;transform-origin:center}.float{animation:float 3.2s infinite ease-in-out}.float2{animation:float 3.2s infinite ease-in-out .7s}.arrow-dash{stroke-dasharray:9 8;animation:dash 1.1s linear infinite}.arrow-dash-slow{stroke-dasharray:9 8;animation:dash 2s linear infinite}.spin-slow{animation:spin 7s linear infinite;transform-origin:center}.shake{animation:shake 1.5s infinite ease-in-out}.scan{animation:scan 2.5s infinite ease-in-out}.blink{animation:blink 1.1s infinite}.flow-dot{animation:moveDot 4s linear infinite}.flow-dot2{animation:moveDot 4s linear infinite .8s}.flow-dot3{animation:moveDot 4s linear infinite 1.6s}
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.72}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    @keyframes dash{to{stroke-dashoffset:-34}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+    @keyframes scan{0%{transform:translateX(-120px);opacity:.1}40%{opacity:.9}100%{transform:translateX(340px);opacity:.1}}
+    @keyframes blink{0%,60%,100%{opacity:1}70%,90%{opacity:.25}}
+    @keyframes moveDot{0%{offset-distance:0%;opacity:0}10%{opacity:1}90%{opacity:1}100%{offset-distance:100%;opacity:0}}
+    .path-dot{offset-path:path("M 35 50 L 345 50");r:5;fill:#2563eb}
+    .lab-header{display:flex;justify-content:space-between;gap:10px;align-items:start;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px}.lab-header h3{margin:0}.duration{font-size:13px;font-weight:800;color:#334155;background:#f1f5f9;border:1px solid #dbe4ef;border-radius:999px;padding:5px 10px;white-space:nowrap}
+    .scenario{border:1px solid var(--line);border-radius:18px;padding:18px;margin:18px 0;background:#fff}.scenario h4{margin-top:0}.verify{background:#ecfdf5;border:1px solid #bbf7d0;border-radius:14px;padding:12px 14px;margin:12px 0}.fix{background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:12px 14px;margin:12px 0}
+    .footer{padding:34px 0;color:#475569;font-size:14px}.small{font-size:13px}.nowrap{white-space:nowrap}
+    @media print{.topbar,button.copy{display:none}.hero{padding:24px 0}.card,.svg-card,.code-wrap,table{box-shadow:none}section{break-inside:avoid}pre{white-space:pre-wrap}.wrap{max-width:100%}}
+    @media (max-width:900px){.hero-grid,.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.meta{grid-template-columns:1fr}.toc{columns:1}.topbar{position:static}.topbar nav{display:none}h1{font-size:34px}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo">K8s</span> Troubleshooting Reference</div>
+    <nav>
+      <a href="#overview">Overview</a>
+      <a href="#control-plane">Control Plane</a>
+      <a href="#node-failure">Node Failure</a>
+      <a href="#app-failure">Application Failure</a>
+      <a href="#manifests">Manifests</a>
+      <a href="#labs">Labs</a>
+      <a href="#cheatsheet">Cheat Sheet</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <h1>Kubernetes Troubleshooting<br/>Reference and Hands-on Labs</h1>
+          <p class="subtitle">A practical trainee guide for diagnosing control plane failures, node failures, application failures, static manifest errors, and common Kubernetes scenarios using simple, repeatable lab exercises.</p>
+          <div class="pill-row">
+            <span class="pill">White-background training handout</span>
+            <span class="pill">Animated conceptual diagrams</span>
+            <span class="pill">kind-friendly labs</span>
+            <span class="pill">kubectl + kubeadm commands</span>
+          </div>
+          <div class="meta">
+            <div class="meta-card"><strong>Audience</strong><span>Beginner to intermediate Kubernetes trainees</span></div>
+            <div class="meta-card"><strong>Lab Style</strong><span>Safe simulations first; kubeadm notes where needed</span></div>
+            <div class="meta-card"><strong>Tools</strong><span>kubectl, kind, Docker, journalctl, crictl</span></div>
+          </div>
+        </div>
+        <div class="svg-card">
+          <div class="diagram-title">Animated Concept: Kubernetes Troubleshooting Loop</div>
+          <svg viewBox="0 0 520 360" width="100%" role="img" aria-label="Kubernetes troubleshooting loop animation">
+            <defs>
+              <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#7c3aed"/></linearGradient>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+            </defs>
+            <rect x="25" y="30" width="470" height="300" rx="28" fill="#f8fafc" stroke="#d9e2ec"/>
+            <circle class="spin-slow" cx="260" cy="180" r="92" fill="none" stroke="#dbeafe" stroke-width="20" stroke-dasharray="40 18"/>
+            <g class="float">
+              <rect x="178" y="58" width="164" height="50" rx="15" fill="#eff6ff" stroke="#bfdbfe"/>
+              <text x="260" y="88" text-anchor="middle" font-size="16" font-weight="800" fill="#1e3a8a">Observe</text>
+            </g>
+            <g class="float2">
+              <rect x="355" y="155" width="118" height="50" rx="15" fill="#fff7ed" stroke="#fed7aa"/>
+              <text x="414" y="185" text-anchor="middle" font-size="16" font-weight="800" fill="#9a3412">Inspect</text>
+            </g>
+            <g class="float">
+              <rect x="193" y="252" width="134" height="50" rx="15" fill="#ecfdf5" stroke="#bbf7d0"/>
+              <text x="260" y="282" text-anchor="middle" font-size="16" font-weight="800" fill="#166534">Fix</text>
+            </g>
+            <g class="float2">
+              <rect x="47" y="155" width="128" height="50" rx="15" fill="#fef2f2" stroke="#fecaca"/>
+              <text x="111" y="185" text-anchor="middle" font-size="16" font-weight="800" fill="#991b1b">Verify</text>
+            </g>
+            <path class="arrow-dash" d="M260 110 C365 115 415 122 415 153" fill="none" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow)"/>
+            <path class="arrow-dash" d="M414 205 C394 262 344 278 329 278" fill="none" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow)"/>
+            <path class="arrow-dash" d="M192 278 C133 275 110 237 111 207" fill="none" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow)"/>
+            <path class="arrow-dash" d="M111 153 C122 87 174 82 177 82" fill="none" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow)"/>
+            <circle class="pulse" cx="260" cy="180" r="52" fill="url(#g1)" opacity=".95"/>
+            <text x="260" y="174" text-anchor="middle" font-size="15" font-weight="900" fill="white">Root Cause</text>
+            <text x="260" y="194" text-anchor="middle" font-size="12" fill="#e0e7ff">not symptoms</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <section id="overview">
+      <div class="wrap">
+        <h2>1. Troubleshooting Overview</h2>
+        <p class="lead">Kubernetes troubleshooting should be systematic. Do not randomly delete objects. First identify the failing layer: application, service/networking, node, control plane, storage, or external dependency.</p>
+        <div class="toc card soft">
+          <a href="#mindset">1.1 Troubleshooting mindset</a>
+          <a href="#first-commands">1.2 First commands to run</a>
+          <a href="#control-plane">2. Control plane failures</a>
+          <a href="#node-failure">3. Node failure</a>
+          <a href="#app-failure">4. Application failure</a>
+          <a href="#manifests">5. Component manifests and errors</a>
+          <a href="#scenarios">6. Scenarios and solutions</a>
+          <a href="#labs">7. Lab: Troubleshooting in Kubernetes</a>
+          <a href="#assessment">8. Assessment questions</a>
+          <a href="#cheatsheet">9. Command cheat sheet</a>
+        </div>
+
+        <h3 id="mindset">1.1 Troubleshooting Mindset</h3>
+        <div class="grid grid-3">
+          <div class="card blue"><span class="tag">1</span><strong>Observe</strong><p>Check symptoms: Pending pods, NotReady nodes, failing probes, missing endpoints, API server unreachable, or controller errors.</p></div>
+          <div class="card orange"><span class="tag orange">2</span><strong>Scope</strong><p>Decide whether it affects one pod, one namespace, one node, one service, or the whole cluster.</p></div>
+          <div class="card green"><span class="tag green">3</span><strong>Verify</strong><p>After fixing, validate with events, logs, endpoints, rollouts, pod status, and an actual application request.</p></div>
+        </div>
+
+        <h3 id="first-commands">1.2 First Commands to Run</h3>
+        <p>Run these commands before changing anything. They quickly identify whether the issue is at the cluster, node, workload, or service layer.</p>
+        <div class="code-wrap">
+          <div class="code-title">Initial cluster triage <button class="copy">Copy</button></div>
+<pre><code>kubectl cluster-info
+kubectl get nodes -o wide
+kubectl get pods -A -o wide
+kubectl get events -A --sort-by=.metadata.creationTimestamp | tail -40
+kubectl get componentstatuses 2>/dev/null || true
+kubectl version --short 2>/dev/null || kubectl version</code></pre>
+        </div>
+        <div class="callout warn"><strong>Note:</strong> <span class="kbd">kubectl get componentstatuses</span> is deprecated in many clusters. Prefer checking the health of control plane pods, static pod manifests, kubelet logs, and API server health endpoints where available.</div>
+      </div>
+    </section>
+
+    <section id="control-plane">
+      <div class="wrap">
+        <h2>2. Control Plane Failures</h2>
+        <p class="lead">Control plane failures affect scheduling, desired-state reconciliation, API access, service discovery, or cluster-wide operations. In kubeadm-based clusters, kube-apiserver, kube-controller-manager, kube-scheduler, and etcd commonly run as static pods managed by the kubelet.</p>
+
+        <div class="svg-card">
+          <div class="diagram-title">Animated Concept: Control Plane Flow</div>
+          <svg viewBox="0 0 860 310" width="100%" role="img" aria-label="Control plane request flow">
+            <defs>
+              <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+            </defs>
+            <rect x="20" y="20" width="820" height="270" rx="24" fill="#f8fafc" stroke="#d9e2ec"/>
+            <g>
+              <rect x="55" y="105" width="125" height="72" rx="16" fill="#eff6ff" stroke="#bfdbfe"/>
+              <text x="117" y="136" text-anchor="middle" font-size="16" font-weight="800" fill="#1e3a8a">kubectl</text>
+              <text x="117" y="158" text-anchor="middle" font-size="12" fill="#475569">user request</text>
+            </g>
+            <g class="pulse">
+              <rect x="242" y="91" width="150" height="100" rx="18" fill="#dbeafe" stroke="#60a5fa" stroke-width="2"/>
+              <text x="317" y="130" text-anchor="middle" font-size="16" font-weight="900" fill="#1d4ed8">kube-apiserver</text>
+              <text x="317" y="153" text-anchor="middle" font-size="12" fill="#334155">authn/authz/API</text>
+            </g>
+            <g>
+              <rect x="465" y="45" width="142" height="70" rx="16" fill="#ecfdf5" stroke="#86efac"/>
+              <text x="536" y="77" text-anchor="middle" font-size="15" font-weight="850" fill="#166534">etcd</text>
+              <text x="536" y="96" text-anchor="middle" font-size="12" fill="#475569">cluster state</text>
+              <rect x="465" y="132" width="142" height="70" rx="16" fill="#fff7ed" stroke="#fed7aa"/>
+              <text x="536" y="164" text-anchor="middle" font-size="15" font-weight="850" fill="#9a3412">scheduler</text>
+              <text x="536" y="183" text-anchor="middle" font-size="12" fill="#475569">assigns nodes</text>
+              <rect x="465" y="219" width="142" height="50" rx="16" fill="#f5f3ff" stroke="#ddd6fe"/>
+              <text x="536" y="250" text-anchor="middle" font-size="15" font-weight="850" fill="#5b21b6">controllers</text>
+            </g>
+            <g>
+              <rect x="681" y="118" width="125" height="72" rx="16" fill="#fef2f2" stroke="#fecaca"/>
+              <text x="744" y="148" text-anchor="middle" font-size="16" font-weight="850" fill="#991b1b">worker node</text>
+              <text x="744" y="170" text-anchor="middle" font-size="12" fill="#475569">kubelet runs pods</text>
+            </g>
+            <path class="arrow-dash" d="M180 141 L238 141" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow2)"/>
+            <path class="arrow-dash-slow" d="M392 118 C424 80 438 80 462 80" fill="none" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow2)"/>
+            <path class="arrow-dash-slow" d="M392 154 L462 167" fill="none" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow2)"/>
+            <path class="arrow-dash-slow" d="M392 176 C430 235 437 244 462 244" fill="none" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow2)"/>
+            <path class="arrow-dash" d="M607 167 L678 154" fill="none" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow2)"/>
+          </svg>
+        </div>
+
+        <h3>2.1 Common Symptoms</h3>
+        <table>
+          <thead><tr><th>Symptom</th><th>Likely Area</th><th>First Checks</th></tr></thead>
+          <tbody>
+            <tr><td><span class="tag red">API</span> <span class="kbd">kubectl</span> times out or connection refused</td><td>API server, load balancer, control plane node, certificate, firewall</td><td><span class="kbd">kubectl cluster-info</span>, control plane node health, <span class="kbd">journalctl -u kubelet</span>, API server static pod logs</td></tr>
+            <tr><td>New pods remain <span class="kbd">Pending</span> but existing pods run</td><td>Scheduler, taints, resource pressure, PVC, affinity</td><td><span class="kbd">kubectl describe pod</span>, scheduler pod, events, node resources</td></tr>
+            <tr><td>Deployments do not create or replace pods</td><td>Controller manager, API access, admission, quotas</td><td>Controller-manager logs, deployment events, replica set status</td></tr>
+            <tr><td>DNS lookup fails inside pods</td><td>CoreDNS, kube-proxy, CNI, service networking</td><td><span class="kbd">kubectl get pods -n kube-system -l k8s-app=kube-dns</span>, CoreDNS logs, service endpoints</td></tr>
+            <tr><td>etcd errors or API server crash loops</td><td>etcd, certificates, disk, static pod config</td><td>etcd pod logs, disk space, certificate expiry, manifest changes</td></tr>
+          </tbody>
+        </table>
+
+        <h3>2.2 Control Plane Diagnostic Commands</h3>
+        <div class="code-wrap">
+          <div class="code-title">Control plane checks for kubeadm/static-pod clusters <button class="copy">Copy</button></div>
+<pre><code># Control plane pods
+kubectl get pods -n kube-system -o wide
+kubectl get pods -n kube-system -l tier=control-plane
+
+# Static pod manifest directory on kubeadm control-plane node
+sudo ls -l /etc/kubernetes/manifests
+sudo grep -R "image:\|command:\|--advertise-address\|--etcd-servers" /etc/kubernetes/manifests
+
+# Kubelet and container runtime checks
+sudo systemctl status kubelet --no-pager
+sudo journalctl -u kubelet -n 120 --no-pager
+sudo systemctl status containerd --no-pager
+sudo crictl ps -a | grep -E "kube-apiserver|kube-scheduler|kube-controller|etcd"
+sudo crictl logs &lt;CONTAINER_ID&gt;</code></pre>
+        </div>
+
+        <div class="callout danger"><strong>Production caution:</strong> Do not edit or delete files under <span class="kbd">/etc/kubernetes/manifests</span> directly on production clusters unless you have a backup, change approval, and recovery access. A bad static pod manifest can take down the component.</div>
+      </div>
+    </section>
+
+    <section id="node-failure">
+      <div class="wrap">
+        <h2>3. Node Failure</h2>
+        <p class="lead">Node failures usually appear as <span class="kbd">NotReady</span>, <span class="kbd">Unknown</span>, scheduling failures, pod evictions, image pull failures, CNI issues, disk pressure, memory pressure, or kubelet/runtime errors.</p>
+
+        <div class="svg-card">
+          <div class="diagram-title">Animated Concept: Node Heartbeat and Failure</div>
+          <svg viewBox="0 0 820 250" width="100%" role="img" aria-label="Node heartbeat animation">
+            <defs><marker id="arrow3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#16a34a"/></marker></defs>
+            <rect x="25" y="25" width="770" height="200" rx="22" fill="#f8fafc" stroke="#d9e2ec"/>
+            <rect x="70" y="75" width="160" height="90" rx="18" fill="#eff6ff" stroke="#bfdbfe"/>
+            <text x="150" y="112" text-anchor="middle" font-size="17" font-weight="900" fill="#1d4ed8">API Server</text>
+            <text x="150" y="137" text-anchor="middle" font-size="12" fill="#475569">stores Node status</text>
+            <rect x="360" y="75" width="160" height="90" rx="18" fill="#ecfdf5" stroke="#bbf7d0"/>
+            <text x="440" y="112" text-anchor="middle" font-size="17" font-weight="900" fill="#166534">kubelet</text>
+            <text x="440" y="137" text-anchor="middle" font-size="12" fill="#475569">sends heartbeat</text>
+            <g class="shake">
+              <rect x="625" y="75" width="130" height="90" rx="18" fill="#fef2f2" stroke="#fecaca"/>
+              <text x="690" y="112" text-anchor="middle" font-size="17" font-weight="900" fill="#991b1b">Node</text>
+              <text x="690" y="137" text-anchor="middle" font-size="12" fill="#475569">NotReady</text>
+            </g>
+            <path class="arrow-dash" d="M360 120 L235 120" fill="none" stroke="#16a34a" stroke-width="4" marker-end="url(#arrow3)"/>
+            <path class="arrow-dash-slow" d="M520 120 L622 120" fill="none" stroke="#dc2626" stroke-width="4" stroke-dasharray="8 10"/>
+            <circle class="blink" cx="575" cy="120" r="9" fill="#dc2626"/>
+            <text x="385" y="194" font-size="13" fill="#475569">Healthy heartbeat</text>
+            <text x="560" y="194" font-size="13" fill="#991b1b">Lost heartbeat / runtime / network issue</text>
+          </svg>
+        </div>
+
+        <h3>3.1 Node Status Conditions</h3>
+        <table>
+          <thead><tr><th>Condition</th><th>Meaning</th><th>Useful Checks</th></tr></thead>
+          <tbody>
+            <tr><td>Ready=False / Unknown</td><td>Kubelet is unhealthy, stopped, unreachable, or cannot update node status.</td><td><span class="kbd">systemctl status kubelet</span>, <span class="kbd">journalctl -u kubelet</span>, network, certificates</td></tr>
+            <tr><td>MemoryPressure</td><td>Node memory is low; kubelet may evict pods.</td><td><span class="kbd">free -h</span>, <span class="kbd">kubectl top node</span>, pod requests/limits</td></tr>
+            <tr><td>DiskPressure</td><td>Disk or inode pressure; image garbage collection or evictions may happen.</td><td><span class="kbd">df -h</span>, <span class="kbd">df -i</span>, container runtime storage</td></tr>
+            <tr><td>PIDPressure</td><td>Too many processes on the node.</td><td><span class="kbd">ps</span>, process count, runaway containers</td></tr>
+            <tr><td>NetworkUnavailable</td><td>CNI or route setup problem.</td><td>CNI pods, kube-proxy, node routes, firewall, MTU</td></tr>
+          </tbody>
+        </table>
+
+        <h3>3.2 Node Diagnostic Commands</h3>
+        <div class="code-wrap">
+          <div class="code-title">Node troubleshooting commands <button class="copy">Copy</button></div>
+<pre><code>kubectl get nodes -o wide
+kubectl describe node &lt;node-name&gt;
+kubectl get pods -A -o wide --field-selector spec.nodeName=&lt;node-name&gt;
+kubectl get events -A --field-selector involvedObject.kind=Node --sort-by=.metadata.creationTimestamp
+
+# On the node itself
+sudo systemctl status kubelet --no-pager
+sudo journalctl -u kubelet -n 150 --no-pager
+sudo systemctl status containerd --no-pager
+sudo crictl info
+sudo crictl ps -a
+sudo crictl images
+sudo df -h
+sudo df -i
+free -h
+ip addr
+ip route</code></pre>
+        </div>
+
+        <h3>3.3 Safe Node Maintenance Workflow</h3>
+        <div class="code-wrap">
+          <div class="code-title">Cordon, drain, fix, uncordon <button class="copy">Copy</button></div>
+<pre><code>kubectl cordon &lt;node-name&gt;
+kubectl drain &lt;node-name&gt; --ignore-daemonsets --delete-emptydir-data
+
+# Fix node issue: kubelet, runtime, disk, CNI, package, certificate, OS patch, etc.
+
+kubectl uncordon &lt;node-name&gt;
+kubectl get nodes
+kubectl get pods -A -o wide</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="app-failure">
+      <div class="wrap">
+        <h2>4. Application Failure</h2>
+        <p class="lead">Most Kubernetes incidents start at the workload layer. A correct troubleshooting path checks object status, events, container logs, probes, service selectors, endpoints, DNS, configuration, resource limits, and node placement.</p>
+
+        <div class="svg-card">
+          <div class="diagram-title">Animated Concept: Service Selector to Pods</div>
+          <svg viewBox="0 0 860 300" width="100%" role="img" aria-label="Service selector maps to matching pods">
+            <defs><marker id="arrow4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker></defs>
+            <rect x="25" y="20" width="810" height="255" rx="22" fill="#f8fafc" stroke="#d9e2ec"/>
+            <rect x="70" y="100" width="150" height="72" rx="18" fill="#eff6ff" stroke="#bfdbfe"/>
+            <text x="145" y="130" text-anchor="middle" font-size="17" font-weight="900" fill="#1d4ed8">Service</text>
+            <text x="145" y="153" text-anchor="middle" font-size="12" fill="#475569">selector: app=web</text>
+            <g class="pulse">
+              <rect x="350" y="54" width="140" height="66" rx="17" fill="#ecfdf5" stroke="#bbf7d0"/>
+              <text x="420" y="84" text-anchor="middle" font-size="15" font-weight="850" fill="#166534">Pod A</text>
+              <text x="420" y="104" text-anchor="middle" font-size="12" fill="#475569">app=web</text>
+            </g>
+            <g class="pulse2">
+              <rect x="350" y="157" width="140" height="66" rx="17" fill="#ecfdf5" stroke="#bbf7d0"/>
+              <text x="420" y="187" text-anchor="middle" font-size="15" font-weight="850" fill="#166534">Pod B</text>
+              <text x="420" y="207" text-anchor="middle" font-size="12" fill="#475569">app=web</text>
+            </g>
+            <g class="shake">
+              <rect x="630" y="105" width="140" height="66" rx="17" fill="#fef2f2" stroke="#fecaca"/>
+              <text x="700" y="135" text-anchor="middle" font-size="15" font-weight="850" fill="#991b1b">Pod C</text>
+              <text x="700" y="155" text-anchor="middle" font-size="12" fill="#475569">app=api</text>
+            </g>
+            <path class="arrow-dash" d="M220 130 C278 92 310 85 347 85" fill="none" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow4)"/>
+            <path class="arrow-dash" d="M220 143 C280 184 313 190 347 190" fill="none" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow4)"/>
+            <path d="M490 138 L625 138" fill="none" stroke="#dc2626" stroke-width="4" stroke-dasharray="8 8"/>
+            <text x="542" y="127" font-size="13" fill="#991b1b">not selected</text>
+          </svg>
+        </div>
+
+        <h3>4.1 Application Failure Patterns</h3>
+        <table>
+          <thead><tr><th>Pod State / Symptom</th><th>Usual Cause</th><th>Investigation</th><th>Fix Direction</th></tr></thead>
+          <tbody>
+            <tr><td>ImagePullBackOff / ErrImagePull</td><td>Wrong image name/tag, registry auth, network, image policy</td><td><span class="kbd">kubectl describe pod</span> events</td><td>Correct image, imagePullSecret, registry/network access</td></tr>
+            <tr><td>CrashLoopBackOff</td><td>App exits, bad command, missing env/config, failed dependency</td><td><span class="kbd">kubectl logs --previous</span>, termination reason</td><td>Fix command, config, dependency, health check</td></tr>
+            <tr><td>Pending</td><td>No schedulable node, taints, insufficient CPU/memory, PVC pending</td><td>Describe pod events, nodes, quotas, PVC</td><td>Adjust resources, tolerations, storage, node capacity</td></tr>
+            <tr><td>Running but NotReady</td><td>Readiness probe failing or app not serving</td><td>Describe pod, probe events, app logs</td><td>Fix readiness path/port/delay or app startup</td></tr>
+            <tr><td>Service has no endpoints</td><td>Selector mismatch or pods not Ready</td><td><span class="kbd">kubectl get endpoints</span>, labels</td><td>Fix service selector or pod labels/readiness</td></tr>
+            <tr><td>OOMKilled</td><td>Container exceeded memory limit</td><td>Describe pod, previous logs, metrics</td><td>Fix memory leak, raise limits, tune JVM/runtime</td></tr>
+          </tbody>
+        </table>
+
+        <h3>4.2 Application Diagnostic Commands</h3>
+        <div class="code-wrap">
+          <div class="code-title">Workload troubleshooting commands <button class="copy">Copy</button></div>
+<pre><code>kubectl get deploy,rs,pod,svc,endpoints -n &lt;namespace&gt; -o wide
+kubectl describe pod &lt;pod-name&gt; -n &lt;namespace&gt;
+kubectl logs &lt;pod-name&gt; -n &lt;namespace&gt;
+kubectl logs &lt;pod-name&gt; -n &lt;namespace&gt; --previous
+kubectl get events -n &lt;namespace&gt; --sort-by=.metadata.creationTimestamp
+kubectl rollout status deployment/&lt;deployment-name&gt; -n &lt;namespace&gt;
+kubectl rollout history deployment/&lt;deployment-name&gt; -n &lt;namespace&gt;
+kubectl get pod &lt;pod-name&gt; -n &lt;namespace&gt; -o yaml
+kubectl exec -it &lt;pod-name&gt; -n &lt;namespace&gt; -- sh</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="manifests">
+      <div class="wrap">
+        <h2>5. Component Manifests and Errors</h2>
+        <p class="lead">In kubeadm clusters, control plane components are commonly static pods. The kubelet watches manifest files and creates mirror pods visible through the Kubernetes API. Manifest syntax, wrong flags, bad certificates, missing files, or invalid image tags can break a component.</p>
+
+        <div class="svg-card">
+          <div class="diagram-title">Animated Concept: Static Pod Manifest to Running Component</div>
+          <svg viewBox="0 0 860 280" width="100%" role="img" aria-label="Static pod manifest flow">
+            <defs><marker id="arrow5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#7c3aed"/></marker></defs>
+            <rect x="25" y="25" width="810" height="220" rx="22" fill="#f8fafc" stroke="#d9e2ec"/>
+            <rect x="60" y="85" width="190" height="84" rx="18" fill="#f5f3ff" stroke="#ddd6fe"/>
+            <text x="155" y="116" text-anchor="middle" font-size="15" font-weight="900" fill="#5b21b6">/etc/kubernetes/</text>
+            <text x="155" y="139" text-anchor="middle" font-size="15" font-weight="900" fill="#5b21b6">manifests</text>
+            <text x="155" y="159" text-anchor="middle" font-size="12" fill="#475569">YAML files</text>
+            <g class="pulse">
+              <rect x="345" y="85" width="160" height="84" rx="18" fill="#eff6ff" stroke="#bfdbfe"/>
+              <text x="425" y="123" text-anchor="middle" font-size="16" font-weight="900" fill="#1d4ed8">kubelet</text>
+              <text x="425" y="146" text-anchor="middle" font-size="12" fill="#475569">watches directory</text>
+            </g>
+            <rect x="600" y="85" width="180" height="84" rx="18" fill="#ecfdf5" stroke="#bbf7d0"/>
+            <text x="690" y="118" text-anchor="middle" font-size="16" font-weight="900" fill="#166534">Static Pod</text>
+            <text x="690" y="142" text-anchor="middle" font-size="12" fill="#475569">API server / etcd / scheduler</text>
+            <path class="arrow-dash" d="M250 127 L342 127" fill="none" stroke="#7c3aed" stroke-width="4" marker-end="url(#arrow5)"/>
+            <path class="arrow-dash" d="M505 127 L597 127" fill="none" stroke="#7c3aed" stroke-width="4" marker-end="url(#arrow5)"/>
+            <rect class="scan" x="64" y="74" width="55" height="106" fill="#a78bfa" opacity=".22" rx="8"/>
+          </svg>
+        </div>
+
+        <h3>5.1 Static Manifest Troubleshooting Checklist</h3>
+        <ul class="checklist">
+          <li>Check whether the expected manifest exists under <span class="kbd">/etc/kubernetes/manifests</span>.</li>
+          <li>Validate YAML indentation and fields before saving changes.</li>
+          <li>Check kubelet logs because kubelet reads static pod manifests.</li>
+          <li>Check the container runtime logs with <span class="kbd">crictl</span> when the API server is unavailable.</li>
+          <li>Confirm certificates, mounted host paths, command flags, and image tags.</li>
+          <li>Back up the original manifest before making any change.</li>
+        </ul>
+
+        <div class="code-wrap">
+          <div class="code-title">Safe static manifest inspection <button class="copy">Copy</button></div>
+<pre><code>sudo cp -a /etc/kubernetes/manifests /etc/kubernetes/manifests.backup.$(date +%F-%H%M%S)
+sudo ls -lh /etc/kubernetes/manifests
+sudo sed -n '1,220p' /etc/kubernetes/manifests/kube-apiserver.yaml
+sudo journalctl -u kubelet -n 150 --no-pager
+sudo crictl ps -a | grep kube-apiserver
+sudo crictl logs &lt;APISERVER_CONTAINER_ID&gt;</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="scenarios">
+      <div class="wrap">
+        <h2>6. Scenarios and Solutions</h2>
+        <table>
+          <thead><tr><th>Scenario</th><th>Fast Diagnosis</th><th>Probable Root Cause</th><th>Solution</th></tr></thead>
+          <tbody>
+            <tr><td>Pod is <span class="kbd">ImagePullBackOff</span></td><td><span class="kbd">kubectl describe pod</span></td><td>Bad image tag, registry auth, registry unavailable</td><td>Fix image, create imagePullSecret, check registry/network</td></tr>
+            <tr><td>Pod is <span class="kbd">CrashLoopBackOff</span></td><td><span class="kbd">kubectl logs --previous</span></td><td>Application exits repeatedly</td><td>Fix command/config/app dependency; add startupProbe if slow startup</td></tr>
+            <tr><td>Service returns timeout</td><td><span class="kbd">kubectl get endpoints</span></td><td>No matching ready pods, wrong selector, network policy</td><td>Fix labels/selectors/readiness; inspect NetworkPolicy</td></tr>
+            <tr><td>Pod is <span class="kbd">Pending</span></td><td>Describe pod events</td><td>Insufficient CPU/memory, taint, affinity, PVC pending, scheduler down</td><td>Adjust scheduling constraints or restore scheduler/storage</td></tr>
+            <tr><td>Node is <span class="kbd">NotReady</span></td><td>Describe node + kubelet logs</td><td>Kubelet stopped, runtime down, network, certificate, disk pressure</td><td>Restart/fix kubelet/runtime, recover disk, repair network/CNI</td></tr>
+            <tr><td>API server unreachable</td><td>Check control plane node and API server container logs</td><td>API server crash, etcd down, certificate/config issue, LB/firewall</td><td>Restore etcd/API server/static manifest/certs/connectivity</td></tr>
+            <tr><td>DNS failing</td><td>CoreDNS pods/logs and kube-dns service</td><td>CoreDNS crash, upstream DNS, CNI/kube-proxy issue</td><td>Fix CoreDNS ConfigMap, kube-proxy, CNI, upstream DNS</td></tr>
+            <tr><td>Deployment rollout stuck</td><td><span class="kbd">kubectl rollout status</span> and describe deployment</td><td>New ReplicaSet pods fail readiness or image pull</td><td>Fix pod issue or <span class="kbd">kubectl rollout undo</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="labs">
+      <div class="wrap">
+        <h2>7. Lab: Troubleshooting in Kubernetes</h2>
+        <p class="lead">These labs use a disposable kind cluster. Do not run destructive control plane simulations on production clusters. For kubeadm clusters, use only the diagnostic commands unless the instructor explicitly provides a lab VM.</p>
+
+        <div class="callout ok"><strong>Recommended lab environment:</strong> Linux VM with Docker, kind, and kubectl. The examples also work on minikube with small adjustments, but node/container failure simulations are easiest with kind.</div>
+
+        <div class="scenario" id="lab-setup">
+          <div class="lab-header"><h3>Lab Setup: Create a Multi-node kind Cluster</h3><span class="duration">15 minutes</span></div>
+          <p>This creates one control-plane node and two worker nodes. The cluster name is <span class="kbd">trouble</span>.</p>
+          <div class="code-wrap">
+            <div class="code-title">kind-trouble.yaml <button class="copy">Copy</button></div>
+<pre><code>cat &gt; kind-trouble.yaml &lt;&lt;'EOF'
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker

@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kubernetes Logging and Monitoring - Trainee Lab Reference</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #172033;
+    --muted: #5b667a;
+    --brand: #326ce5;
+    --brand-2: #00a3a3;
+    --soft: #eef5ff;
+    --soft2: #f6f8fb;
+    --line: #d8e0ee;
+    --warn: #b45309;
+    --danger: #b91c1c;
+    --ok: #0f766e;
+    --code-bg: #0f172a;
+    --code-ink: #e5e7eb;
+    --shadow: 0 12px 30px rgba(17, 24, 39, .09);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.6;
+  }
+  header {
+    position: relative;
+    overflow: hidden;
+    padding: 56px 28px 46px;
+    background:
+      radial-gradient(circle at 12% 20%, rgba(50,108,229,.14), transparent 28%),
+      radial-gradient(circle at 78% 12%, rgba(0,163,163,.13), transparent 24%),
+      linear-gradient(135deg, #f8fbff, #ffffff 65%);
+    border-bottom: 1px solid var(--line);
+  }
+  header .wrap, main { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: clamp(2rem, 4vw, 3.45rem); line-height: 1.06; margin: 0 0 16px; letter-spacing: -0.04em; }
+  h2 { font-size: 1.75rem; margin: 54px 0 16px; letter-spacing: -0.025em; border-bottom: 2px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 1.22rem; margin: 28px 0 10px; }
+  h4 { margin: 18px 0 8px; }
+  p { margin: 8px 0 14px; }
+  a { color: var(--brand); }
+  .subtitle { max-width: 880px; font-size: 1.1rem; color: var(--muted); }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .pill { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 8px 13px; font-size: .92rem; box-shadow: 0 4px 14px rgba(31,41,55,.04); }
+  main { padding: 32px 24px 80px; }
+  .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .span-4 { grid-column: span 4; } .span-6 { grid-column: span 6; } .span-8 { grid-column: span 8; } .span-12 { grid-column: span 12; }
+  @media (max-width: 860px) { .span-4,.span-6,.span-8 { grid-column: span 12; } }
+  .toc { background: var(--soft2); border: 1px solid var(--line); padding: 18px; border-radius: 16px; }
+  .toc a { display: inline-block; margin: 5px 10px 5px 0; text-decoration: none; border-bottom: 1px dotted var(--brand); }
+  .note, .warn, .danger, .success { border-radius: 14px; padding: 14px 16px; margin: 14px 0; border: 1px solid; }
+  .note { background: #eff6ff; border-color: #bfdbfe; }
+  .warn { background: #fffbeb; border-color: #fde68a; }
+  .danger { background: #fef2f2; border-color: #fecaca; }
+  .success { background: #ecfdf5; border-color: #a7f3d0; }
+  .ok { color: var(--ok); font-weight: 700; }
+  .bad { color: var(--danger); font-weight: 700; }
+  .muted { color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .95rem; }
+  th, td { border: 1px solid var(--line); padding: 10px 12px; vertical-align: top; }
+  th { background: #f1f5f9; text-align: left; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .93em; background: #eef2ff; padding: 2px 5px; border-radius: 6px; }
+  .code-card { border-radius: 16px; overflow: hidden; margin: 14px 0 22px; border: 1px solid #111827; box-shadow: 0 8px 20px rgba(15,23,42,.12); }
+  .code-title { background: #111827; color: #fff; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: .92rem; }
+  .copy-btn { border: 1px solid rgba(255,255,255,.28); color: #fff; background: rgba(255,255,255,.09); border-radius: 8px; padding: 5px 10px; cursor: pointer; }
+  pre { margin: 0; overflow: auto; background: var(--code-bg); color: var(--code-ink); padding: 16px; font-size: .88rem; line-height: 1.52; }
+  pre code { background: transparent; color: inherit; padding: 0; border-radius: 0; }
+  details { border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; background: #fff; margin: 12px 0; }
+  summary { cursor: pointer; font-weight: 700; }
+  .step { border-left: 4px solid var(--brand); padding: 10px 0 10px 16px; margin: 18px 0; }
+  .lab-title { display: flex; align-items: center; gap: 12px; }
+  .lab-badge { background: var(--brand); color: #fff; border-radius: 999px; padding: 4px 10px; font-size: .78rem; font-weight: 700; }
+
+  /* Animated diagrams */
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 18px; margin: 18px 0; overflow: hidden; }
+  .diagram-title { font-weight: 800; margin-bottom: 8px; }
+  .pipeline { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 118px; gap: 10px; }
+  .nodebox { position: relative; z-index: 2; background: #fff; border: 2px solid var(--brand); border-radius: 16px; padding: 13px 14px; min-width: 138px; text-align: center; font-weight: 800; box-shadow: 0 8px 20px rgba(50,108,229,.12); }
+  .nodebox small { display: block; font-weight: 500; color: var(--muted); }
+  .pipe-line { position: absolute; top: 58px; left: 7%; right: 7%; height: 4px; background: linear-gradient(90deg, #bfdbfe, #67e8f9); border-radius: 99px; }
+  .packet { position: absolute; top: 48px; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); animation: movePacket 4s linear infinite; box-shadow: 0 0 0 7px rgba(50,108,229,.11); }
+  .packet.p2 { animation-delay: 1.3s; background: var(--brand-2); }
+  .packet.p3 { animation-delay: 2.6s; background: #7c3aed; }
+  @keyframes movePacket { from { left: 8%; opacity: .25; } 15% { opacity: 1; } to { left: 88%; opacity: .25; } }
+  .logstream { height: 160px; background: #0f172a; color: #bbf7d0; border-radius: 14px; overflow: hidden; font-family: ui-monospace, monospace; position: relative; padding: 12px; }
+  .loglines { position: absolute; animation: scrollLogs 8s linear infinite; white-space: nowrap; }
+  .loglines div { margin: 6px 0; }
+  @keyframes scrollLogs { from { transform: translateY(110px); } to { transform: translateY(-245px); } }
+  .pod-vis { display: flex; gap: 18px; align-items: center; justify-content: center; flex-wrap: wrap; padding: 20px 0; }
+  .pod-card { border: 2px solid #c7d2fe; background: #f8fafc; border-radius: 18px; padding: 14px; min-width: 170px; text-align: center; position: relative; }
+  .container-dot { display:inline-block; width: 18px; height: 18px; border-radius: 50%; margin: 8px; background: var(--brand); animation: pulse 1.6s infinite; }
+  .container-dot.warn-dot { background: #f59e0b; animation-delay: .35s; }
+  .container-dot.bad-dot { background: #ef4444; animation-delay: .7s; }
+  @keyframes pulse { 0%,100% { transform: scale(1); opacity: .7; } 50% { transform: scale(1.35); opacity: 1; } }
+  .selector-demo { display: grid; grid-template-columns: 1fr 100px 1fr; gap: 14px; align-items: center; }
+  .arrow { height: 4px; border-radius: 99px; background: linear-gradient(90deg, var(--brand), var(--brand-2)); position: relative; overflow: hidden; }
+  .arrow:after { content: ''; position: absolute; top: -5px; left: 0; width: 14px; height: 14px; background: #fff; border: 3px solid var(--brand); border-radius: 50%; animation: arrowDot 2s infinite linear; }
+  @keyframes arrowDot { from { transform: translateX(-10px); } to { transform: translateX(100px); } }
+  .pod-pill { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; margin: 8px; display: inline-block; background: #fff; }
+  .sparkline { width: 100%; height: 80px; }
+  .sparkline polyline { fill: none; stroke: var(--brand); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 440; stroke-dashoffset: 440; animation: drawLine 4s ease infinite; }
+  @keyframes drawLine { 0% { stroke-dashoffset: 440; } 50%,100% { stroke-dashoffset: 0; } }
+  .flow-svg { width: 100%; max-width: 940px; display: block; margin: auto; }
+  .flow-svg .pulse-ring { animation: ring 2.2s infinite; transform-origin: center; }
+  @keyframes ring { 0% { opacity: .2; transform: scale(.85); } 50% { opacity: .85; transform: scale(1.06); } 100% { opacity: .2; transform: scale(.85); } }
+  .footer { border-top: 1px solid var(--line); margin-top: 60px; padding-top: 22px; color: var(--muted); font-size: .93rem; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Kubernetes Logging and Monitoring<br/>Trainee Lab Reference</h1>
+    <p class="subtitle">A practical, beginner-friendly guide for describing resources, reading Pod/container logs, debugging failed applications, using events, inspecting nodes with <code>crictl</code>, and deploying Metrics Server for <code>kubectl top</code>.</p>
+    <div class="pill-row">
+      <span class="pill">White background</span>
+      <span class="pill">Animated concept diagrams</span>
+      <span class="pill">Simple lab use cases</span>
+      <span class="pill">Copy-ready YAML and commands</span>
+      <span class="pill">Validation and cleanup included</span>
+    </div>
+  </div>
+</header>
+<main>
+  <section class="toc">
+    <strong>Contents:</strong>
+    <a href="#objectives">Objectives</a>
+    <a href="#mental-model">Mental Model</a>
+    <a href="#describe">Describe Resources</a>
+    <a href="#logs">Pod and Container Logs</a>
+    <a href="#debugging">Debugging Applications</a>
+    <a href="#crictl">crictl Node Inspection</a>
+    <a href="#metrics">Metrics Server and top</a>
+    <a href="#events">Events</a>
+    <a href="#labs">Labs</a>
+    <a href="#validation">Validation Notes</a>
+    <a href="#cleanup">Cleanup</a>
+  </section>
+
+  <section id="objectives">
+    <h2>1. Training Objectives</h2>
+    <div class="grid">
+      <div class="card span-6">
+        <h3>By the end of this module, trainees can:</h3>
+        <ul>
+          <li>Use <code>kubectl get</code> and <code>kubectl describe</code> to inspect current state, desired state, related resources, and events.</li>
+          <li>Read single-container, multi-container, previous, streaming, and time-filtered logs.</li>
+          <li>Debug common failures: <code>ImagePullBackOff</code>, <code>CrashLoopBackOff</code>, init container failure, service selector mismatch, and OOMKilled.</li>
+          <li>Use <code>kubectl exec</code>, <code>kubectl debug</code>, ephemeral debug containers, node debug pods, and <code>crictl</code>.</li>
+          <li>Install Metrics Server and validate <code>kubectl top nodes</code> / <code>kubectl top pods</code>.</li>
+        </ul>
+      </div>
+      <div class="card span-6">
+        <h3>Lab Assumptions</h3>
+        <ul>
+          <li>A working Kubernetes cluster: Minikube, Kind, kubeadm, EKS, AKS, GKE, OpenShift-compatible Kubernetes, or similar.</li>
+          <li><code>kubectl</code> is configured and can run <code>kubectl get nodes</code>.</li>
+          <li>Internet access is available to pull public container images.</li>
+          <li>For node-level and <code>crictl</code> labs, trainees need node shell access and suitable permissions.</li>
+        </ul>
+        <div class="warn"><strong>Do not run failure labs in production namespaces.</strong> These labs intentionally create broken Pods.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="mental-model">
+    <h2>2. Conceptual Mental Model</h2>
+    <p>Kubernetes troubleshooting is evidence collection. Start broad, then narrow down: resource state → events → logs → shell/debug container → node/runtime inspection → metrics.</p>
+
+    <div class="diagram">
+      <div class="diagram-title">Animated Concept: Debugging Evidence Flow</div>
+      <div class="pipeline">
+        <div class="pipe-line"></div><div class="packet"></div><div class="packet p2"></div><div class="packet p3"></div>
+        <div class="nodebox">kubectl get<small>What exists?</small></div>
+        <div class="nodebox">describe/events<small>Why changed?</small></div>
+        <div class="nodebox">logs/exec<small>What app says?</small></div>
+        <div class="nodebox">debug/crictl<small>Runtime view</small></div>
+        <div class="nodebox">top<small>CPU/memory</small></div>
+      </div>
+    </div>
+
+    <div class="diagram">
+      <div class="diagram-title">Animated Concept: Logs, Metrics, and Events Are Different Signals</div>
+      <div class="grid">
+        <div class="span-4 card">
+          <h3>Logs</h3>
+          <p>Application text output from containers. Best for error messages, stack traces, request traces, and custom application messages.</p>
+          <div class="logstream">
+            <div class="loglines">
+              <div>{"level":"INFO","msg":"request received"}</div>
+              <div>{"level":"INFO","msg":"db connected"}</div>
+              <div>{"level":"ERROR","msg":"timeout"}</div>
+              <div>{"level":"INFO","msg":"retrying"}</div>
+              <div>{"level":"WARN","msg":"slow response"}</div>
+              <div>{"level":"INFO","msg":"request completed"}</div>
+              <div>{"level":"ERROR","msg":"missing config"}</div>
+            </div>
+          </div>
+        </div>
+        <div class="span-4 card">
+          <h3>Metrics</h3>
+          <p>Numeric measurements such as CPU and memory. Best for load, capacity, autoscaling, and resource pressure signals.</p>
+          <svg class="sparkline" viewBox="0 0 400 100" aria-label="Animated metric line">
+            <polyline points="5,80 50,78 95,65 140,70 185,38 230,55 275,28 320,40 370,15" />
+          </svg>
+          <p class="muted">Metrics Server provides recent CPU/memory metrics for <code>kubectl top</code> and autoscaling.</p>
+        </div>
+        <div class="span-4 card">
+          <h3>Events</h3>
+          <p>Kubernetes-generated lifecycle messages. Best for scheduling, image pull, volume, probe, and object state-change issues.</p>
+          <div class="pod-vis">
+            <div class="pod-card"><strong>Pod lifecycle</strong><br/><span class="container-dot"></span><span class="container-dot warn-dot"></span><span class="container-dot bad-dot"></span><br/><small>Scheduled → Pulling → Failed</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="describe">
+    <h2>3. Describe Resources</h2>
+    <p><code>kubectl describe</code> gives a human-readable, aggregated view of a resource. For Pods, it commonly shows labels, node placement, container states, image details, restart count, probes, volumes, conditions, and recent events.</p>
+    <table>
+      <tr><th>Command</th><th>Purpose</th></tr>
+      <tr><td><code>kubectl get pods -n k8s-debug-lab -o wide</code></td><td>List Pods with node name, IP, readiness, restarts, and age.</td></tr>
+      <tr><td><code>kubectl describe pod POD -n k8s-debug-lab</code></td><td>Detailed Pod state and related events.</td></tr>
+      <tr><td><code>kubectl describe deploy/log-demo -n k8s-debug-lab</code></td><td>Deployment rollout, ReplicaSet, labels, selectors, and Pod template.</td></tr>
+      <tr><td><code>kubectl get pod POD -o yaml</code></td><td>Machine-readable full object specification and status.</td></tr>
+      <tr><td><code>kubectl get pod POD -o jsonpath='{.status.phase}'</code></td><td>Extract a precise field for scripts.</td></tr>
+    </table>
+    <div class="note"><strong>Rule:</strong> Use <code>get</code> to find the object and status quickly. Use <code>describe</code> to understand why the object is in that state.</div>
+  </section>
+
+  <section id="logs">
+    <h2>4. Pod and Container Logs</h2>
+    <p>In Kubernetes, the common logging pattern is for applications to write logs to standard output and standard error. The container runtime captures those streams, and <code>kubectl logs</code> retrieves them.</p>
+    <table>
+      <tr><th>Use case</th><th>Command</th></tr>
+      <tr><td>Current logs</td><td><code>kubectl logs POD -n NAMESPACE</code></td></tr>
+      <tr><td>Follow logs</td><td><code>kubectl logs -f POD -n NAMESPACE</code></td></tr>
+      <tr><td>Last few lines</td><td><code>kubectl logs POD --tail=50</code></td></tr>
+      <tr><td>Logs from last 5 minutes</td><td><code>kubectl logs POD --since=5m</code></td></tr>
+      <tr><td>Specific container</td><td><code>kubectl logs POD -c CONTAINER</code></td></tr>
+      <tr><td>Previous crashed container logs</td><td><code>kubectl logs POD -c CONTAINER --previous</code></td></tr>
+      <tr><td>All containers in a Pod</td><td><code>kubectl logs POD --all-containers=true</code></td></tr>
+      <tr><td>Deployment logs</td><td><code>kubectl logs deploy/DEPLOYMENT -n NAMESPACE</code></td></tr>
+    </table>
+    <div class="warn"><strong>Important:</strong> <code>kubectl logs</code> is not a long-term log storage system. For production, send logs to a backend such as Loki, Elasticsearch/OpenSearch, Splunk, Cloud Logging, or another centralized logging platform.</div>
+  </section>
+
+  <section id="debugging">
+    <h2>5. Debugging Your Application</h2>
+    <div class="grid">
+      <div class="card span-6">
+        <h3>Debug Pods</h3>
+        <ol>
+          <li><code>kubectl get pod</code> — identify status.</li>
+          <li><code>kubectl describe pod</code> — inspect state, conditions, restart reason, events.</li>
+          <li><code>kubectl logs</code> — inspect application output.</li>
+          <li><code>kubectl logs --previous</code> — inspect prior failed container instance.</li>
+          <li><code>kubectl exec</code> — inspect inside running container.</li>
+          <li><code>kubectl debug</code> — attach a temporary debug container or create a debug copy.</li>
+        </ol>
+      </div>
+      <div class="card span-6">
+        <h3>Determine Reason for Pod Failure</h3>
+        <table>
+          <tr><th>Status / Reason</th><th>Likely meaning</th><th>First commands</th></tr>
+          <tr><td><code>Pending</code></td><td>Scheduling, volume, quota, taint, or resource issue.</td><td><code>describe pod</code>, <code>events</code></td></tr>
+          <tr><td><code>ImagePullBackOff</code></td><td>Bad image name/tag, registry auth, network, pull policy.</td><td><code>describe pod</code></td></tr>
+          <tr><td><code>CrashLoopBackOff</code></td><td>Container starts then exits repeatedly.</td><td><code>logs --previous</code>, <code>describe pod</code></td></tr>
+          <tr><td><code>Init:CrashLoopBackOff</code></td><td>Init container failed repeatedly.</td><td><code>logs -c init-name</code></td></tr>
+          <tr><td><code>OOMKilled</code></td><td>Container exceeded memory limit.</td><td><code>describe pod</code>, <code>top pod</code></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="diagram">
+      <div class="diagram-title">Animated Concept: Service Selector to Pods</div>
+      <div class="selector-demo">
+        <div class="card"><strong>Service</strong><br/><code>selector: app=web-ok</code></div>
+        <div class="arrow"></div>
+        <div class="card"><strong>Pods</strong><br/><span class="pod-pill">app=web-ok</span><span class="pod-pill">app=web-ok</span><span class="pod-pill">app=other</span></div>
+      </div>
+      <p class="muted">A Service does not route to Pods by name. It routes to Pods whose labels match the Service selector.</p>
+    </div>
+  </section>
+
+  <section id="crictl">
+    <h2>6. Inspect Kubernetes Node with crictl</h2>
+    <p><code>crictl</code> is a command-line tool for CRI-compatible container runtimes. Use it when <code>kubectl</code> is not enough and you need a node/runtime-level view.</p>
+    <div class="warn"><strong>Permission boundary:</strong> <code>crictl</code> normally runs on the node with <code>sudo</code>. It is not a regular developer command for shared production clusters.</div>
+    <table>
+      <tr><th>Command</th><th>Purpose</th></tr>
+      <tr><td><code>sudo crictl info</code></td><td>Runtime information.</td></tr>
+      <tr><td><code>sudo crictl pods</code></td><td>List Pod sandboxes known to the runtime.</td></tr>
+      <tr><td><code>sudo crictl ps -a</code></td><td>List containers including exited containers.</td></tr>
+      <tr><td><code>sudo crictl logs CONTAINER_ID</code></td><td>Read logs directly from runtime.</td></tr>
+      <tr><td><code>sudo crictl inspect CONTAINER_ID</code></td><td>Inspect runtime container details.</td></tr>
+    </table>
+  </section>
+
+  <section id="metrics">
+    <h2>7. Metrics Server and the top Command</h2>
+    <p>Metrics Server collects recent CPU and memory metrics from kubelets and exposes them through the Kubernetes Metrics API. <code>kubectl top</code> depends on Metrics Server being installed and healthy.</p>
+    <div class="diagram">
+      <div class="diagram-title">Animated Concept: Metrics Server Flow</div>
+      <svg class="flow-svg" viewBox="0 0 920 260" role="img" aria-label="Metrics server flow">
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#326ce5" /></marker>
+        </defs>
+        <rect x="35" y="70" width="160" height="84" rx="18" fill="#eff6ff" stroke="#326ce5" stroke-width="3"/>
+        <text x="115" y="104" text-anchor="middle" font-weight="800">kubectl top</text>
+        <text x="115" y="128" text-anchor="middle" font-size="13">User request</text>
+        <circle class="pulse-ring" cx="115" cy="112" r="54" fill="none" stroke="#326ce5" stroke-width="2"/>
+        <rect x="270" y="70" width="170" height="84" rx="18" fill="#f0fdfa" stroke="#00a3a3" stroke-width="3"/>
+        <text x="355" y="104" text-anchor="middle" font-weight="800">API Server</text>
+        <text x="355" y="128" text-anchor="middle" font-size="13">Metrics API</text>
+        <rect x="520" y="70" width="185" height="84" rx="18" fill="#faf5ff" stroke="#7c3aed" stroke-width="3"/>
+        <text x="612" y="104" text-anchor="middle" font-weight="800">Metrics Server</text>
+        <text x="612" y="128" text-anchor="middle" font-size="13">Aggregates CPU/memory</text>
+        <rect x="775" y="30" width="110" height="56" rx="14" fill="#fff7ed" stroke="#f97316" stroke-width="3"/>
+        <text x="830" y="63" text-anchor="middle" font-weight="800">Kubelet</text>
+        <rect x="775" y="112" width="110" height="56" rx="14" fill="#fff7ed" stroke="#f97316" stroke-width="3"/>
+        <text x="830" y="145" text-anchor="middle" font-weight="800">Kubelet</text>
+        <rect x="775" y="194" width="110" height="56" rx="14" fill="#fff7ed" stroke="#f97316" stroke-width="3"/>
+        <text x="830" y="227" text-anchor="middle" font-weight="800">Kubelet</text>
+        <line x1="195" y1="112" x2="270" y2="112" stroke="#326ce5" stroke-width="4" marker-end="url(#arrowhead)"/>
+        <line x1="440" y1="112" x2="520" y2="112" stroke="#326ce5" stroke-width="4" marker-end="url(#arrowhead)"/>
+        <line x1="705" y1="112" x2="775" y2="58" stroke="#326ce5" stroke-width="4" marker-end="url(#arrowhead)"/>
+        <line x1="705" y1="112" x2="775" y2="140" stroke="#326ce5" stroke-width="4" marker-end="url(#arrowhead)"/>
+        <line x1="705" y1="112" x2="775" y2="222" stroke="#326ce5" stroke-width="4" marker-end="url(#arrowhead)"/>
+      </svg>
+    </div>
+    <div class="note"><strong>Compatibility note:</strong> Metrics Server 0.8.x targets Kubernetes 1.31+. For Kubernetes 1.27 to 1.30 lab clusters, use Metrics Server 0.7.2.</div>
+    <div class="warn"><strong>Scope note:</strong> Metrics Server is useful for <code>kubectl top</code> and autoscaling signals. It is not a replacement for Prometheus/Grafana or a long-term monitoring system.</div>
+  </section>
+
+  <section id="events">
+    <h2>8. Events</h2>
+    <p>Events are Kubernetes-generated records that explain what happened to objects: scheduled, pulling image, failed mount, failed probe, back-off restarting container, service endpoint changes, and similar lifecycle activity.</p>
+    <table>
+      <tr><th>Command</th><th>Purpose</th></tr>
+      <tr><td><code>kubectl events -n k8s-debug-lab</code></td><td>List recent events in a namespace.</td></tr>
+      <tr><td><code>kubectl events -n k8s-debug-lab --types=Warning</code></td><td>Show warning events only.</td></tr>
+      <tr><td><code>kubectl events --for pod/POD -n k8s-debug-lab</code></td><td>Show events for one Pod.</td></tr>
+      <tr><td><code>kubectl events -n k8s-debug-lab --watch</code></td><td>Watch new events as they occur.</td></tr>
+      <tr><td><code>kubectl get events --sort-by=.lastTimestamp</code></td><td>Older-compatible fallback.</td></tr>
+    </table>
+  </section>
+
+  <section id="labs">
+    <h2>9. Hands-on Labs</h2>
+    <div class="success"><strong>Recommended sequence:</strong> Complete labs in order. Each failure lab teaches a specific troubleshooting signal.</div>
+
+    <article class="card span-12">
+      <div class="lab-title"><span class="lab-badge">LAB 0</span><h3>Prepare Lab Namespace and Base Workloads</h3></div>
+      <p>Create the namespace and two working workloads: a log generator Deployment and a two-container Pod.</p>
+      
+    <div class="code-card">
+      <div class="code-title"><span>00-namespace.yaml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-yaml">apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-debug-lab
+  labels:
+    purpose: logging-monitoring-training
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>01-log-demo.yaml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-demo
+  namespace: k8s-debug-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-demo
+  template:
+    metadata:
+      labels:
+        app: log-demo
+    spec:
+      containers:
+      - name: logger
+        image: busybox:1.36.1
+        command: [&quot;sh&quot;, &quot;-c&quot;]
+        args:
+        - |
+          i=0
+          while true; do
+            echo &quot;{\&quot;ts\&quot;:\&quot;$(date -Iseconds)\&quot;,\&quot;level\&quot;:\&quot;INFO\&quot;,\&quot;msg\&quot;:\&quot;heartbeat from log-demo\&quot;,\&quot;count\&quot;:$i}&quot;
+            i=$((i+1))
+            sleep 3
+          done
+        resources:
+          requests:
+            cpu: &quot;20m&quot;
+            memory: &quot;32Mi&quot;
+          limits:
+            cpu: &quot;100m&quot;
+            memory: &quot;64Mi&quot;
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>02-two-container-logs.yaml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: two-container-logs
+  namespace: k8s-debug-lab
+  labels:
+    app: two-container-logs
+spec:
+  containers:
+  - name: app
+    image: busybox:1.36.1
+    command: [&quot;sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      while true; do
+        echo &quot;APP: request processed at $(date -Iseconds)&quot;
+        sleep 4
+      done
+    resources:
+      requests:
+        cpu: &quot;10m&quot;
+        memory: &quot;16Mi&quot;
+      limits:
+        cpu: &quot;50m&quot;
+        memory: &quot;32Mi&quot;
+  - name: sidecar
+    image: busybox:1.36.1
+    command: [&quot;sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      while true; do
+        echo &quot;SIDECAR: shipping log batch at $(date -Iseconds)&quot;
+        sleep 5
+      done
+    resources:
+      requests:
+        cpu: &quot;10m&quot;
+        memory: &quot;16Mi&quot;
+      limits:
+        cpu: &quot;50m&quot;
+        memory: &quot;32Mi&quot;
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>apply-core-labs.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">kubectl apply -f 00-namespace.yaml
+kubectl apply -f 01-log-demo.yaml
+kubectl apply -f 02-two-container-logs.yaml
+kubectl -n k8s-debug-lab rollout status deployment/log-demo --timeout=120s
+kubectl -n k8s-debug-lab wait --for=condition=Ready pod/two-container-logs --timeout=120s
+</code></pre>
+    </div>
+      <details><summary>Expected validation</summary>
+        <ul>
+          <li><code>deployment/log-demo</code> should be successfully rolled out.</li>
+          <li><code>two-container-logs</code> should show <code>READY 2/2</code>.</li>
+          <li><code>kubectl get pods -n k8s-debug-lab</code> should show both workloads running.</li>
+        </ul>
+      </details>
+    </article>
+
+    <article class="card span-12">
+      <div class="lab-title"><span class="lab-badge">LAB 1</span><h3>Describe Resources and Read Logs</h3></div>
+      <p>This lab demonstrates the most frequently used debugging workflow: list → describe → logs.</p>
+      
+    <div class="code-card">
+      <div class="code-title"><span>describe-and-logs.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">kubectl get all -n k8s-debug-lab
+kubectl describe deployment/log-demo -n k8s-debug-lab
+kubectl get pods -n k8s-debug-lab -o wide
+
+POD=$(kubectl get pod -n k8s-debug-lab -l app=log-demo -o jsonpath=&#x27;{.items[0].metadata.name}&#x27;)
+echo &quot;$POD&quot;
+
+kubectl logs &quot;$POD&quot; -n k8s-debug-lab
+kubectl logs -f &quot;$POD&quot; -n k8s-debug-lab
+kubectl logs &quot;$POD&quot; -n k8s-debug-lab --tail=5
+kubectl logs &quot;$POD&quot; -n k8s-debug-lab --since=1m
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>multi-container-logs.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">kubectl logs two-container-logs -n k8s-debug-lab -c app --tail=5
+kubectl logs two-container-logs -n k8s-debug-lab -c sidecar --tail=5
+kubectl logs two-container-logs -n k8s-debug-lab --all-containers=true --tail=10
+</code></pre>
+    </div>
+      <details><summary>Expected validation</summary>
+        <ul>
+          <li><code>kubectl describe deployment/log-demo</code> should show selector <code>app=log-demo</code> and one available replica.</li>
+          <li><code>kubectl logs</code> should print JSON-like heartbeat messages.</li>
+          <li>For the two-container Pod, <code>-c app</code> and <code>-c sidecar</code> should show different log messages.</li>
+        </ul>
+      </details>
+    </article>
+
+    <article class="card span-12">
+      <div class="lab-title"><span class="lab-badge">LAB 2A</span><h3>Debug Image Pull Failure</h3></div>
+      <p>This creates a Pod with a deliberately invalid image tag. Trainees should observe <code>ErrImagePull</code> or <code>ImagePullBackOff</code>.</p>
+      
+    <div class="code-card">
+      <div class="code-title"><span>03-bad-image-pod.yaml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-image-pod
+  namespace: k8s-debug-lab
+  labels:
+    app: bad-image-demo
+spec:
+  containers:
+  - name: app
+    image: nginx:this-tag-does-not-exist-for-lab
+    ports:
+    - containerPort: 80
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>debug-bad-image.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">kubectl apply -f 03-bad-image-pod.yaml
+kubectl get pod bad-image-pod -n k8s-debug-lab
+kubectl describe pod bad-image-pod -n k8s-debug-lab
+kubectl events -n k8s-debug-lab --for pod/bad-image-pod
+
+# Cleanup after observing ImagePullBackOff / ErrImagePull
+kubectl delete pod bad-image-pod -n k8s-debug-lab
+</code></pre>
+    </div>
+      <details><summary>What trainees should learn</summary>
+        <ul>
+          <li><code>kubectl logs</code> is not useful if the container never starts.</li>
+          <li><code>kubectl describe pod</code> and events show image pull errors.</li>
+          <li>Common causes: typo in image name, invalid tag, private registry auth missing, registry/network issue.</li>
+        </ul>
+      </details>
+    </article>
+
+    <article class="card span-12">
+      <div class="lab-title"><span class="lab-badge">LAB 2B</span><h3>Debug CrashLoopBackOff</h3></div>
+      <p>This creates a Pod that starts, writes an error, exits with code 1, and restarts repeatedly.</p>
+      
+    <div class="code-card">
+      <div class="code-title"><span>04-crashloop-pod.yaml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: crashloop-pod
+  namespace: k8s-debug-lab
+  labels:
+    app: crashloop-demo
+spec:
+  restartPolicy: Always
+  containers:
+  - name: app
+    image: busybox:1.36.1
+    command: [&quot;sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      echo &quot;Starting application&quot;
+      echo &quot;FATAL: missing required environment variable APP_MODE&quot;
+      exit 1
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>debug-crashloop.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">kubectl apply -f 04-crashloop-pod.yaml
+kubectl get pod crashloop-pod -n k8s-debug-lab -w
+
+# Press Ctrl+C after you see CrashLoopBackOff, then inspect:
+kubectl describe pod crashloop-pod -n k8s-debug-lab
+kubectl logs crashloop-pod -n k8s-debug-lab -c app
+kubectl logs crashloop-pod -n k8s-debug-lab -c app --previous
+kubectl get pod crashloop-pod -n k8s-debug-lab -o jsonpath=&#x27;{.status.containerStatuses[0].lastState.terminated.reason}{&quot;\n&quot;}&#x27;
+
+# Cleanup
+kubectl delete pod crashloop-pod -n k8s-debug-lab
+</code></pre>
+    </div>
+      <details><summary>What trainees should learn</summary>
+        <ul>
+          <li><code>CrashLoopBackOff</code> means the container starts and then exits repeatedly.</li>
+          <li><code>kubectl logs --previous</code> is important because the current container instance may have already restarted.</li>
+          <li><code>lastState.terminated.reason</code> and exit code help confirm the failure reason.</li>
+        </ul>
+      </details>
+    </article>
+
+    <article class="card span-12">
+      <div class="lab-title"><span class="lab-badge">LAB 2C</span><h3>Debug Init Container Failure</h3></div>
+      <p>This demonstrates that application containers do not start until init containers complete successfully.</p>
+      
+    <div class="code-card">
+      <div class="code-title"><span>05-init-failure-pod.yaml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: init-failure-pod
+  namespace: k8s-debug-lab
+  labels:
+    app: init-failure-demo
+spec:
+  volumes:
+  - name: workdir
+    emptyDir: {}
+  initContainers:
+  - name: init-check
+    image: busybox:1.36.1
+    command: [&quot;sh&quot;, &quot;-c&quot;]
+    args:
+    - |
+      echo &quot;Init container checking for /work/ready&quot;
+      test -f /work/ready
+    volumeMounts:
+    - name: workdir
+      mountPath: /work
+  containers:
+  - name: app
+    image: busybox:1.36.1
+    command: [&quot;sh&quot;, &quot;-c&quot;, &quot;echo Application started; sleep 3600&quot;]
+    volumeMounts:
+    - name: workdir
+      mountPath: /work
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>06-init-fixed-pod.yaml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: init-fixed-pod
+  namespace: k8s-debug-lab
+  labels:
+    app: init-fixed-demo
+spec:
+  volumes:
+  - name: workdir
+    emptyDir: {}
+  initContainers:
+  - name: init-create-file
+    image: busybox:1.36.1
+    command: [&quot;sh&quot;, &quot;-c&quot;, &quot;echo ready &gt; /work/ready &amp;&amp; cat /work/ready&quot;]
+    volumeMounts:
+    - name: workdir
+      mountPath: /work
+  containers:
+  - name: app
+    image: busybox:1.36.1
+    command: [&quot;sh&quot;, &quot;-c&quot;, &quot;echo Application started after init; sleep 3600&quot;]
+    volumeMounts:
+    - name: workdir
+      mountPath: /work
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>debug-init-container.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">kubectl apply -f 05-init-failure-pod.yaml
+kubectl get pod init-failure-pod -n k8s-debug-lab
+kubectl describe pod init-failure-pod -n k8s-debug-lab
+kubectl logs init-failure-pod -n k8s-debug-lab -c init-check
+kubectl get pod init-failure-pod -n k8s-debug-lab -o jsonpath=&#x27;{.status.initContainerStatuses[0].state}{&quot;\n&quot;}&#x27;
+
+# Replace failed Pod with fixed Pod. Pod specs are mostly immutable, so delete and recreate.
+kubectl delete pod init-failure-pod -n k8s-debug-lab
+kubectl apply -f 06-init-fixed-pod.yaml
+kubectl wait --for=condition=Ready pod/init-fixed-pod -n k8s-debug-lab --timeout=120s
+kubectl logs init-fixed-pod -n k8s-debug-lab -c init-create-file
+kubectl logs init-fixed-pod -n k8s-debug-lab -c app
+</code></pre>
+    </div>
+      <details><summary>Expected validation</summary>
+        <ul>
+          <li>The broken Pod should stay in an <code>Init:</code> status.</li>
+          <li><code>kubectl logs -c init-check</code> should show the init container message.</li>
+          <li>The fixed Pod should reach <code>Running</code> and print <code>Application started after init</code>.</li>
+        </ul>
+      </details>
+    </article>
+
+    <article class="card span-12">
+      <div class="lab-title"><span class="lab-badge">LAB 2D</span><h3>Debug Service Failure Caused by Wrong Selector</h3></div>
+      <p>This creates working nginx Pods but a broken Service selector. The Service exists, but it has no backend endpoints until fixed.</p>
+      
+    <div class="code-card">
+      <div class="code-title"><span>07-service-selector-failure.yaml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-ok
+  namespace: k8s-debug-lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-ok
+  template:
+    metadata:
+      labels:
+        app: web-ok
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25-alpine
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: &quot;20m&quot;
+            memory: &quot;32Mi&quot;
+          limits:
+            cpu: &quot;100m&quot;
+            memory: &quot;64Mi&quot;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bad-web-svc
+  namespace: k8s-debug-lab
+spec:
+  type: ClusterIP
+  selector:
+    app: wrong-label
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>debug-service-selector.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">kubectl apply -f 07-service-selector-failure.yaml
+kubectl -n k8s-debug-lab rollout status deployment/web-ok --timeout=120s
+kubectl get svc,endpoints,endpointslice -n k8s-debug-lab
+kubectl describe svc bad-web-svc -n k8s-debug-lab
+
+# This should fail or time out because the Service has no backend endpoints.
+kubectl run curl-test -n k8s-debug-lab --rm -i --restart=Never --image=curlimages/curl:8.8.0 -- \
+  --connect-timeout 3 http://bad-web-svc || true
+
+# Fix the selector so it matches Pod labels app=web-ok.
+kubectl patch svc bad-web-svc -n k8s-debug-lab -p &#x27;{&quot;spec&quot;:{&quot;selector&quot;:{&quot;app&quot;:&quot;web-ok&quot;}}}&#x27;
+kubectl get endpoints bad-web-svc -n k8s-debug-lab
+
+# Now it should return the nginx welcome page.
+kubectl run curl-test -n k8s-debug-lab --rm -i --restart=Never --image=curlimages/curl:8.8.0 -- \
+  -s http://bad-web-svc | head
+</code></pre>
+    </div>
+      <details><summary>Expected validation</summary>
+        <ul>
+          <li>Before the patch, <code>kubectl get endpoints bad-web-svc</code> should show no endpoint addresses.</li>
+          <li>After the patch, endpoints should appear for the nginx Pods.</li>
+          <li>The curl test should return part of the nginx welcome page.</li>
+        </ul>
+      </details>
+    </article>
+
+    <article class="card span-12">
+      <div class="lab-title"><span class="lab-badge">LAB 3</span><h3>Get a Shell, Use Ephemeral Debug Containers, and Debug Node</h3></div>
+      <p>Use this after the base workloads are running. Some commands require higher privileges and may not work in locked-down managed clusters.</p>
+      
+    <div class="code-card">
+      <div class="code-title"><span>exec-and-ephemeral-debug.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">POD=$(kubectl get pod -n k8s-debug-lab -l app=log-demo -o jsonpath=&#x27;{.items[0].metadata.name}&#x27;)
+
+# Get a shell in the existing container.
+kubectl exec -it &quot;$POD&quot; -n k8s-debug-lab -c logger -- sh
+
+# Add an ephemeral debug container to a running Pod.
+kubectl debug -it &quot;$POD&quot; -n k8s-debug-lab --image=busybox:1.36.1 --target=logger -- sh
+
+# If --target is unsupported by your runtime, retry without it:
+kubectl debug -it &quot;$POD&quot; -n k8s-debug-lab --image=busybox:1.36.1 -- sh
+
+# Create a debug copy of the Pod with a different command.
+kubectl debug &quot;$POD&quot; -n k8s-debug-lab -it --copy-to=log-demo-debug --container=logger -- sh
+kubectl delete pod log-demo-debug -n k8s-debug-lab --ignore-not-found=true
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>debug-node-and-crictl.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">NODE=$(kubectl get pod -n k8s-debug-lab -l app=log-demo -o jsonpath=&#x27;{.items[0].spec.nodeName}&#x27;)
+echo &quot;$NODE&quot;
+
+# Requires cluster-admin style permissions. This creates a privileged node debug Pod.
+kubectl debug node/$NODE -it --image=busybox:1.36.1
+
+# Inside the debug shell, the host filesystem is mounted at /host.
+# Example commands inside the node debug shell:
+chroot /host sh
+ps aux | grep kubelet
+ls /var/log/pods | head
+exit
+exit
+
+# crictl commands must be run on the Kubernetes node, not usually on your laptop.
+sudo tee /etc/crictl.yaml &gt;/dev/null &lt;&lt;&#x27;EOF&#x27;
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 10
+debug: false
+EOF
+
+sudo crictl info
+sudo crictl pods
+sudo crictl ps -a
+sudo crictl images
+
+# Filter a container and inspect it.
+CID=$(sudo crictl ps -a --name logger -q | head -n 1)
+sudo crictl inspect &quot;$CID&quot; | less
+sudo crictl logs &quot;$CID&quot; | tail
+</code></pre>
+    </div>
+      <details><summary>Common issues</summary>
+        <ul>
+          <li>If <code>kubectl exec</code> fails, the container may not be running or may not have the shell requested.</li>
+          <li>If <code>kubectl debug --target</code> fails, retry without <code>--target</code>.</li>
+          <li>If node debug is denied, your account lacks privileges.</li>
+          <li>If <code>crictl</code> cannot connect, verify the runtime endpoint. For containerd, common paths are <code>unix:///run/containerd/containerd.sock</code> and <code>unix:///var/run/containerd/containerd.sock</code>.</li>
+        </ul>
+      </details>
+    </article>
+
+    <article class="card span-12">
+      <div class="lab-title"><span class="lab-badge">LAB 4</span><h3>Use Events During Troubleshooting</h3></div>
+      <p>Events are most useful while failures are happening. Open a second terminal and watch events while creating failed Pods.</p>
+      
+    <div class="code-card">
+      <div class="code-title"><span>events-commands.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">kubectl events -n k8s-debug-lab
+kubectl events -n k8s-debug-lab --types=Warning
+kubectl events -n k8s-debug-lab --for pod/init-fixed-pod
+kubectl events -n k8s-debug-lab --watch
+
+# Older fallback that also works widely:
+kubectl get events -n k8s-debug-lab --sort-by=.lastTimestamp
+</code></pre>
+    </div>
+      <details><summary>Practice task</summary>
+        <p>Run <code>kubectl events -n k8s-debug-lab --watch</code> in one terminal. In another terminal, recreate the bad image Pod and observe the image pull event sequence.</p>
+      </details>
+    </article>
+
+    <article class="card span-12">
+      <div class="lab-title"><span class="lab-badge">LAB 5</span><h3>Deploy Metrics Server and Use kubectl top</h3></div>
+      <p>Choose the installation path based on your Kubernetes version.</p>
+      <div class="step"><strong>Step 1: Check Kubernetes version</strong><br/><code>kubectl version</code></div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>metrics-server-latest.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash"># For Kubernetes 1.31+ clusters, install the latest Metrics Server release.
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl -n kube-system rollout status deployment/metrics-server --timeout=180s
+kubectl get apiservice v1beta1.metrics.k8s.io
+kubectl top nodes
+kubectl top pods -A
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>metrics-server-older.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash"># For Kubernetes 1.27 to 1.30 lab clusters, use Metrics Server v0.7.2.
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.2/components.yaml
+kubectl -n kube-system rollout status deployment/metrics-server --timeout=180s
+kubectl get apiservice v1beta1.metrics.k8s.io
+kubectl top nodes
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>metrics-server-local-tls-patch.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash"># Local kubeadm/minikube-style lab workaround only.
+# Use this only if metrics-server logs show kubelet serving certificate validation errors.
+kubectl -n kube-system logs deployment/metrics-server --tail=50
+
+kubectl -n kube-system get deployment metrics-server -o yaml | grep kubelet-insecure-tls || \
+kubectl patch deployment metrics-server -n kube-system --type=&#x27;json&#x27; \
+  -p=&#x27;[{&quot;op&quot;:&quot;add&quot;,&quot;path&quot;:&quot;/spec/template/spec/containers/0/args/-&quot;,&quot;value&quot;:&quot;--kubelet-insecure-tls&quot;}]&#x27;
+
+kubectl -n kube-system rollout restart deployment/metrics-server
+kubectl -n kube-system rollout status deployment/metrics-server --timeout=180s
+kubectl top nodes
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>08-cpu-demo.yaml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpu-demo
+  namespace: k8s-debug-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cpu-demo
+  template:
+    metadata:
+      labels:
+        app: cpu-demo
+    spec:
+      containers:
+      - name: cpu
+        image: busybox:1.36.1
+        command: [&quot;sh&quot;, &quot;-c&quot;, &quot;while true; do :; done&quot;]
+        resources:
+          requests:
+            cpu: &quot;50m&quot;
+            memory: &quot;32Mi&quot;
+          limits:
+            cpu: &quot;250m&quot;
+            memory: &quot;64Mi&quot;
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>metrics-demo-workload.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">kubectl apply -f 08-cpu-demo.yaml
+kubectl -n k8s-debug-lab rollout status deployment/cpu-demo --timeout=120s
+
+# Wait 30-60 seconds after creating the workload before checking top output.
+kubectl top pod -n k8s-debug-lab
+kubectl top pod -n k8s-debug-lab --containers
+kubectl top node
+</code></pre>
+    </div>
+      <details><summary>Expected validation</summary>
+        <ul>
+          <li><code>kubectl get apiservice v1beta1.metrics.k8s.io</code> should show <code>Available=True</code>.</li>
+          <li><code>kubectl top nodes</code> should show CPU and memory usage.</li>
+          <li><code>kubectl top pod -n k8s-debug-lab</code> should show resource usage for lab Pods after a short delay.</li>
+        </ul>
+      </details>
+    </article>
+
+    <article class="card span-12">
+      <div class="lab-title"><span class="lab-badge">OPTIONAL</span><h3>Debug OOMKilled</h3></div>
+      <p>This intentionally creates a memory-hungry container with a low memory limit. Run only on a disposable lab namespace.</p>
+      
+    <div class="code-card">
+      <div class="code-title"><span>09-oom-demo.yaml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: oom-demo
+  namespace: k8s-debug-lab
+  labels:
+    app: oom-demo
+spec:
+  restartPolicy: Always
+  containers:
+  - name: memory-hog
+    image: python:3.12-alpine
+    command: [&quot;python&quot;, &quot;-c&quot;]
+    args:
+    - |
+      x=[]
+      while True:
+          x.append(&#x27;x&#x27; * 1024 * 1024)
+    resources:
+      requests:
+        memory: &quot;32Mi&quot;
+        cpu: &quot;20m&quot;
+      limits:
+        memory: &quot;64Mi&quot;
+        cpu: &quot;100m&quot;
+</code></pre>
+    </div>
+      
+    <div class="code-card">
+      <div class="code-title"><span>oom-demo.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">kubectl apply -f 09-oom-demo.yaml
+kubectl get pod oom-demo -n k8s-debug-lab -w
+
+# Press Ctrl+C after it restarts or shows OOMKilled / CrashLoopBackOff.
+kubectl describe pod oom-demo -n k8s-debug-lab
+kubectl logs oom-demo -n k8s-debug-lab -c memory-hog --previous
+kubectl get pod oom-demo -n k8s-debug-lab -o jsonpath=&#x27;{.status.containerStatuses[0].lastState.terminated.reason}{&quot;\n&quot;}&#x27;
+
+kubectl delete pod oom-demo -n k8s-debug-lab
+</code></pre>
+    </div>
+      <div class="danger"><strong>Do not run this on production clusters.</strong> It is designed to force a memory-limit failure.</div>
+    </article>
+  </section>
+
+  <section id="validation">
+    <h2>10. Static Validation Performed for This Document</h2>
+    <p>The embedded YAML manifests were parsed successfully using a YAML parser. I could not run <code>kubectl apply</code> against your cluster from here, so server-side validation still must be performed in the trainee environment using <code>kubectl apply --dry-run=server -f FILE.yaml</code>.</p>
+    <table>
+      <tr><th>File</th><th>Kinds detected</th><th>Validation result</th></tr>
+      <tr><td><code>00-namespace.yaml</code></td><td>Namespace</td><td><span class='ok'>YAML parsed successfully</span></td></tr>
+<tr><td><code>01-log-demo.yaml</code></td><td>Deployment</td><td><span class='ok'>YAML parsed successfully</span></td></tr>
+<tr><td><code>02-two-container-logs.yaml</code></td><td>Pod</td><td><span class='ok'>YAML parsed successfully</span></td></tr>
+<tr><td><code>03-bad-image-pod.yaml</code></td><td>Pod</td><td><span class='ok'>YAML parsed successfully</span></td></tr>
+<tr><td><code>04-crashloop-pod.yaml</code></td><td>Pod</td><td><span class='ok'>YAML parsed successfully</span></td></tr>
+<tr><td><code>05-init-failure-pod.yaml</code></td><td>Pod</td><td><span class='ok'>YAML parsed successfully</span></td></tr>
+<tr><td><code>06-init-fixed-pod.yaml</code></td><td>Pod</td><td><span class='ok'>YAML parsed successfully</span></td></tr>
+<tr><td><code>07-service-selector-failure.yaml</code></td><td>Deployment, Service</td><td><span class='ok'>YAML parsed successfully</span></td></tr>
+<tr><td><code>08-cpu-demo.yaml</code></td><td>Deployment</td><td><span class='ok'>YAML parsed successfully</span></td></tr>
+<tr><td><code>09-oom-demo.yaml</code></td><td>Pod</td><td><span class='ok'>YAML parsed successfully</span></td></tr>
+    </table>
+    <h3>Recommended trainer-side pre-check before class</h3>
+    <div class="code-card">
+      <div class="code-title"><span>trainer-precheck.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">kubectl get nodes
+kubectl auth can-i create pods -n k8s-debug-lab
+kubectl auth can-i create deployments -n k8s-debug-lab
+kubectl auth can-i create services -n k8s-debug-lab
+kubectl auth can-i create pods/ephemeralcontainers -n k8s-debug-lab
+kubectl auth can-i get events -n k8s-debug-lab
+
+# After saving YAML snippets as files:
+for f in *.yaml; do
+  echo "Checking $f"
+  kubectl apply --dry-run=server -f "$f"
+done</code></pre>
+    </div>
+  </section>
+
+  <section id="cleanup">
+    <h2>11. Cleanup</h2>
+    <p>Delete the lab namespace after the session. Remove Metrics Server only if it was installed solely for this lab.</p>
+    
+    <div class="code-card">
+      <div class="code-title"><span>cleanup.sh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-bash">kubectl delete namespace k8s-debug-lab --ignore-not-found=true
+
+# Optional: remove Metrics Server only if this lab installed it and your cluster does not need it.
+kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml --ignore-not-found=true
+kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.2/components.yaml --ignore-not-found=true
+</code></pre>
+    </div>
+  </section>
+
+  <section class="footer">
+    <p><strong>Document status:</strong> Generated as a self-contained HTML reference with CSS/SVG animations and copy-ready lab commands. Commands are intended for disposable training clusters and namespaces.</p>
+    <p><strong>Source basis:</strong> Kubernetes documentation for logging, debug workflows, events, <code>kubectl top</code>, <code>kubectl debug</code>, <code>crictl</code>, and Metrics Server project documentation.</p>
+  </section>
+</main>
+<script>
+function copyCode(btn) {
+  const pre = btn.closest('.code-card').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const old = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = old, 1200);
+  }).catch(() => {
+    btn.textContent = 'Select manually';
+  });
+}
+</script>
+</body>
+</html>

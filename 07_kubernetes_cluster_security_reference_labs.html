@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kubernetes Cluster Security - Trainee Reference and Labs</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --panel: #f8fafc;
+      --panel-2: #eef6ff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #d7e0ea;
+      --brand: #326ce5;
+      --brand-dark: #1e40af;
+      --accent: #0f766e;
+      --danger: #b91c1c;
+      --warn: #b45309;
+      --ok: #15803d;
+      --code-bg: #0b1220;
+      --code-text: #dbeafe;
+      --shadow: 0 12px 32px rgba(15, 23, 42, .08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--brand-dark); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .page { max-width: 1240px; margin: 0 auto; padding: 28px; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 38px;
+      background:
+        radial-gradient(circle at 12% 20%, rgba(50,108,229,.16), transparent 32%),
+        radial-gradient(circle at 88% 18%, rgba(15,118,110,.12), transparent 30%),
+        linear-gradient(135deg, #ffffff 0%, #f8fbff 72%);
+      box-shadow: var(--shadow);
+    }
+    .hero h1 { margin: 0 0 12px; font-size: clamp(2rem, 3.8vw, 4rem); line-height: 1.05; letter-spacing: -0.04em; }
+    .hero p { max-width: 900px; margin: 0; color: var(--muted); font-size: 1.08rem; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+    .badge { border: 1px solid #bfdbfe; background: #eff6ff; color: #1e3a8a; padding: 7px 12px; border-radius: 999px; font-size: .88rem; font-weight: 650; }
+    .grid { display: grid; gap: 18px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (max-width: 860px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } .page { padding: 16px; } .hero { padding: 24px; } }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, .04);
+    }
+    .card h3, .card h4 { margin-top: 0; }
+    .toc {
+      margin: 24px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .toc a {
+      display: block;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: #fff;
+      color: var(--text);
+      font-weight: 650;
+    }
+    section { margin-top: 36px; }
+    h2 { font-size: clamp(1.45rem, 2.4vw, 2.25rem); line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 16px; }
+    h3 { font-size: 1.25rem; margin: 24px 0 10px; }
+    h4 { margin: 18px 0 8px; }
+    .lead { color: var(--muted); max-width: 920px; }
+    .note, .warn, .danger, .success {
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      border: 1px solid;
+    }
+    .note { background: #f0f7ff; border-color: #bfdbfe; }
+    .warn { background: #fff7ed; border-color: #fed7aa; }
+    .danger { background: #fef2f2; border-color: #fecaca; }
+    .success { background: #f0fdf4; border-color: #bbf7d0; }
+    table { width: 100%; border-collapse: collapse; margin: 14px 0; background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); }
+    th, td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { background: #f1f5f9; text-align: left; font-size: .92rem; }
+    tr:last-child td { border-bottom: 0; }
+    code:not(pre code) { background: #eaf1ff; color: #0f172a; border: 1px solid #dbeafe; padding: 2px 5px; border-radius: 6px; font-size: .92em; }
+    .codebox { position: relative; margin: 14px 0 22px; }
+    .codebox .label { display: inline-block; background: #dbeafe; border: 1px solid #bfdbfe; color: #1e3a8a; font-size: .82rem; font-weight: 750; padding: 4px 9px; border-radius: 9px 9px 0 0; }
+    pre { margin: 0; white-space: pre; overflow: auto; border-radius: 0 14px 14px 14px; background: var(--code-bg); color: var(--code-text); padding: 16px; border: 1px solid #172033; }
+    pre code { font-family: "JetBrains Mono", "Fira Code", Consolas, Menlo, monospace; font-size: .9rem; line-height: 1.55; }
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+      border-radius: 10px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: .8rem;
+    }
+    .copy-btn:hover { background: #f8fafc; }
+    .pill { display:inline-block; padding: 3px 8px; border-radius: 999px; font-size:.8rem; font-weight:700; }
+    .pill-ok { background:#dcfce7; color:#166534; }
+    .pill-warn { background:#ffedd5; color:#9a3412; }
+    .pill-danger { background:#fee2e2; color:#991b1b; }
+    .pill-blue { background:#dbeafe; color:#1e40af; }
+    .step { border-left: 5px solid var(--brand); padding-left: 16px; margin: 22px 0; }
+    .checklist li { margin: 8px 0; }
+    .footer { margin: 44px 0 12px; padding: 18px; background: #f8fafc; border: 1px solid var(--border); border-radius: 18px; color: var(--muted); }
+
+    /* Animated diagrams */
+    .anim-panel { background: #ffffff; border: 1px solid var(--border); border-radius: 20px; padding: 20px; overflow: hidden; }
+    .pipeline { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; align-items: center; min-height: 126px; }
+    .pipeline::before { content:""; position:absolute; top:64px; left:6%; right:6%; height:4px; background: linear-gradient(90deg, #93c5fd, #5eead4); border-radius: 999px; }
+    .pipeline::after { content:""; position:absolute; top:57px; left:5%; width:18px; height:18px; border-radius:50%; background: var(--brand); box-shadow: 0 0 0 8px rgba(50,108,229,.12); animation: packet 7s infinite linear; }
+    @keyframes packet { 0% { left: 5%; } 16% { left: 22%; } 32% { left: 38%; } 48% { left: 54%; } 68% { left: 70%; } 88%,100% { left: 88%; } }
+    .pipe-node { position:relative; z-index:1; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 16px; padding: 12px 8px; min-height: 82px; text-align: center; display:flex; flex-direction:column; justify-content:center; box-shadow: 0 8px 18px rgba(15,23,42,.06); }
+    .pipe-node strong { display:block; font-size:.94rem; }
+    .pipe-node span { color: var(--muted); font-size:.78rem; }
+    .rbac-anim { display: grid; grid-template-columns: 1fr 80px 1fr; gap: 12px; align-items: center; }
+    .ns-box { border: 2px solid #cbd5e1; border-radius: 18px; min-height: 178px; padding: 14px; background: #f8fafc; position: relative; }
+    .ns-title { font-weight: 800; margin-bottom: 10px; }
+    .sa { width: 62px; height: 62px; border-radius: 50%; background: #dbeafe; border: 2px solid #93c5fd; display:flex; align-items:center; justify-content:center; font-weight:900; animation: bob 2.4s infinite ease-in-out; }
+    .role-card { margin-top: 12px; display:inline-block; background:#dcfce7; border:1px solid #86efac; border-radius:12px; padding:8px 10px; font-weight:750; }
+    .lock { width: 60px; height: 60px; border-radius: 14px; background: #0f766e; position: relative; margin: 0 auto; animation: pulseLock 2.2s infinite; }
+    .lock::before { content:""; position:absolute; top:-22px; left:14px; width:32px; height:30px; border:7px solid #0f766e; border-bottom:0; border-radius:18px 18px 0 0; }
+    .lock::after { content:""; position:absolute; top:23px; left:27px; width:7px; height:18px; background:#ccfbf1; border-radius:4px; }
+    @keyframes pulseLock { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+    .stack-anim { display:grid; gap:12px; max-width: 720px; margin: 0 auto; }
+    .layer { border-radius: 16px; padding: 13px 16px; border: 1px solid; font-weight: 800; position:relative; overflow:hidden; }
+    .layer::after { content:""; position:absolute; inset:0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: translateX(-100%); animation: shine 3.2s infinite; }
+    @keyframes shine { 0% { transform: translateX(-100%); } 55%,100% { transform: translateX(100%); } }
+    .l1 { background:#eff6ff; border-color:#bfdbfe; }
+    .l2 { background:#f0fdf4; border-color:#bbf7d0; }
+    .l3 { background:#fff7ed; border-color:#fed7aa; }
+    .l4 { background:#fef2f2; border-color:#fecaca; }
+    .shield-grid { display:grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+    @media (max-width: 720px) { .shield-grid { grid-template-columns:1fr 1fr; } .pipeline { grid-template-columns: 1fr 1fr; } .pipeline::before, .pipeline::after { display:none; } .rbac-anim { grid-template-columns:1fr; } }
+    .shield { min-height: 92px; border:1px solid var(--border); border-radius: 16px; background:#fff; display:flex; align-items:center; justify-content:center; text-align:center; font-weight:800; padding:10px; position:relative; }
+    .shield::before { content:"🛡️"; position:absolute; top:-12px; right:8px; font-size:28px; animation: wiggle 2.5s infinite; }
+    @keyframes wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1>Kubernetes Cluster Security</h1>
+      <p>Reference document for trainees with simple concepts, animated explanations, and hands-on labs covering authentication, authorization, RBAC, kubeconfig, TLS certificates, service accounts, security context, capabilities, seccomp, and SELinux labels.</p>
+      <div class="badge-row">
+        <span class="badge">White-background trainee handout</span>
+        <span class="badge">Copy-ready kubectl labs</span>
+        <span class="badge">RBAC + Security Context</span>
+        <span class="badge">Kubernetes v1.25+ friendly</span>
+      </div>
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+      <a href="#objectives">1. Objectives and prerequisites</a>
+      <a href="#model">2. Security request flow</a>
+      <a href="#cluster-security">3. Securing the Kubernetes cluster</a>
+      <a href="#primitives">4. Kubernetes security primitives</a>
+      <a href="#authz">5. Authentication and authorization</a>
+      <a href="#tls">6. TLS certificates and kubeconfig</a>
+      <a href="#sa-users">7. Service accounts and users</a>
+      <a href="#rbac">8. Roles, RoleBindings, ClusterRoles</a>
+      <a href="#security-context">9. Pod/container security context</a>
+      <a href="#lab1">Lab 1. Namespaces and RBAC</a>
+      <a href="#lab2">Lab 2. Security Context</a>
+      <a href="#checklist">Security checklist</a>
+    </nav>
+
+    <section id="objectives">
+      <h2>1. Objectives and Prerequisites</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Learning objectives</h3>
+          <ul>
+            <li>Understand how Kubernetes decides whether a request is allowed.</li>
+            <li>Create service accounts, Roles, RoleBindings, ClusterRoles, and ClusterRoleBindings.</li>
+            <li>Understand user certificates and kubeconfig entries.</li>
+            <li>Harden Pods using security context, Linux capabilities, seccomp, and SELinux labels.</li>
+            <li>Validate access using <code>kubectl auth can-i</code> and runtime checks from inside containers.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Lab prerequisites</h3>
+          <ul>
+            <li>A working Kubernetes cluster: <code>kind</code>, <code>minikube</code>, kubeadm, or cloud Kubernetes.</li>
+            <li><code>kubectl</code> configured with admin access for lab creation.</li>
+            <li>Internet access from nodes to pull <code>nginx:1.27-alpine</code> and <code>busybox:1.36</code>.</li>
+            <li>Optional: SELinux-enabled worker nodes for the SELinux label section.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="codebox"><span class="label">Pre-flight checks</span><button class="copy-btn">Copy</button><pre><code>kubectl version --short 2&gt;/dev/null || kubectl version
+kubectl cluster-info
+kubectl get nodes -o wide
+kubectl auth can-i &#x27;*&#x27; &#x27;*&#x27; --all-namespaces</code></pre></div>
+      <div class="warn"><strong>Training note:</strong> These labs are intentionally simple. In production, integrate RBAC with your identity provider, enforce Pod Security Standards, protect etcd, enable audit logs, restrict node access, scan images, and use network policies.</div>
+    </section>
+
+    <section id="model">
+      <h2>2. Animated Concept: Kubernetes Security Request Flow</h2>
+      <p class="lead">Every API request passes through a security pipeline. A request may be syntactically valid but still denied if the identity is not authenticated, not authorized, or violates an admission policy.</p>
+      <div class="anim-panel">
+        <div class="pipeline" aria-label="Animated Kubernetes security flow">
+          <div class="pipe-node"><strong>Client</strong><span>kubectl / controller / app</span></div>
+          <div class="pipe-node"><strong>API Server</strong><span>single front door</span></div>
+          <div class="pipe-node"><strong>Authentication</strong><span>Who are you?</span></div>
+          <div class="pipe-node"><strong>Authorization</strong><span>Are you allowed?</span></div>
+          <div class="pipe-node"><strong>Admission</strong><span>Policy checks</span></div>
+          <div class="pipe-node"><strong>Kubelet</strong><span>Run workload</span></div>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Stage</th><th>Question answered</th><th>Common controls</th></tr></thead>
+        <tbody>
+          <tr><td>Authentication</td><td>Who is making the request?</td><td>Client certificates, service account tokens, OIDC, webhook authenticators.</td></tr>
+          <tr><td>Authorization</td><td>What is this identity allowed to do?</td><td>RBAC, Node authorization, webhook authorization.</td></tr>
+          <tr><td>Admission</td><td>Is this object acceptable before storage?</td><td>Pod Security Admission, validating/mutating admission webhooks, resource policies.</td></tr>
+          <tr><td>Runtime isolation</td><td>What can the process do on the node?</td><td>securityContext, seccomp, capabilities, SELinux/AppArmor, runtime sandboxing.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="cluster-security">
+      <h2>3. Securing the Kubernetes Cluster</h2>
+      <p class="lead">Cluster security is layered. Do not rely only on RBAC or only on container restrictions. Secure the control plane, nodes, identities, network, workloads, and supply chain together.</p>
+      <div class="shield-grid">
+        <div class="shield">Control plane hardening</div>
+        <div class="shield">Least-privilege RBAC</div>
+        <div class="shield">Pod security controls</div>
+        <div class="shield">Network segmentation</div>
+      </div>
+      <div class="grid grid-2" style="margin-top:18px;">
+        <div class="card">
+          <h3>Control plane</h3>
+          <ul>
+            <li>Expose the API server only to trusted networks.</li>
+            <li>Use TLS everywhere: API server, kubelet, etcd, admission webhooks.</li>
+            <li>Encrypt Secrets at rest using Kubernetes encryption configuration.</li>
+            <li>Back up etcd and protect etcd certificates and snapshots.</li>
+            <li>Enable audit logging and forward logs to a secure log platform.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Worker nodes</h3>
+          <ul>
+            <li>Limit SSH access; prefer immutable or managed nodes.</li>
+            <li>Patch OS, kubelet, container runtime, and CNI plugins.</li>
+            <li>Restrict kubelet API access and avoid anonymous kubelet access.</li>
+            <li>Use SELinux/AppArmor/seccomp where supported.</li>
+            <li>Separate high-risk workloads using taints, node pools, or runtime classes.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Workloads</h3>
+          <ul>
+            <li>Run as non-root and disable privilege escalation.</li>
+            <li>Drop Linux capabilities by default.</li>
+            <li>Use read-only root filesystems where possible.</li>
+            <li>Use explicit service accounts; avoid using the default service account.</li>
+            <li>Use NetworkPolicies to control pod-to-pod traffic.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Supply chain</h3>
+          <ul>
+            <li>Use trusted image registries and immutable image tags/digests.</li>
+            <li>Scan images for vulnerabilities and secrets.</li>
+            <li>Sign images where feasible.</li>
+            <li>Restrict who can deploy privileged workloads.</li>
+            <li>Use admission controls to enforce baseline or restricted standards.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="primitives">
+      <h2>4. Kubernetes Security Primitives</h2>
+      <table>
+        <thead><tr><th>Primitive</th><th>Purpose</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Namespace</td><td>Logical boundary for namespaced resources.</td><td><code>dev</code>, <code>test</code>, <code>prod</code></td></tr>
+          <tr><td>User</td><td>External identity; not stored as a Kubernetes API object.</td><td>Certificate CN <code>trainee</code>, OIDC user, LDAP-backed identity.</td></tr>
+          <tr><td>ServiceAccount</td><td>Namespaced identity for Pods and automation.</td><td><code>system:serviceaccount:dev:build-bot</code></td></tr>
+          <tr><td>Role</td><td>Namespaced permission set.</td><td>Read Pods in namespace <code>dev</code>.</td></tr>
+          <tr><td>RoleBinding</td><td>Grants a Role or ClusterRole inside a namespace.</td><td>Bind <code>pod-reader</code> to <code>trainee-viewer</code>.</td></tr>
+          <tr><td>ClusterRole</td><td>Cluster-scoped permission set, or reusable permission set for namespaces.</td><td>Read nodes, list pods, view non-resource URLs.</td></tr>
+          <tr><td>ClusterRoleBinding</td><td>Grants ClusterRole permissions cluster-wide.</td><td>Allow a monitoring service account to list nodes.</td></tr>
+          <tr><td>kubeconfig</td><td>Client-side file containing cluster, user, and context entries.</td><td><code>~/.kube/config</code></td></tr>
+          <tr><td>securityContext</td><td>Pod/container runtime security settings.</td><td><code>runAsNonRoot</code>, <code>seccompProfile</code>, <code>capabilities</code>.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="authz">
+      <h2>5. Cluster Authentication and Authorization</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Authentication</h3>
+          <p>Authentication verifies identity. Kubernetes supports multiple authenticators such as client certificates, bearer tokens, service account tokens, OIDC, and webhook token authentication.</p>
+          <ul>
+            <li>Certificate user example: <code>CN=trainee</code>, group <code>O=dev-team</code>.</li>
+            <li>Service account example: <code>system:serviceaccount:rbac-lab:trainee-viewer</code>.</li>
+            <li>Groups are important because RBAC can bind permissions to users, groups, or service accounts.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Authorization</h3>
+          <p>Authorization checks whether an authenticated identity can perform a verb on a resource in a namespace or across the cluster.</p>
+          <ul>
+            <li>Verb: <code>get</code>, <code>list</code>, <code>watch</code>, <code>create</code>, <code>update</code>, <code>patch</code>, <code>delete</code>.</li>
+            <li>Resource: <code>pods</code>, <code>deployments</code>, <code>secrets</code>, <code>nodes</code>.</li>
+            <li>Namespace: applies to namespaced resources such as Pods and Deployments.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note"><strong>Useful command:</strong> <code>kubectl auth can-i VERB RESOURCE -n NAMESPACE --as=IDENTITY</code> is the safest way to validate RBAC during training.</div>
+    </section>
+
+    <section id="tls">
+      <h2>6. Creating TLS Certificates and kubeconfig</h2>
+      <p class="lead">TLS in Kubernetes has two common meanings: securing component communication and authenticating clients. This section demonstrates a client certificate identity for a trainee user. Creating the identity does not grant permissions; RBAC must still be added.</p>
+      <div class="warn"><strong>Important:</strong> In a real production cluster, normal users are usually integrated through an external identity provider such as OIDC/SSO. Client certificate users are useful for learning and controlled administrative use, but certificate lifecycle management must be handled carefully.</div>
+      <div class="step">
+        <h3>6.1 Create a trainee client certificate using the Kubernetes CSR API</h3>
+        <div class="codebox"><span class="label">Client certificate request</span><button class="copy-btn">Copy</button><pre><code>mkdir -p ~/k8s-security-lab/certs
+cd ~/k8s-security-lab/certs
+
+# 1) Create private key and CSR for a normal Kubernetes user identity.
+openssl genrsa -out trainee.key 2048
+openssl req -new -key trainee.key -out trainee.csr -subj &quot;/CN=trainee/O=dev-team&quot;
+
+# 2) Convert CSR to base64 without line wrapping.
+CSR_B64=$(base64 -w0 &lt; trainee.csr 2&gt;/dev/null || base64 &lt; trainee.csr | tr -d &#x27;\n&#x27;)
+
+# 3) Submit CSR to Kubernetes certificates.k8s.io API.
+cat &gt; trainee-csr.yaml &lt;&lt;EOF
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: trainee
+spec:
+  request: ${CSR_B64}
+  signerName: kubernetes.io/kube-apiserver-client
+  expirationSeconds: 86400
+  usages:
+  - client auth
+EOF
+
+kubectl apply -f trainee-csr.yaml
+kubectl certificate approve trainee
+
+# 4) Download the signed certificate.
+kubectl get csr trainee -o jsonpath=&#x27;{.status.certificate}&#x27; | base64 -d &gt; trainee.crt
+ls -l trainee.key trainee.csr trainee.crt</code></pre></div>
+      </div>
+      <div class="step">
+        <h3>6.2 Create a dedicated kubeconfig for the trainee user</h3>
+        <div class="codebox"><span class="label">kubeconfig creation</span><button class="copy-btn">Copy</button><pre><code>cd ~/k8s-security-lab/certs
+
+CLUSTER_NAME=$(kubectl config view --minify -o jsonpath=&#x27;{.clusters[0].name}&#x27;)
+SERVER=$(kubectl config view --minify -o jsonpath=&#x27;{.clusters[0].cluster.server}&#x27;)
+CA_DATA=$(kubectl config view --raw --minify -o jsonpath=&#x27;{.clusters[0].cluster.certificate-authority-data}&#x27;)
+echo &quot;$CA_DATA&quot; | base64 -d &gt; ca.crt
+
+kubectl config set-cluster &quot;$CLUSTER_NAME&quot; \
+  --server=&quot;$SERVER&quot; \
+  --certificate-authority=ca.crt \
+  --embed-certs=true \
+  --kubeconfig=trainee.kubeconfig
+
+kubectl config set-credentials trainee \
+  --client-certificate=trainee.crt \
+  --client-key=trainee.key \
+  --embed-certs=true \
+  --kubeconfig=trainee.kubeconfig
+
+kubectl config set-context trainee-context \
+  --cluster=&quot;$CLUSTER_NAME&quot; \
+  --user=trainee \
+  --namespace=rbac-lab \
+  --kubeconfig=trainee.kubeconfig
+
+kubectl config use-context trainee-context --kubeconfig=trainee.kubeconfig
+
+# Expected before RBAC is added: the user authenticates but is not authorized.
+kubectl --kubeconfig=trainee.kubeconfig get pods -n rbac-lab</code></pre></div>
+      </div>
+      <table>
+        <thead><tr><th>kubeconfig section</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>clusters</code></td><td>API server endpoint and CA trust information.</td></tr>
+          <tr><td><code>users</code></td><td>Client credentials such as certificate/key, token, or exec plugin.</td></tr>
+          <tr><td><code>contexts</code></td><td>Mapping of cluster + user + default namespace.</td></tr>
+          <tr><td><code>current-context</code></td><td>The default context used by <code>kubectl</code>.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="sa-users">
+      <h2>7. Service Accounts and Users</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Normal users</h3>
+          <ul>
+            <li>Normal users are not stored as Kubernetes API objects.</li>
+            <li>They come from client certificates, OIDC, external identity systems, or authentication webhooks.</li>
+            <li>RBAC can refer to them by username or group.</li>
+            <li>Example certificate subject: <code>/CN=trainee/O=dev-team</code>.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Service accounts</h3>
+          <ul>
+            <li>ServiceAccounts are Kubernetes API objects.</li>
+            <li>They are namespaced and commonly used by Pods.</li>
+            <li>Use one service account per application or automation function.</li>
+            <li>Short-lived tokens can be created using <code>kubectl create token</code>.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="danger"><strong>Do not use the default service account for everything.</strong> Create explicit service accounts and bind only the minimum permissions required.</div>
+    </section>
+
+    <section id="rbac">
+      <h2>8. Roles, RoleBindings, ClusterRoles, and ClusterRoleBindings</h2>
+      <p class="lead">RBAC separates permission definition from permission assignment. A Role or ClusterRole defines allowed actions. A RoleBinding or ClusterRoleBinding assigns those permissions to a subject.</p>
+      <div class="anim-panel">
+        <div class="rbac-anim">
+          <div class="ns-box">
+            <div class="ns-title">Namespace: rbac-lab</div>
+            <div class="sa">SA</div>
+            <div class="role-card">Role: pod-reader</div>
+            <p style="margin:10px 0 0;color:var(--muted);font-size:.9rem;">Permission applies only here.</p>
+          </div>
+          <div class="lock" aria-label="RBAC lock"></div>
+          <div class="ns-box">
+            <div class="ns-title">Namespace: default</div>
+            <div class="sa" style="background:#fee2e2;border-color:#fecaca;">SA</div>
+            <div class="role-card" style="background:#fee2e2;border-color:#fecaca;">No binding</div>
+            <p style="margin:10px 0 0;color:var(--muted);font-size:.9rem;">Request is denied.</p>
+          </div>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Object</th><th>Scope</th><th>Use when</th></tr></thead>
+        <tbody>
+          <tr><td>Role</td><td>Namespace</td><td>You want permissions only inside one namespace.</td></tr>
+          <tr><td>RoleBinding</td><td>Namespace</td><td>You want to grant a Role or ClusterRole only inside the RoleBinding namespace.</td></tr>
+          <tr><td>ClusterRole</td><td>Cluster</td><td>You need cluster-scoped permissions or a reusable permission template.</td></tr>
+          <tr><td>ClusterRoleBinding</td><td>Cluster</td><td>You want to grant ClusterRole permissions across the whole cluster.</td></tr>
+        </tbody>
+      </table>
+      <div class="warn"><strong>Common spelling issue:</strong> The correct object is <code>ClusterRole</code>, not <code>CluserRole</code>.</div>
+    </section>
+
+    <section id="security-context">
+      <h2>9. Pod and Container Security Context</h2>
+      <p class="lead">A security context defines privilege and access-control settings for a Pod or container. Pod-level settings apply to all containers unless overridden at container level.</p>
+      <div class="anim-panel">
+        <div class="stack-anim">
+          <div class="layer l1">Pod securityContext: runAsNonRoot, runAsUser, fsGroup, seccompProfile</div>
+          <div class="layer l2">Container securityContext: allowPrivilegeEscalation, readOnlyRootFilesystem</div>
+          <div class="layer l3">Linux capabilities: drop ALL, add only the minimum required</div>
+          <div class="layer l4">Kernel controls: seccomp, SELinux/AppArmor, namespaces, cgroups</div>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Field</th><th>Level</th><th>Recommended training value</th><th>Why it matters</th></tr></thead>
+        <tbody>
+          <tr><td><code>runAsNonRoot</code></td><td>Pod/container</td><td><code>true</code></td><td>Prevents running as UID 0.</td></tr>
+          <tr><td><code>runAsUser</code></td><td>Pod/container</td><td><code>1000</code></td><td>Runs process with a known non-root UID.</td></tr>
+          <tr><td><code>allowPrivilegeEscalation</code></td><td>Container</td><td><code>false</code></td><td>Blocks gaining more privileges through setuid or file capabilities.</td></tr>
+          <tr><td><code>capabilities.drop</code></td><td>Container</td><td><code>["ALL"]</code></td><td>Removes unnecessary Linux privileges.</td></tr>
+          <tr><td><code>seccompProfile.type</code></td><td>Pod/container</td><td><code>RuntimeDefault</code></td><td>Uses runtime default syscall filtering.</td></tr>
+          <tr><td><code>readOnlyRootFilesystem</code></td><td>Container</td><td><code>true</code></td><td>Reduces damage if the process is compromised.</td></tr>
+          <tr><td><code>seLinuxOptions</code></td><td>Pod/container</td><td><code>type: container_t</code></td><td>Applies SELinux labels where SELinux is supported.</td></tr>
+        </tbody>
+      </table>
+      <div class="note"><strong>Pod Security Standards:</strong> Use namespace labels such as <code>pod-security.kubernetes.io/enforce=restricted</code> to prevent unsafe Pods from being created.</div>
+    </section>
+
+    <section id="lab1">
+      <h2>Lab 1: Working with Namespaces and RBAC</h2>
+      <p class="lead">In this lab, trainees create a namespace, service accounts, a Role, RoleBinding, ClusterRole, and ClusterRoleBinding. They validate what is allowed and denied.</p>
+      <div class="success"><strong>Expected outcome:</strong> Trainees can explain why one identity can read Pods but cannot create Deployments, and why a ClusterRole grants cluster-wide access only when bound with ClusterRoleBinding.</div>
+
+      <div class="step"><h3>Step 1: Create namespace and sample Pod</h3><div class="codebox"><span class="label">Namespace and Pod</span><button class="copy-btn">Copy</button><pre><code>mkdir -p ~/k8s-security-lab/rbac
+cd ~/k8s-security-lab/rbac
+
+kubectl create namespace rbac-lab --dry-run=client -o yaml | kubectl apply -f -
+
+cat &gt; demo-pod.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-demo
+  namespace: rbac-lab
+  labels:
+    app: web-demo
+spec:
+  containers:
+  - name: web
+    image: nginx:1.27-alpine
+    ports:
+    - containerPort: 80
+EOF
+
+kubectl apply -f demo-pod.yaml
+kubectl -n rbac-lab get pods -o wide</code></pre></div></div>
+      <div class="step"><h3>Step 2: Create service accounts</h3><div class="codebox"><span class="label">ServiceAccounts</span><button class="copy-btn">Copy</button><pre><code>kubectl -n rbac-lab create serviceaccount trainee-viewer --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n rbac-lab create serviceaccount trainee-deployer --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl -n rbac-lab get serviceaccounts</code></pre></div></div>
+      <div class="step"><h3>Step 3: Create a namespaced Role and RoleBinding</h3><div class="codebox"><span class="label">Role + RoleBinding</span><button class="copy-btn">Copy</button><pre><code>cat &gt; pod-reader-role.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader
+  namespace: rbac-lab
+rules:
+- apiGroups: [&quot;&quot;]
+  resources: [&quot;pods&quot;, &quot;pods/log&quot;]
+  verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;]
+EOF
+
+cat &gt; pod-reader-binding.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: trainee-viewer-can-read-pods
+  namespace: rbac-lab
+subjects:
+- kind: ServiceAccount
+  name: trainee-viewer
+  namespace: rbac-lab
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+EOF
+
+kubectl apply -f pod-reader-role.yaml
+kubectl apply -f pod-reader-binding.yaml</code></pre></div></div>
+      <div class="step"><h3>Step 4: Validate allowed and denied actions</h3><div class="codebox"><span class="label">RBAC validation</span><button class="copy-btn">Copy</button><pre><code># Test as the service account. This requires your current admin user to be allowed to impersonate.
+kubectl auth can-i list pods \
+  -n rbac-lab \
+  --as=system:serviceaccount:rbac-lab:trainee-viewer
+
+kubectl auth can-i create deployments \
+  -n rbac-lab \
+  --as=system:serviceaccount:rbac-lab:trainee-viewer
+
+# Expected:
+# yes
+# no</code></pre></div></div>
+      <div class="step"><h3>Step 5: Give a second service account deployment permissions</h3><div class="codebox"><span class="label">Deployment manager Role</span><button class="copy-btn">Copy</button><pre><code>cat &gt; deployment-manager-role.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployment-manager
+  namespace: rbac-lab
+rules:
+- apiGroups: [&quot;apps&quot;]
+  resources: [&quot;deployments&quot;]
+  verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;, &quot;create&quot;, &quot;update&quot;, &quot;patch&quot;, &quot;delete&quot;]
+- apiGroups: [&quot;&quot;]
+  resources: [&quot;pods&quot;]
+  verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;]
+EOF
+
+cat &gt; deployment-manager-binding.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: trainee-deployer-can-manage-deployments
+  namespace: rbac-lab
+subjects:
+- kind: ServiceAccount
+  name: trainee-deployer
+  namespace: rbac-lab
+roleRef:
+  kind: Role
+  name: deployment-manager
+  apiGroup: rbac.authorization.k8s.io
+EOF
+
+kubectl apply -f deployment-manager-role.yaml
+kubectl apply -f deployment-manager-binding.yaml
+
+kubectl auth can-i create deployments \
+  -n rbac-lab \
+  --as=system:serviceaccount:rbac-lab:trainee-deployer</code></pre></div></div>
+      <div class="step"><h3>Step 6: Use ClusterRole with a namespaced RoleBinding</h3><div class="codebox"><span class="label">ClusterRole bound only in one namespace</span><button class="copy-btn">Copy</button><pre><code>cat &gt; namespace-pod-reader-clusterrole.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: namespace-pod-reader
+rules:
+- apiGroups: [&quot;&quot;]
+  resources: [&quot;pods&quot;]
+  verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;]
+EOF
+
+cat &gt; clusterrole-to-namespace-rolebinding.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: bind-clusterrole-only-in-rbac-lab
+  namespace: rbac-lab
+subjects:
+- kind: ServiceAccount
+  name: trainee-viewer
+  namespace: rbac-lab
+roleRef:
+  kind: ClusterRole
+  name: namespace-pod-reader
+  apiGroup: rbac.authorization.k8s.io
+EOF
+
+kubectl apply -f namespace-pod-reader-clusterrole.yaml
+kubectl apply -f clusterrole-to-namespace-rolebinding.yaml
+
+# This is allowed only in rbac-lab because we used RoleBinding, not ClusterRoleBinding.
+kubectl auth can-i list pods -n rbac-lab \
+  --as=system:serviceaccount:rbac-lab:trainee-viewer
+kubectl auth can-i list pods -n default \
+  --as=system:serviceaccount:rbac-lab:trainee-viewer</code></pre></div></div>
+      <div class="step"><h3>Step 7: Use ClusterRoleBinding for cluster-wide permission</h3><div class="codebox"><span class="label">ClusterRoleBinding</span><button class="copy-btn">Copy</button><pre><code>cat &gt; node-reader-clusterrole.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: safe-node-reader
+rules:
+- apiGroups: [&quot;&quot;]
+  resources: [&quot;nodes&quot;]
+  verbs: [&quot;get&quot;, &quot;list&quot;]
+EOF
+
+cat &gt; node-reader-clusterrolebinding.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: trainee-viewer-can-read-nodes
+subjects:
+- kind: ServiceAccount
+  name: trainee-viewer
+  namespace: rbac-lab
+roleRef:
+  kind: ClusterRole
+  name: safe-node-reader
+  apiGroup: rbac.authorization.k8s.io
+EOF
+
+kubectl apply -f node-reader-clusterrole.yaml
+kubectl apply -f node-reader-clusterrolebinding.yaml
+
+kubectl auth can-i list nodes \
+  --as=system:serviceaccount:rbac-lab:trainee-viewer</code></pre></div></div>
+      <div class="step"><h3>Step 8: Optional certificate user test</h3><p>After creating the <code>trainee.kubeconfig</code> in section 6, bind the certificate user to a Role and test again.</p>
+        <div class="codebox"><span class="label">Bind certificate user to pod-reader</span><button class="copy-btn">Copy</button><pre><code>kubectl -n rbac-lab create rolebinding trainee-user-can-read-pods \
+  --role=pod-reader \
+  --user=trainee \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl --kubeconfig=~/k8s-security-lab/certs/trainee.kubeconfig get pods -n rbac-lab</code></pre></div>
+      </div>
+      <div class="step"><h3>Step 9: Cleanup</h3><div class="codebox"><span class="label">Cleanup RBAC lab</span><button class="copy-btn">Copy</button><pre><code>kubectl delete namespace rbac-lab
+kubectl delete clusterrole namespace-pod-reader safe-node-reader --ignore-not-found
+kubectl delete clusterrolebinding trainee-viewer-can-read-nodes --ignore-not-found
+kubectl delete csr trainee --ignore-not-found</code></pre></div></div>
+
+      <h3>Lab 1 troubleshooting</h3>
+      <table>
+        <thead><tr><th>Symptom</th><th>Likely reason</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td><code>forbidden: User ... cannot impersonate</code></td><td>Your current user is not cluster-admin.</td><td>Run the lab with admin kubeconfig or use token-based testing instead of <code>--as</code>.</td></tr>
+          <tr><td>ServiceAccount can do too much</td><td>It may have another binding, or you are testing as the wrong identity.</td><td>Run <code>kubectl auth can-i --list --as=...</code> and inspect bindings.</td></tr>
+          <tr><td>Certificate user authenticates but cannot get Pods</td><td>Authentication succeeded but authorization failed.</td><td>Create RoleBinding for <code>--user=trainee</code> or group <code>dev-team</code>.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="lab2">
+      <h2>Lab 2: Working with Security Context</h2>
+      <p class="lead">In this lab, trainees enforce the restricted Pod Security Standard in a namespace, observe a rejected privileged Pod, and deploy hardened Pods using security context settings.</p>
+      <div class="success"><strong>Expected outcome:</strong> Trainees can verify UID/GID, read-only filesystem behavior, dropped capabilities, seccomp status, and understand when SELinux labels apply.</div>
+
+      <div class="step"><h3>Step 1: Create a restricted namespace</h3><div class="codebox"><span class="label">Pod Security namespace</span><button class="copy-btn">Copy</button><pre><code>mkdir -p ~/k8s-security-lab/security-context
+cd ~/k8s-security-lab/security-context
+
+kubectl create namespace secure-lab --dry-run=client -o yaml | kubectl apply -f -
+
+# Enforce Kubernetes Pod Security Standards at the namespace level.
+# This requires Kubernetes v1.25+ where Pod Security Admission is stable.
+kubectl label namespace secure-lab \
+  pod-security.kubernetes.io/enforce=restricted \
+  pod-security.kubernetes.io/audit=restricted \
+  pod-security.kubernetes.io/warn=restricted \
+  --overwrite
+
+kubectl describe namespace secure-lab | grep -i pod-security -A5</code></pre></div></div>
+      <div class="step"><h3>Step 2: Try an unsafe privileged Pod</h3><div class="codebox"><span class="label">Expected rejection</span><button class="copy-btn">Copy</button><pre><code>cat &gt; bad-privileged-pod.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-privileged-pod
+  namespace: secure-lab
+spec:
+  containers:
+  - name: bad
+    image: busybox:1.36
+    command: [&quot;sh&quot;, &quot;-c&quot;, &quot;sleep 3600&quot;]
+    securityContext:
+      privileged: true
+      runAsUser: 0
+EOF
+
+kubectl apply -f bad-privileged-pod.yaml
+
+# Expected: rejected by Pod Security Admission because the namespace enforces &quot;restricted&quot;.</code></pre></div></div>
+      <div class="step"><h3>Step 3: Deploy a hardened Pod</h3><div class="codebox"><span class="label">Safe Pod securityContext</span><button class="copy-btn">Copy</button><pre><code>cat &gt; safe-pod.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: v1
+kind: Pod
+metadata:
+  name: safe-pod
+  namespace: secure-lab
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 3000
+    fsGroup: 2000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;sh&quot;, &quot;-c&quot;, &quot;id; touch /tmp/write-ok; sleep 3600&quot;]
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: [&quot;ALL&quot;]
+    volumeMounts:
+    - name: tmp
+      mountPath: /tmp
+  volumes:
+  - name: tmp
+    emptyDir: {}
+EOF
+
+kubectl apply -f safe-pod.yaml
+kubectl -n secure-lab wait --for=condition=Ready pod/safe-pod --timeout=90s
+kubectl -n secure-lab get pod safe-pod -o wide</code></pre></div></div>
+      <div class="step"><h3>Step 4: Verify runtime behavior</h3><div class="codebox"><span class="label">Runtime checks</span><button class="copy-btn">Copy</button><pre><code>kubectl -n secure-lab exec safe-pod -- id
+kubectl -n secure-lab exec safe-pod -- sh -c &#x27;ls -l /tmp/write-ok&#x27;
+kubectl -n secure-lab exec safe-pod -- sh -c &#x27;touch /root/should-fail || echo &quot;root filesystem write blocked&quot;&#x27;
+kubectl -n secure-lab exec safe-pod -- sh -c &#x27;grep Seccomp /proc/1/status; grep CapEff /proc/1/status&#x27;
+
+# Expected observations:
+# - uid=1000 and gid=3000
+# - write to /tmp works because emptyDir is mounted there
+# - write to /root fails because root filesystem is read-only
+# - Seccomp is active and effective capabilities are dropped</code></pre></div></div>
+      <div class="step"><h3>Step 5: Add a narrow Linux capability</h3><div class="codebox"><span class="label">Capabilities</span><button class="copy-btn">Copy</button><pre><code>cat &gt; capability-pod.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: v1
+kind: Pod
+metadata:
+  name: capability-pod
+  namespace: secure-lab
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;sh&quot;, &quot;-c&quot;, &quot;sleep 3600&quot;]
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [&quot;ALL&quot;]
+        add: [&quot;NET_BIND_SERVICE&quot;]
+EOF
+
+kubectl apply -f capability-pod.yaml
+kubectl -n secure-lab wait --for=condition=Ready pod/capability-pod --timeout=90s
+kubectl -n secure-lab exec capability-pod -- sh -c &#x27;grep CapEff /proc/1/status&#x27;
+
+# NET_BIND_SERVICE is the narrow capability used for binding low TCP/UDP ports.
+# Do not add broad capabilities such as SYS_ADMIN in normal application Pods.</code></pre></div></div>
+      <div class="step"><h3>Step 6: Observe seccomp policy enforcement</h3><div class="codebox"><span class="label">Expected rejection for Unconfined seccomp</span><button class="copy-btn">Copy</button><pre><code>cat &gt; unconfined-seccomp-pod.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: v1
+kind: Pod
+metadata:
+  name: unconfined-seccomp-pod
+  namespace: secure-lab
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: Unconfined
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;sh&quot;, &quot;-c&quot;, &quot;sleep 3600&quot;]
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [&quot;ALL&quot;]
+EOF
+
+kubectl apply -f unconfined-seccomp-pod.yaml
+
+# Expected in a restricted namespace: rejected because seccomp must not be Unconfined.</code></pre></div></div>
+      <div class="step"><h3>Step 7: Optional SELinux label example</h3><div class="warn"><strong>SELinux note:</strong> This example is meaningful only on SELinux-enabled nodes, commonly seen on RHEL/Fedora/OpenShift-style environments. On many Ubuntu/kind/minikube clusters, SELinux is not enforcing on the node and the practical label check may not show useful results.</div><div class="codebox"><span class="label">SELinux labels</span><button class="copy-btn">Copy</button><pre><code>cat &gt; selinux-pod.yaml &lt;&lt;&#x27;EOF&#x27;
+apiVersion: v1
+kind: Pod
+metadata:
+  name: selinux-pod
+  namespace: secure-lab
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+    seLinuxOptions:
+      type: container_t
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;sh&quot;, &quot;-c&quot;, &quot;sleep 3600&quot;]
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [&quot;ALL&quot;]
+EOF
+
+kubectl apply -f selinux-pod.yaml
+kubectl -n secure-lab get pod selinux-pod
+
+# On SELinux-enabled nodes, you can inspect labels from the node/runtime side.
+# On Ubuntu/kind/minikube without SELinux enforcement, this section is conceptual/optional.</code></pre></div></div>
+      <div class="step"><h3>Step 8: Cleanup</h3><div class="codebox"><span class="label">Cleanup security context lab</span><button class="copy-btn">Copy</button><pre><code>kubectl delete namespace secure-lab</code></pre></div></div>
+
+      <h3>Lab 2 troubleshooting</h3>
+      <table>
+        <thead><tr><th>Symptom</th><th>Likely reason</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Safe Pod rejected by restricted policy</td><td>Missing <code>allowPrivilegeEscalation: false</code>, dropped capabilities, non-root user, or seccomp profile.</td><td>Compare your manifest with <code>safe-pod.yaml</code>.</td></tr>
+          <tr><td>Image pull error</td><td>Cluster nodes cannot reach registry.</td><td>Pre-pull images or configure a local registry mirror.</td></tr>
+          <tr><td><code>touch /root/should-fail</code> succeeds</td><td><code>readOnlyRootFilesystem</code> missing or container differs from manifest.</td><td>Reapply manifest and inspect <code>kubectl get pod safe-pod -o yaml</code>.</td></tr>
+          <tr><td>SELinux label not visible</td><td>Node OS or container runtime is not using SELinux enforcement.</td><td>Treat SELinux section as conceptual unless using SELinux-enabled nodes.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="checklist">
+      <h2>Cluster Security Checklist for Trainees</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>RBAC checklist</h3>
+          <ul class="checklist">
+            <li>Use named service accounts per workload.</li>
+            <li>Prefer namespaced Roles over ClusterRoles where possible.</li>
+            <li>Avoid wildcard verbs and resources unless absolutely required.</li>
+            <li>Never bind <code>cluster-admin</code> to application service accounts.</li>
+            <li>Validate with <code>kubectl auth can-i</code>.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Pod hardening checklist</h3>
+          <ul class="checklist">
+            <li>Set <code>runAsNonRoot: true</code>.</li>
+            <li>Set <code>allowPrivilegeEscalation: false</code>.</li>
+            <li>Drop all capabilities; add back only what is required.</li>
+            <li>Use <code>seccompProfile: RuntimeDefault</code>.</li>
+            <li>Use read-only root filesystem where possible.</li>
+            <li>Use Pod Security Standards labels on namespaces.</li>
+          </ul>
+        </div>
+      </div>
+      <h3>Assessment questions</h3>
+      <ol>
+        <li>What is the difference between authentication and authorization in Kubernetes?</li>
+        <li>Why does creating a TLS client certificate not automatically grant permissions?</li>
+        <li>What is the difference between RoleBinding and ClusterRoleBinding?</li>
+        <li>Why should an application Pod not use the default service account?</li>
+        <li>What does <code>allowPrivilegeEscalation: false</code> prevent?</li>
+        <li>Why is <code>capabilities.drop: ["ALL"]</code> a good default?</li>
+        <li>When is <code>seLinuxOptions</code> practically useful?</li>
+        <li>How do you prove whether a service account can create Deployments?</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Reference Sources</h2>
+      <p class="lead">The concepts and field names in this document align with Kubernetes official documentation.</p>
+      <ul>
+        <li><a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">Kubernetes RBAC Authorization</a></li>
+        <li><a href="https://kubernetes.io/docs/reference/access-authn-authz/authentication/">Kubernetes Authentication</a></li>
+        <li><a href="https://kubernetes.io/docs/reference/access-authn-authz/authorization/">Kubernetes Authorization</a></li>
+        <li><a href="https://kubernetes.io/docs/concepts/security/service-accounts/">Kubernetes Service Accounts</a></li>
+        <li><a href="https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/">Organizing Cluster Access Using kubeconfig Files</a></li>
+        <li><a href="https://kubernetes.io/docs/tasks/configure-pod-container/security-context/">Configure a Security Context for a Pod or Container</a></li>
+        <li><a href="https://kubernetes.io/docs/concepts/security/pod-security-standards/">Pod Security Standards</a></li>
+        <li><a href="https://kubernetes.io/docs/concepts/security/linux-kernel-security-constraints/">Linux kernel security constraints for Pods and containers</a></li>
+      </ul>
+    </section>
+
+    <div class="footer">
+      <strong>Document validation note:</strong> YAML manifests embedded in this document were syntax-checked during generation. Runtime behavior can still differ based on Kubernetes version, admission controllers, CNI, container runtime, image registry access, and node OS security features.
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const code = btn.parentElement.querySelector('code').innerText;
+        try {
+          await navigator.clipboard.writeText(code);
+          const old = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => btn.textContent = old, 1200);
+        } catch (e) {
+          btn.textContent = 'Select manually';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
